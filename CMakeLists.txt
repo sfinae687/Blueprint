@@ -31,16 +31,19 @@ add_subdirectory(lib/proxy)
 
 # ImGUI
 file(GLOB IMGUI_SOURCE lib/imgui/*.cpp)
-list(APPEND IMGUI_SOURCE
-        lib/imgui/backends/imgui_impl_glfw.cpp
-        lib/imgui/backends/imgui_impl_opengl3.cpp
-)
 
 add_library(imgui ${IMGUI_SOURCE})
 target_include_directories(imgui
         PUBLIC lib/imgui
-        INTERFACE lib/imgui/backends
 )
+
+set(IMGUI_BACKEND_SOURCE
+        lib/imgui/backends/imgui_impl_glfw.cpp
+        lib/imgui/backends/imgui_impl_opengl3.cpp
+)
+add_library(imgui_backend ${IMGUI_BACKEND_SOURCE})
+target_include_directories(imgui_backend PUBLIC lib/imgui/backends)
+target_link_libraries(imgui_backend PUBLIC imgui)
 
 # Blueprint-gui
 set(BLUEPRINT_GUI_INTERFACE
@@ -55,7 +58,7 @@ target_sources(blueprint_gui
 )
 target_link_libraries(blueprint_gui
         PUBLIC imgui OpenGL::GL glfw
-        PRIVATE Boost::log
+        PRIVATE imgui_backend Boost::log
 )
 
 add_executable(blueprint src/main.cpp)
