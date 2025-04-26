@@ -39,7 +39,7 @@ namespace blueprint::GUI
         return true;
     }
 
-    void final_gui()
+    void finish_gui()
     {
         glfwTerminate();
     }

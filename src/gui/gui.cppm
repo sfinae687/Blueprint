@@ -32,7 +32,7 @@ namespace blueprint::GUI
     /**
      * Call the function after all gui operation finished.
      */
-    export void final_gui();
+    export void finish_gui();
 
     /**
      * The class manages a window context. The most member function of the class could just invoke when the context is
@@ -133,12 +133,13 @@ namespace blueprint::GUI
          */
         [[nodiscard]] ImGuiContext* imgui_context() const noexcept;
 
-    // protected:
 
         // draw stage operation
 
         /**
-         * Execute the full redner operation once.
+         * Execute the full render operation once.
+         *
+         * The full render operation includes: logic update, and drawing.
          *
          * @pre The context is set and the drawing stage is at 'to_prepare'.
          */
@@ -172,7 +173,7 @@ namespace blueprint::GUI
          */
         void finish_drawing();
 
-        // aux
+    private:
 
         /**
          * adjust underlying viewport to match the windows size.
@@ -221,7 +222,6 @@ namespace blueprint::GUI
          */
         void release_context();
 
-    private:
 
         enum draw_stage_t
         {

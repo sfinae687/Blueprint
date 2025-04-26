@@ -19,14 +19,16 @@ namespace blueprint::GUI
     bool begin_main_window(std::string_view title, bool* p_open) noexcept
     {
         const auto vp = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(vp->Pos);
-        ImGui::SetNextWindowSize(vp->Size);
+        ImGui::SetNextWindowPos(vp->WorkPos);
+        ImGui::SetNextWindowSize(vp->WorkSize);
 
         constexpr auto main_win_flag = ImGuiWindowFlags_NoTitleBar
             | ImGuiWindowFlags_NoResize
             | ImGuiWindowFlags_NoMove
             | ImGuiWindowFlags_MenuBar
             | ImGuiWindowFlags_NoBringToFrontOnFocus
+            | ImGuiWindowFlags_NoDocking
+            | ImGuiWindowFlags_NoCollapse
             | ImGuiWindowFlags_NoDecoration;
         return ImGui::Begin(title.data(), p_open, main_win_flag);
     }

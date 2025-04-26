@@ -16,7 +16,7 @@ export module blueprint.gui:begin;
 namespace blueprint::GUI
 {
     /**
-     * Begin a window fill all native viewport.
+     * Begin a window fill viewport, and keep staying in the background.
      */
     export bool begin_main_window(std::string_view title, bool* p_open) noexcept;
 }

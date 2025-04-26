@@ -69,8 +69,13 @@ target_link_libraries(blueprint_gui
 
 # Node editor
 add_subdirectory(src/nodes)
+add_subdirectory(src/node_editor)
 
-add_executable(blueprint src/main.cpp)
-target_link_libraries(blueprint
-        PRIVATE blueprint_gui Boost::log_setup
+# Blueprint Context
+add_subdirectory(src/blueprint)
+
+# Blueprint
+add_executable(blueprint_app src/main.cpp)
+target_link_libraries(blueprint_app
+        PRIVATE blueprint Boost::log_setup
 )
