@@ -23,10 +23,57 @@ int main(int argc, char *argv[])
     blueprint::GUI::init_gui();
 
     blueprint::GUI::window wd("Hello", 640, 480);
-    wd.set_draw_op([&]
+
+    ImVec2 pos, sz;
+    auto prev_time = std::chrono::system_clock::now();
+    float frame_rate = 0;
+
+    wd.set_update_operation([&]
     {
-        ImGui::Text("Hello Gui.");
+        using namespace std::chrono_literals;
+        auto &io = ImGui::GetIO();
+        sz = io.DisplaySize;
+        pos = {0, 0};
+
+        auto cur_time = std::chrono::system_clock::now();
+        frame_rate = 1s / (cur_time - prev_time);
+        prev_time = cur_time;
+
     });
+
+    wd.set_draw_operation([&]
+    {
+        using namespace blueprint::GUI;
+
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+
+        constexpr auto main_win_flag = ImGuiWindowFlags_NoTitleBar
+            | ImGuiWindowFlags_NoResize
+            | ImGuiWindowFlags_NoMove
+            | ImGuiWindowFlags_MenuBar
+            | ImGuiWindowFlags_NoBringToFrontOnFocus
+            | ImGuiWindowFlags_NoDocking
+            | ImGuiWindowFlags_NoCollapse
+            | ImGuiWindowFlags_NoDecoration;
+
+        bool open;
+        if (ImGui::Begin("Main", &open, main_win_flag))
+        {
+            ImGui::Text("Hello Gui.");
+            ImGui::Text(std::to_string(frame_rate).c_str());
+        }
+        ImGui::End();
+
+        ImGui::PopStyleVar();
+
+        ImGui::ShowDemoWindow();
+    });
+
     wd.render_loop();
 
     blueprint::GUI::final_gui();

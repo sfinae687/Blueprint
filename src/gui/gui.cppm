@@ -16,6 +16,7 @@ module;
 
 export module blueprint.gui;
 export import :debug;
+export import :begin;
 
 namespace blueprint::GUI
 {
@@ -42,6 +43,7 @@ namespace blueprint::GUI
     public:
 
         using draw_op_t = std::move_only_function<void(void)>;
+        using update_op_t = std::move_only_function<void(void)>;
 
         // copy control: movable, default constructible
 
@@ -65,11 +67,17 @@ namespace blueprint::GUI
         // render
 
         /**
+         * Set the operation will be run before drawing to update logic.
+         * @return The operation set previously.
+         */
+        update_op_t set_update_operation(update_op_t) noexcept;
+
+        /**
          * Set the operation will be run in render loop.
          *
          * @return The original draw operation. It would be empty if the operation hasn't been set.
          */
-        draw_op_t set_draw_op(draw_op_t) noexcept;
+        draw_op_t set_draw_operation(draw_op_t) noexcept;
 
         /**
          * Lunch a loop for render. It would quit when the window should be close or the drawing operation throw
@@ -97,18 +105,17 @@ namespace blueprint::GUI
         // information
 
         /**
-         * get the size of the native windows.
-         *
-         * @return width as first, height as second.
+         * The size of window measured by pixel.
+         * @return Width as first, height as second.
          */
-        std::pair<int, int> windows_size() const noexcept;
+        [[nodiscard]] std::pair<int, int> frame_buff_size() const;
 
         /**
          * test whether windows should finish.
          *
          * @return true if windows is requested to close
          */
-        bool should_close() const noexcept;
+        [[nodiscard]] bool should_close() const noexcept;
 
         // underlying handle
 
@@ -117,35 +124,53 @@ namespace blueprint::GUI
          *
          * @return the glfw context hold by the object.
          */
-        GLFWwindow* glfw_context() const noexcept;
+        [[nodiscard]] GLFWwindow* glfw_context() const noexcept;
 
         /**
          * Get the underlying context of imgui.
          *
          * @return the imgui context hold by the object.
          */
-        ImGuiContext* imgui_context() const noexcept;
+        [[nodiscard]] ImGuiContext* imgui_context() const noexcept;
 
-    protected:
+    // protected:
 
         // draw stage operation
+
+        /**
+         * Execute the full redner operation once.
+         *
+         * @pre The context is set and the drawing stage is at 'to_prepare'.
+         */
+        void do_render();
+
+        /**
+         * Update logic, including event polling, viewport adjusting and user defined update operation.
+         *
+         * @pre The current context is set, and drawing stage doesn't reach updated.
+         * @post The drawing stage will process to 'updated'.
+         */
+        void update();
 
         /**
          * Config context for drawing. You may call the function many times in a frame, but only the
          * first call is affect.
          *
+         * The operation doesn't execute full-update operation although the drawing stage doesn't reach it.
+         * If it occurs, the minimal operation to push the drawing stage.
+         *
          * @pre context is active and the drawing stage isn't reach 'finished'.
          * @post could begin to call the function to drawing the screen.
          */
-        void prepare_drawing() const;
+        void prepare_drawing();
 
         /**
-         * finish drawing, adjust viewport and update buffer.
+         * Finish drawing, adjust viewport and update buffer.
          *
          * @pre context is active.
          * @post The window has been updated with drawn content. The drawing stage will back to_prepare.
          */
-        void finish_drawing() const;
+        void finish_drawing();
 
         // aux
 
@@ -201,6 +226,7 @@ namespace blueprint::GUI
         enum draw_stage_t
         {
             to_prepare,
+            updated,
             ready,
             finished,
         };
@@ -220,6 +246,7 @@ namespace blueprint::GUI
         // internal info
 
         draw_op_t draw_op_{};
+        update_op_t update_op_{};
         draw_stage_t draw_stage_ = to_prepare;
 
 

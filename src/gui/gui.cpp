@@ -9,6 +9,8 @@ module;
 
 #include <boost/log/common.hpp>
 #include <boost/log/trivial.hpp>
+
+#include <thread>
 module blueprint.gui;
 import :debug;
 
@@ -52,10 +54,38 @@ namespace blueprint::GUI
         oth.window_ = nullptr;
     }
 
-    window::window(std::string_view title, int w, int h)
-        : window_(glfwCreateWindow(w, h, title.data(), nullptr, nullptr))
-        , im_context_(ImGui::CreateContext())
+    namespace
     {
+        void size_cb(GLFWwindow *window, int w, int h)
+        {
+            glfwSwapInterval(0);
+            auto win = static_cast<GUI::window*>(glfwGetWindowUserPointer(window));
+            win->do_render();
+            glfwSwapInterval(1);
+        }
+        void refresh_cb(GLFWwindow *window)
+        {
+            glfwSwapInterval(0);
+            auto win = static_cast<GUI::window*>(glfwGetWindowUserPointer(window));
+            win->do_render();
+            glfwSwapInterval(1);
+        }
+    }
+
+    window::window(std::string_view title, int w, int h)
+    {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+
+        window_ = glfwCreateWindow(w, h, title.data(), nullptr, nullptr);
+        glfwSetWindowUserPointer(window_, this);
+        // glfwSetWindowRefreshCallback(window_, &refresh_cb);
+        // glfwSetWindowSizeCallback(window_, &size_cb);
+
+        im_context_ = ImGui::CreateContext();
+
         glfwMakeContextCurrent(window_);
 
         auto &io = ImGui::GetIO();
@@ -71,84 +101,6 @@ namespace blueprint::GUI
 
         ImGui::SetCurrentContext(nullptr);
         glfwMakeContextCurrent(nullptr);
-    }
-
-    window::draw_op_t window::set_draw_op(draw_op_t op) noexcept
-    {
-        using std::swap;
-        swap(op, draw_op_);
-        return op;
-    }
-
-    void window::render_loop()
-    {
-        auto gd = context_guard();
-        while (! should_close())
-        {
-            prepare_drawing();
-            draw_op_();
-            finish_drawing();
-        }
-    }
-
-    void window::redner()
-    {
-        auto gd = context_guard();
-        prepare_drawing();
-        draw_op_();
-        finish_drawing();
-    }
-
-    std::pair<int, int> window::windows_size() const noexcept
-    {
-        int ww, wh;
-        glfwGetWindowSize(window_, &ww, &wh);
-        return {ww, wh};
-    }
-
-    bool window::should_close() const noexcept
-    {
-        return glfwWindowShouldClose(window_);
-    }
-
-    GLFWwindow* window::glfw_context() const noexcept
-    {
-        return window_;
-    }
-
-    ImGuiContext* window::imgui_context() const noexcept
-    {
-        return im_context_;
-    }
-
-    void window::prepare_drawing() const
-    {
-        switch (draw_stage_)
-        {
-        case to_prepare:
-            glfwPollEvents();
-            prepare_frame();
-        case ready:
-            return;
-        case finished:
-            BOOST_LOG_SEV(gui_lg, warning) << "prepare a drawing after it finished in the frame";
-        }
-    }
-
-    void window::finish_drawing() const
-    {
-        adjust_viewport();
-        glClear(GL_COLOR_BUFFER_BIT);
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        glfwSwapBuffers(window_);
-    }
-
-    void window::adjust_viewport() const
-    {
-        int dw, dh;
-        glfwGetFramebufferSize(window_, &dw, &dh);
-        glViewport(0, 0, dw, dh);
     }
 
     window::~window() noexcept
@@ -173,6 +125,118 @@ namespace blueprint::GUI
         oth.im_context_ = nullptr;
 
         return *this;
+    }
+
+    window::update_op_t window::set_update_operation(update_op_t op) noexcept
+    {
+        using std::swap;
+        swap(op, update_op_);
+        return op;
+    }
+
+    window::draw_op_t window::set_draw_operation(draw_op_t op) noexcept
+    {
+        using std::swap;
+        swap(op, draw_op_);
+        return op;
+    }
+
+    void window::render_loop()
+    {
+        auto gd = context_guard();
+        while (! should_close())
+        {
+            do_render();
+        }
+    }
+
+    void window::redner()
+    {
+        auto gd = context_guard();
+        do_render();
+    }
+
+    std::pair<int, int> window::frame_buff_size() const
+    {
+        int w, h;
+        glfwGetFramebufferSize(window_, &w, &h);
+        return {w, h};
+    }
+
+    bool window::should_close() const noexcept
+    {
+        return glfwWindowShouldClose(window_);
+    }
+
+    GLFWwindow* window::glfw_context() const noexcept
+    {
+        return window_;
+    }
+
+    ImGuiContext* window::imgui_context() const noexcept
+    {
+        return im_context_;
+    }
+
+    void window::do_render()
+    {
+        if constexpr (gui_debug)
+        {
+            if (draw_stage_ != to_prepare)
+            {
+                BOOST_LOG_SEV(gui_lg, warning) << "Take drawing operation in half way";
+            }
+        }
+        update();
+        prepare_drawing();
+        if (draw_op_)
+        {
+            draw_op_();
+        }
+        finish_drawing();
+    }
+
+    void window::update()
+    {
+        if (update_op_)
+        {
+            update_op_();
+        }
+        draw_stage_ = updated;
+    }
+
+
+    void window::prepare_drawing()
+    {
+        switch (draw_stage_)
+        {
+        case to_prepare:
+            glfwPollEvents();
+        case updated:
+            prepare_frame();
+            draw_stage_ = ready;
+        case ready:
+            return;
+        case finished:
+            BOOST_LOG_SEV(gui_lg, warning) << "prepare a drawing after it finished in the frame";
+        }
+    }
+
+    void window::finish_drawing()
+    {
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        glfwSwapBuffers(window_);
+        draw_stage_ = to_prepare;
+        glClear(GL_COLOR_BUFFER_BIT);
+        glfwPollEvents();
+    }
+
+    void window::adjust_viewport() const
+    {
+        int dw, dh;
+        glfwGetFramebufferSize(window_, &dw, &dh);
+        glViewport(0, 0, dw, dh);
     }
 
     void window::prepare_frame() const
