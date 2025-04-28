@@ -9,6 +9,7 @@ set(BP06_GUI_INTERFACE
 add_library(blueprint_gui ${BP06_GUI_INTERFACE}
         window.cpp
         imgui_begin.cpp
+        imnodes_context.cpp
 )
 target_sources(blueprint_gui
         PUBLIC FILE_SET CXX_MODULES FILES ${BP06_GUI_INTERFACE}

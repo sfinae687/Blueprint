@@ -89,7 +89,7 @@ namespace blueprint::GUI
          *
          * @param fn the operation should take in the context.
          */
-        void entry(std::invocable<void> auto &&fn);
+        void entry(std::invocable<> auto&& fn);
 
         // information
 
@@ -259,7 +259,7 @@ namespace blueprint::GUI
         return boost::scope::scope_exit([&]{inactivate_context();});
     }
 
-    void window::entry(std::invocable<void> auto&& fn)
+    void window::entry(std::invocable<> auto&& fn)
     {
         if (is_active())
         {
