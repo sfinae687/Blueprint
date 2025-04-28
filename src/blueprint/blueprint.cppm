@@ -36,8 +36,13 @@ namespace blueprint
 
     private:
 
+        // context manager
+
         GUI::window gui_;
         GUI::imnodes_context nodes_;
+
+        // application state
+        bool main_open = true;
     };
 
 

@@ -1,9 +1,10 @@
 set(BP06_BLUEPRINT_INTERFACE
     ./blueprint.cppm
+    draw_node.cppm
 )
 add_library(blueprint
     ${BP06_BLUEPRINT_INTERFACE}
-        blueprint.cpp
+    blueprint.cpp
 )
 target_sources(blueprint
     PUBLIC FILE_SET CXX_MODULES FILES ${BP06_BLUEPRINT_INTERFACE}

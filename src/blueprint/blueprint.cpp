@@ -25,21 +25,21 @@ namespace blueprint
     {
         using namespace GUI;
 
-        gui_.set_draw_operation([]
+        gui_.set_draw_operation([&]
         {
-            bool main_open;
             if (begin_main_window("main", &main_open))
             {
-                ImGui::BeginChild("NodeEditor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
-                ImNodes::BeginNodeEditor();
 
+                ImGui::BeginChild("NodeEditor",
+                    ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
+
+                ImNodes::BeginNodeEditor();
                 ImNodes::BeginNode(0);
                 ImGui::Dummy(ImVec2(80.0f, 45.0f));
                 ImNodes::EndNode();
                 ImNodes::EndNodeEditor();
 
                 ImGui::EndChild();
-
 
                 ImGui::Text("hello world");
             }
@@ -48,9 +48,7 @@ namespace blueprint
     }
 
     blueprint_application::~blueprint_application()
-    {
-
-    }
+    = default;
 
 
     int blueprint_application::run()
