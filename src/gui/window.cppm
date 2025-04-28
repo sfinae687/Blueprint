@@ -268,7 +268,6 @@ namespace blueprint::GUI
         else
         {
             auto context_gd = context_guard();
-            prepare_drawing();
             fn();
         }
     }

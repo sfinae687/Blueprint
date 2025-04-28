@@ -52,9 +52,6 @@ add_subdirectory(lib/imnodes)
 # Blueprint-gui
 add_subdirectory(src/gui)
 
-# Node editor
-add_subdirectory(src/nodes)
-
 # Blueprint Context
 add_subdirectory(src/blueprint)
 

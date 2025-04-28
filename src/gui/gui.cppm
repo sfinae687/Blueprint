@@ -10,6 +10,7 @@ export import :debug;
 export import :forward_declaration;
 export import :begin;
 export import :imnode_context;
+export import :window;
 
 namespace blueprint::GUI
 {

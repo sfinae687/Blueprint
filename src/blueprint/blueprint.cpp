@@ -7,7 +7,10 @@
 
 
 module;
+#define IMGUI_DEFINE_MATH_OPERATORS
+
 #include <imgui.h>
+#include <imnodes.h>
 
 module blueprint;
 import blueprint.gui;
@@ -17,21 +20,30 @@ namespace blueprint
 
     /// Constructor, it defines the all GUI, and connect other necessary component.
     blueprint_application::blueprint_application()
-        : gui("Blueprint Node editor", 720, 360)
+        : gui_("Blueprint Node editor", 720, 360)
+        , nodes_(gui_)
     {
-
         using namespace GUI;
 
-        gui.set_draw_operation([]
+        gui_.set_draw_operation([]
         {
             bool main_open;
             if (begin_main_window("main", &main_open))
             {
+                ImGui::BeginChild("NodeEditor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
+                ImNodes::BeginNodeEditor();
+
+                ImNodes::BeginNode(0);
+                ImGui::Dummy(ImVec2(80.0f, 45.0f));
+                ImNodes::EndNode();
+                ImNodes::EndNodeEditor();
+
+                ImGui::EndChild();
+
+
                 ImGui::Text("hello world");
             }
             ImGui::End();
-
-            ImGui::ShowDemoWindow();
         });
     }
 
@@ -43,7 +55,7 @@ namespace blueprint
 
     int blueprint_application::run()
     {
-        gui.render_loop();
+        gui_.render_loop();
         return 0;
     }
 }

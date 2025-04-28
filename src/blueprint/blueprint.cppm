@@ -8,8 +8,6 @@
 module;
 #include <boost/scope/scope_exit.hpp>
 
-#include <imgui.h>
-
 export module blueprint;
 import blueprint.gui;
 
@@ -38,8 +36,8 @@ namespace blueprint
 
     private:
 
-        GUI::window gui;
-
+        GUI::window gui_;
+        GUI::imnodes_context nodes_;
     };
 
 
