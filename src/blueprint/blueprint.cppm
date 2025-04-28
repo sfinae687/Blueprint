@@ -29,6 +29,7 @@ namespace blueprint
     {
     public:
         blueprint_application();
+        ~blueprint_application();
 
         blueprint_application(const blueprint_application &) = delete;
         blueprint_application& operator= (const blueprint_application &) = delete;
@@ -38,6 +39,7 @@ namespace blueprint
     private:
 
         GUI::window gui;
+
     };
 
 

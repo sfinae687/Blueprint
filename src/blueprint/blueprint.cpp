@@ -14,6 +14,8 @@ import blueprint.gui;
 
 namespace blueprint
 {
+
+    /// Constructor, it defines the all GUI, and connect other necessary component.
     blueprint_application::blueprint_application()
         : gui("Blueprint Node editor", 720, 360)
     {
@@ -32,6 +34,12 @@ namespace blueprint
             ImGui::ShowDemoWindow();
         });
     }
+
+    blueprint_application::~blueprint_application()
+    {
+
+    }
+
 
     int blueprint_application::run()
     {

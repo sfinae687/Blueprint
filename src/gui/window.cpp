@@ -11,8 +11,10 @@ module;
 #include <boost/log/trivial.hpp>
 
 #include <thread>
+
 module blueprint.gui;
 import :debug;
+import :window;
 
 namespace blueprint::GUI
 {
@@ -52,24 +54,6 @@ namespace blueprint::GUI
     {
         oth.im_context_ = nullptr;
         oth.window_ = nullptr;
-    }
-
-    namespace
-    {
-        void size_cb(GLFWwindow *window, int w, int h)
-        {
-            glfwSwapInterval(0);
-            auto win = static_cast<GUI::window*>(glfwGetWindowUserPointer(window));
-            win->do_render();
-            glfwSwapInterval(1);
-        }
-        void refresh_cb(GLFWwindow *window)
-        {
-            glfwSwapInterval(0);
-            auto win = static_cast<GUI::window*>(glfwGetWindowUserPointer(window));
-            win->do_render();
-            glfwSwapInterval(1);
-        }
     }
 
     window::window(std::string_view title, int w, int h)
@@ -178,6 +162,12 @@ namespace blueprint::GUI
         return im_context_;
     }
 
+    void window::add_external_context(context_manage_proxy p)
+    {
+        extension_manage_.push_back(p);
+    }
+
+
     void window::do_render()
     {
         if constexpr (gui_debug)
@@ -261,6 +251,10 @@ namespace blueprint::GUI
     {
         glfwMakeContextCurrent(window_);
         ImGui::SetCurrentContext(im_context_);
+        for (auto p : extension_manage_)
+        {
+            p->activate_context();
+        }
     }
 
     void window::inactivate_context() const
@@ -272,6 +266,12 @@ namespace blueprint::GUI
                 throw context_unexpected_state_exception("inactivate a unused context");
             }
         }
+
+        for (auto p : extension_manage_)
+        {
+            p->inactivate_context();
+        }
+
         glfwMakeContextCurrent(nullptr);
         ImGui::SetCurrentContext(nullptr);
     }

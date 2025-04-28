@@ -50,26 +50,10 @@ set(IMNODES_IMGUI_TARGET_NAME imgui)
 add_subdirectory(lib/imnodes)
 
 # Blueprint-gui
-set(BP06_GUI_INTERFACE
-        src/gui/gui.cppm
-        src/gui/gui_debug.cppm
-        src/gui/imgui_begin.cppm
-)
-add_library(blueprint_gui ${BP06_GUI_INTERFACE}
-        src/gui/gui.cpp
-        src/gui/imgui_begin.cpp
-)
-target_sources(blueprint_gui
-    PUBLIC FILE_SET CXX_MODULES FILES ${BP06_GUI_INTERFACE}
-)
-target_link_libraries(blueprint_gui
-        PUBLIC imgui OpenGL::GL glfw
-        PRIVATE imgui_backend Boost::log
-)
+add_subdirectory(src/gui)
 
 # Node editor
 add_subdirectory(src/nodes)
-add_subdirectory(src/node_editor)
 
 # Blueprint Context
 add_subdirectory(src/blueprint)
