@@ -161,6 +161,12 @@ namespace blueprint::scheduler
 
         ~event_queue() = default;
 
+        /**
+         * Push event data. The event is specified by explict event parameter.
+         * @tparam E Event
+         * @param d The event data
+         * @return True if success
+         */
         template <event E>
             requires helper_::template among_us<E>
         bool push(typename E::data_type&& d)
@@ -170,6 +176,15 @@ namespace blueprint::scheduler
             return queue.push(std::forward<typename E::data_type>(d));
         }
 
+        /**
+         * Push event data.
+         * The event is deduced automatically, but it will success only if there is only one event
+         * type that has the data type.
+         *
+         * @tparam D Event data type
+         * @param d data
+         * @return True if success
+         */
         template <typename D>
             requires helper_::template among_deduced_data<D> && (not helper_:: template among_us<D>)
         bool push(D&& d)
@@ -180,6 +195,11 @@ namespace blueprint::scheduler
             return queue.push(std::forward<D>(d));
         }
 
+        /**
+         * Get and pop out event data.
+         * @tparam E Event Type
+         * @return Event data if the queue related to the event type is not empty, nullopt otherwise.
+         */
         template <event E>
             requires helper_::template among_us<E>
         auto pop() -> std::optional<event_data_t<E>>
