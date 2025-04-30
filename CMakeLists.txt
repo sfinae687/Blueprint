@@ -49,11 +49,16 @@ target_link_libraries(imgui_backend PUBLIC imgui)
 set(IMNODES_IMGUI_TARGET_NAME imgui)
 add_subdirectory(lib/imnodes)
 
-# Blueprint-gui
+enable_testing()
+
+# Blueprint GUI
 add_subdirectory(src/gui)
 
 # Blueprint Context
 add_subdirectory(src/blueprint)
+
+# Blueprint Event and Scheduler
+add_subdirectory(src/scheduler)
 
 # Blueprint
 add_executable(blueprint_app src/main.cpp)
