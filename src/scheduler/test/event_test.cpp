@@ -5,6 +5,7 @@
 // Created by ll06 on 25-4-30.
 //
 
+#include <boost/proto/transform/env.hpp>
 #include <gtest/gtest.h>
 
 import blueprint.scheduler;
@@ -59,5 +60,27 @@ TEST(BLUEPRINT_EVENT, QUEUE_TEST)
     queue.push(1.1);
     e2_pop_data = queue.pop<event2>();
     ASSERT_TRUE(e2_pop_data && abs(*e2_pop_data - 1.1) <= std::numeric_limits<double>::epsilon());
+
+}
+
+TEST(BLUEPRINT_EVENT, QUEUE_CONSUME)
+{
+    event_queue<event1, event2> queue{};
+
+    using data = event1::data_type;
+
+    queue.push(data{12});
+    queue.push(data{1});
+    queue.push(3.14);
+    queue.push(3.14);
+
+    queue.consume_one<event1>([] (data e)
+    {
+         ASSERT_EQ(12, e.i);
+    });
+    queue.consume_one([] (data e)
+    {
+         ASSERT_EQ(1, e.i);
+    });
 
 }

@@ -134,6 +134,39 @@ namespace blueprint::scheduler
 
             template <typename T>
             static constexpr bool among_deduced_data = mp_map_contains<direct_seekable_data_type, T>::value;
+
+            template <typename Fn, event E>
+                requires among_us<E>
+            static constexpr bool invocable_with_event = std::invocable<Fn, event_data_t<E>>;
+
+            template <typename Fn, event E>
+                requires among_us<E>
+            using mp_invocable_with_event = mp_bool<invocable_with_event<Fn, E>>;
+
+            template <typename Fn>
+            static constexpr bool deduced_invocable = mp_count_if_q<
+                event_type_list,
+                mp_bind<mp_invocable_with_event, Fn, _1>
+            >::value == 1;
+
+            template <typename Fn>
+            static constexpr bool invocable_for_all = mp_all_of_q<
+                event_type_list,
+                mp_bind<mp_invocable_with_event, Fn, _1>
+            >::value;
+
+            // Deduced invocable
+
+            template <typename Fn>
+                requires deduced_invocable<Fn>
+            using deduced_event_to_invoke = mp_at<
+                event_type_list,
+                mp_find_if_q<
+                    event_type_list,
+                    mp_bind<mp_invocable_with_event, Fn, _1>
+                >
+            >;
+
         };
     }
 
@@ -208,6 +241,40 @@ namespace blueprint::scheduler
             auto&& queue = get_queue<E>();
 
             return std::move(queue.pop(uses_optional));
+        }
+
+        template <event E, typename Fn>
+            requires (helper_::template invocable_with_event<Fn, E>)
+        bool consume_one(Fn &&f)
+        {
+            auto &&queue = get_queue<E>();
+            return queue.consume_one(std::forward<Fn>(f));
+        }
+
+        template <event E, typename Fn>
+            requires helper_::template invocable_with_event<Fn, E>
+        bool consume_all(Fn &&f)
+        {
+            auto &&queue = get_queue<E>();
+            return queue.consume_all(std::forward<E>(f));
+        }
+
+        template <typename Fn>
+            requires helper_::template deduced_invocable<Fn>
+        bool consume_one(Fn &&f)
+        {
+            using event_type = typename helper_::template deduced_event_to_invoke<Fn>;
+            auto &&queue = get_queue<event_type>();
+            return queue.consume_one(std::forward<Fn>(f));
+        }
+
+        template <typename Fn>
+            requires helper_::template deduced_invocable<Fn>
+        bool consume_all(Fn &&f)
+        {
+            using event_type = typename helper_::template deduced_event_to_invoke<Fn>;
+            auto &&queue = get_queue<event_type>();
+            return queue.consume_all(std::forward<Fn>(f));
         }
 
     private:
