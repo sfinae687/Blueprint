@@ -10,8 +10,9 @@
 
 export module blueprint.scheduler;
 export import :event;
+export import :poller;
+export import :debug;
 
 namespace blueprint::scheduler
 {
-
 }

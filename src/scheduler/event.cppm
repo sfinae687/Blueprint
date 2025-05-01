@@ -6,11 +6,14 @@
 //
 
 module;
-#include <concepts>
 #include <boost/lockfree/queue.hpp>
 #include <boost/mp11/mpl.hpp>
 #include <boost/mp11/map.hpp>
 #include <boost/hana.hpp>
+#include <boost/callable_traits/args.hpp>
+
+#include <concepts>
+#include <utility>
 
 export module blueprint.scheduler:event;
 
@@ -126,6 +129,7 @@ namespace blueprint::scheduler
             >;
 
             // Check
+
             template <typename T>
             static constexpr bool among_us = mp_contains<event_type_list, T>::value;
 
@@ -135,16 +139,34 @@ namespace blueprint::scheduler
             template <typename T>
             static constexpr bool among_deduced_data = mp_map_contains<direct_seekable_data_type, T>::value;
 
+
+            template <typename Fn, event E>
+                requires among_us<E>
+            static constexpr bool invocable_with_event_L1 = std::same_as<
+                std::tuple_element_t<0, boost::callable_traits::args_t<Fn>>,
+                event_data_t<E>
+            >;
+
             template <typename Fn, event E>
                 requires among_us<E>
             static constexpr bool invocable_with_event = std::invocable<Fn, event_data_t<E>>;
 
             template <typename Fn, event E>
                 requires among_us<E>
+            using mp_invocable_with_event_L1 = mp_bool<invocable_with_event_L1<Fn, E>>;
+
+            template <typename Fn, event E>
+                requires among_us<E>
             using mp_invocable_with_event = mp_bool<invocable_with_event<Fn, E>>;
 
             template <typename Fn>
-            static constexpr bool deduced_invocable = mp_count_if_q<
+            static constexpr bool deduced_invocable_L1 = mp_count_if_q<
+                event_type_list,
+                mp_bind<mp_invocable_with_event_L1, Fn, _1>
+            >::value == 1;
+
+            template <typename Fn>
+            static constexpr bool deduced_invocable = deduced_invocable_L1<Fn> || mp_count_if_q<
                 event_type_list,
                 mp_bind<mp_invocable_with_event, Fn, _1>
             >::value == 1;
@@ -155,17 +177,48 @@ namespace blueprint::scheduler
                 mp_bind<mp_invocable_with_event, Fn, _1>
             >::value;
 
+            template <typename Fn, event E>
+                requires among_us<E>
+            static constexpr bool tagged_invocable_with_event =
+                std::invocable<Fn, hana::type<E>, event_data_t<E>> || std::invocable<Fn, event_data_t<E>, hana::type<E>>;
+
             // Deduced invocable
 
             template <typename Fn>
                 requires deduced_invocable<Fn>
-            using deduced_event_to_invoke = mp_at<
-                event_type_list,
-                mp_find_if_q<
+            using deduced_event_to_invoke = mp_if_c<
+                deduced_invocable_L1<Fn>,
+                mp_at<
                     event_type_list,
-                    mp_bind<mp_invocable_with_event, Fn, _1>
+                    mp_find_if_q<
+                        event_type_list,
+                        mp_bind<mp_invocable_with_event_L1, Fn, _1>
+                    >
+                >,
+                mp_at<
+                    event_type_list,
+                    mp_find_if_q<
+                        event_type_list,
+                        mp_bind<mp_invocable_with_event, Fn, _1>
+                    >
                 >
             >;
+
+            // fn
+
+            template <event E, typename Fn>
+                requires tagged_invocable_with_event<Fn, E>
+            void tagged_invoke(Fn &&f, event_data_t<E> d)
+            {
+                using call_arg = boost::callable_traits::args<Fn>;
+                if constexpr (std::same_as<std::tuple_element_t<0, call_arg>, hana::type<E>>)
+                {
+                    std::invoke(std::forward<Fn>(f), hana::type_c<E>, std::move(d));
+                } else
+                {
+                    std::invoke(std::forward<Fn>(f), std::move(d), hana::type_c<E>);
+                }
+            }
 
         };
     }
@@ -256,7 +309,7 @@ namespace blueprint::scheduler
         bool consume_all(Fn &&f)
         {
             auto &&queue = get_queue<E>();
-            return queue.consume_all(std::forward<E>(f));
+            return queue.consume_all(std::forward<Fn>(f));
         }
 
         template <typename Fn>
@@ -276,6 +329,8 @@ namespace blueprint::scheduler
             auto &&queue = get_queue<event_type>();
             return queue.consume_all(std::forward<Fn>(f));
         }
+
+        // TODO Tagged consume function.
 
     private:
         typename helper_::queue_map queue_map_{};
