@@ -28,8 +28,10 @@ namespace blueprint::GUI
 
     // logger
 
+    using enum boost::log::trivial::severity_level;
+
     using logger_t = boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level>;
-    inline logger_t gui_lg;
+    inline logger_t gui_log;
 
     // exceptions
 

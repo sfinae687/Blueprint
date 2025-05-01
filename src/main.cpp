@@ -11,8 +11,10 @@ import blueprint;
 
 void init_log()
 {
-    boost::log::add_console_log(std::clog);
-
+    using namespace boost::log;
+    boost::log::add_console_log(std::clog,
+        keywords::format = " [%Severity%]: %Message%"
+    );
 }
 
 int main(int argc, char *argv[])

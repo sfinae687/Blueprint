@@ -19,8 +19,6 @@ import :window;
 namespace blueprint::GUI
 {
 
-    using enum boost::log::trivial::severity_level;
-
     // free function //
 
     bool init_gui()
@@ -32,7 +30,7 @@ namespace blueprint::GUI
             glfwGetError(&description);
             if (description)
             {
-                BOOST_LOG_SEV(gui_lg, fatal) << "glfw init fail" << std::endl;
+                BOOST_LOG_SEV(gui_log, fatal) << "glfw init fail" << std::endl;
             }
             return false;
         }
@@ -58,6 +56,9 @@ namespace blueprint::GUI
 
     window::window(std::string_view title, int w, int h)
     {
+
+        BOOST_LOG_SEV(gui_log, trace) << "Window created";
+
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -174,7 +175,7 @@ namespace blueprint::GUI
         {
             if (draw_stage_ != to_prepare)
             {
-                BOOST_LOG_SEV(gui_lg, warning) << "Take drawing operation in half way";
+                BOOST_LOG_SEV(gui_log, warning) << "Take drawing operation in half way";
             }
         }
         update();
@@ -208,7 +209,7 @@ namespace blueprint::GUI
         case ready:
             return;
         case finished:
-            BOOST_LOG_SEV(gui_lg, warning) << "prepare a drawing after it finished in the frame";
+            BOOST_LOG_SEV(gui_log, warning) << "prepare a drawing after it finished in the frame";
         }
     }
 
