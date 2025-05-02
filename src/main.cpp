@@ -11,8 +11,8 @@ import blueprint;
 
 void init_log()
 {
+    boost::log::add_common_attributes();
     boost::log::add_console_log(std::clog);
-
 }
 
 int main(int argc, char *argv[])

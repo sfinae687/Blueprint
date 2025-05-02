@@ -125,6 +125,23 @@ namespace blueprint::scheduler
             set_callback<event_type, Fn>(std::forward<Fn>(f));
         }
 
+        template <event E, typename Fn>
+            requires helper_::template invocable_with_event<Fn, E>
+        void chain_callback(Fn&& f)
+        {
+            if (auto&& cb = cb_slot<E>())
+            {
+                set_callback<E>([ncb = std::forward<Fn>(f), cb = std::move(cb)] (event_data_t<E> d)
+                {
+                    ncb(d);
+                    cb(d);
+                });
+            } else
+            {
+                set_callback<E>(std::forward<Fn>(f));
+            }
+        }
+
         void poll_once()
         {
             namespace hana = boost::hana;

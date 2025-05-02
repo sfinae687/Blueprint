@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 include(FetchContent)
+include(cmake/CPM.cmake)
 
 # dependency
 
@@ -45,9 +46,22 @@ add_library(imgui_backend ${IMGUI_BACKEND_SOURCE})
 target_include_directories(imgui_backend PUBLIC lib/imgui/backends)
 target_link_libraries(imgui_backend PUBLIC imgui)
 
-#ImNodes
+# ImNodes
 set(IMNODES_IMGUI_TARGET_NAME imgui)
 add_subdirectory(lib/imnodes)
+
+# ThreadPool
+CPMAddPackage(
+        NAME thread-pool
+        GITHUB_REPOSITORY DeveloperPaul123/thread-pool
+        GIT_TAG 0.7.0 # change this to latest commit or release tag
+        OPTIONS
+        "TP_BUILD_TESTS OFF"
+        "TP_BUILD_BENCHMARKS OFF"
+        "TP_BUILD_EXAMPLES OFF"
+)
+
+# Blueprint Source
 
 enable_testing()
 
