@@ -6,6 +6,7 @@
 //
 
 module;
+#include <proxy.h>
 #include <memory>
 
 export module blueprint.dyn_node:builtin_type;

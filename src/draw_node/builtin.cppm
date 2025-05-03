@@ -45,21 +45,25 @@ namespace blueprint::draw_node
 
     // utility
 
-    type_draw_map_t builtin_draw_map()
+    export type_draw_map_t builtin_type_draw_map()
     {
         using namespace dyn_node;
         using namespace dyn_node::builtin;
 
         type_draw_map_t rt;
         rt[INT_ID] = &draw_int;
+
+        return rt;
     }
 
-    node_draw_map_t builtin_node_draw_map()
+    export node_draw_map_t builtin_node_draw_map()
     {
         using namespace dyn_node;
         using namespace dyn_node::builtin;
 
         node_draw_map_t rt;
         rt[IDENTITY_ID] = &node_draw_noop;
+
+        return rt;
     }
 }

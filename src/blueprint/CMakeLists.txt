@@ -10,5 +10,5 @@ target_sources(blueprint
 )
 target_link_libraries(blueprint
     PUBLIC Boost::boost imgui
-    PRIVATE blueprint_gui
+    PRIVATE blueprint_gui blueprint_dyn_node blueprint_draw_node Boost::log
 )

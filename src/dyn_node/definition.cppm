@@ -22,7 +22,7 @@ namespace blueprint::dyn_node
 
     // Data operation
 
-    template <typename T>
+    export template <typename T>
     struct lookup_hint
     {
         using type = void;
@@ -57,15 +57,16 @@ namespace blueprint::dyn_node
         {
             if constexpr (std::same_as<lookup_hint_t<T>, void>)
             {
-                return type_id(t);
+                return type_id(std::move(t));
             }
             else
             {
-                return type_id(lookup_hint_t<T>{}, t);
+                return type_id(lookup_hint_t<T>{}, std::move(t));
             }
         }
     };
     export constexpr type_id_t type_id;
+
     struct clone_t
     {
         template <details::clone_member T>
@@ -78,11 +79,11 @@ namespace blueprint::dyn_node
         {
             if constexpr (std::same_as<lookup_hint_t<T>, void>)
             {
-                return clone(t);
+                return clone(std::move(t));
             }
             else
             {
-                return clone(lookup_hint_t<T>{}, t);
+                return clone(lookup_hint_t<T>{}, std::move(t));
             }
         }
     };
@@ -133,17 +134,17 @@ namespace blueprint::dyn_node
     PRO_DEF_MEM_DISPATCH(get_output_dispatch, get_output);
 
     export struct node_instance_facade : pro::facade_builder
-        // ::add_convention<type_id_dispatch, id_type() const>
-        ::add_convention<channels_dispatch, std::vector<id_type>() const>
-        // ::add_convention<set_channel_dispatch, bool(std::size_t, data_proxy)>
-        // ::add_convention<get_channel_dispatch, data_proxy(std::size_t) const>
-        // ::add_convention<compute_dispatch, void()>
-        // ::add_convention<outputs_dispatch, std::vector<id_type>() const>
-        // ::add_convention<get_output_dispatch, data_proxy(std::size_t) const>
-        ::support_destruction<pro::constraint_level::nontrivial>
-        ::support_rtti
-        ::build
-    {};
+            ::add_convention<type_id_dispatch, id_type() const>
+            ::add_convention<channels_dispatch, std::vector<id_type>() const>
+            ::add_convention<set_channel_dispatch, bool(std::size_t, data_proxy)>
+            ::add_convention<get_channel_dispatch, data_proxy(std::size_t) const>
+            ::add_convention<compute_dispatch, void()>
+            ::add_convention<outputs_dispatch, std::vector<id_type>() const>
+            ::add_convention<get_output_dispatch, data_proxy(std::size_t) const>
+            ::support_destruction<pro::constraint_level::nontrivial>
+            ::support_rtti
+            ::build
+        {};
 
     PRO_DEF_MEM_DISPATCH(create_node_dispatch, create_node);
 

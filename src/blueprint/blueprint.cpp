@@ -11,19 +11,27 @@ module;
 
 #include <imgui.h>
 #include <imnodes.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/common.hpp>
+#include <proxy.h>
 
 module blueprint;
 import blueprint.gui;
+import blueprint.dyn_node;
+import blueprint.draw_node;
 
 namespace blueprint
 {
 
-    /// Constructor, it defines the all GUI, and connect other necessary component.
+    /// Constructor, it defines the all GUI, and connect another necessary component.
     blueprint_application::blueprint_application()
         : gui_("Blueprint Node editor", 720, 360)
         , nodes_(gui_)
     {
         using namespace GUI;
+
+        setup_logger();
+        load_builtin();
 
         gui_.set_draw_operation([&]
         {
@@ -47,13 +55,34 @@ namespace blueprint
         });
     }
 
-    blueprint_application::~blueprint_application()
-    = default;
-
-
     int blueprint_application::run()
     {
         gui_.render_loop();
         return 0;
     }
+
+    void blueprint_application::setup_logger()
+    {
+        using namespace boost::log;
+        logger.add_attribute("Module", attributes::constant<std::string>("Application"));
+    }
+
+    void blueprint_application::load_builtin()
+    {
+        BOOST_LOG_SEV(logger, info) << "Loading builtin Nodes";
+        node_def_ = dyn_node::builtin::builtin_definitions();
+
+        BOOST_LOG_SEV(logger, info) << "Loading builtin Types";
+        type_def_ = dyn_node::builtin::builtin_type_definitions();
+
+        BOOST_LOG_SEV(logger, info) << "Loading builtin Nodes draw rule";
+        node_draw_ = draw_node::builtin_node_draw_map();
+
+        BOOST_LOG_SEV(logger, info) << "Loading builtin Types draw rule";
+        type_draw_ = draw_node::builtin_type_draw_map();
+
+        BOOST_LOG_SEV(logger, info) << "Finish to load builtin node information";
+
+    }
+
 }

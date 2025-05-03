@@ -83,3 +83,6 @@ add_executable(blueprint_app src/main.cpp)
 target_link_libraries(blueprint_app
         PRIVATE blueprint Boost::log_setup
 )
+
+# Others
+add_subdirectory(tries)

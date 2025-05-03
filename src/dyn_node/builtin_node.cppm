@@ -26,6 +26,10 @@ namespace blueprint::dyn_node::builtin
 
     export struct identity_node_instance
     {
+        friend id_type type_id(const identity_node_instance&)
+        {
+            return IDENTITY_ID;
+        }
         [[nodiscard]] std::vector<id_type> channels() const
         {
             return {INT_ID};
@@ -88,8 +92,6 @@ namespace blueprint::dyn_node::builtin
         std::optional<int> val = std::nullopt;
     };
 
-    node_instance_proxy p = std::make_unique<identity_node_instance>();
-
     export struct identity_node_definition
     {
         [[nodiscard]] text_type name() const
@@ -112,7 +114,7 @@ namespace blueprint::dyn_node::builtin
 
     // utility
 
-    node_definitions_t builtin_definitions()
+    export node_definitions_t builtin_definitions()
     {
         node_definitions_t rt{};
 
