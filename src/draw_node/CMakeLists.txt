@@ -1,0 +1,15 @@
+set(BP06_DRAW_NODE_INTERFACE
+        draw_node.cppm
+        builtin.cppm
+        draw_rule.cppm
+)
+add_library(blueprint_draw_node
+        ${BP06_DRAW_NODE_INTERFACE}
+)
+target_sources(blueprint_draw_node
+    PUBLIC FILE_SET CXX_MODULES FILES ${BP06_DRAW_NODE_INTERFACE}
+)
+target_link_libraries(blueprint_draw_node
+    PUBLIC msft_proxy
+    PRIVATE blueprint_dyn_node imgui
+)

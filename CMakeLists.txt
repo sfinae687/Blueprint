@@ -74,6 +74,10 @@ add_subdirectory(src/blueprint)
 # Blueprint Event and Scheduler
 add_subdirectory(src/scheduler)
 
+# Blueprint Dynamic Node Description
+add_subdirectory(src/dyn_node)
+add_subdirectory(src/draw_node)
+
 # Blueprint
 add_executable(blueprint_app src/main.cpp)
 target_link_libraries(blueprint_app
