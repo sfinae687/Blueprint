@@ -43,7 +43,12 @@ namespace blueprint
 
     private:
         void setup_logger();
+        void update();
+        void draw();
         void load_builtin();
+
+        void draw_nodes(dyn_node::node_instance_proxy p, std::size_t id);
+
 
         // logger
         application_logger_t logger{};

@@ -113,6 +113,7 @@ namespace blueprint::dyn_node
     export struct data_interface_facade : pro::facade_builder
         ::add_convention<type_id_dispatch, id_type() const>
         ::add_convention<clone_dispatch, pro::facade_aware_overload_t<copy_overload>>
+        ::support_copy<pro::constraint_level::nontrivial>
         ::support_destruction<pro::constraint_level::nontrivial>
         ::support_relocation<pro::constraint_level::nontrivial>
         ::support_rtti
@@ -132,6 +133,20 @@ namespace blueprint::dyn_node
     PRO_DEF_MEM_DISPATCH(compute_dispatch, compute);
     PRO_DEF_MEM_DISPATCH(outputs_dispatch, outputs);
     PRO_DEF_MEM_DISPATCH(get_output_dispatch, get_output);
+
+
+    // Node Instance
+    //
+    // - type_id(): Acquire the type id of the instance
+    // - channels(): Get the type id vector of channels
+    // - set_channel(data_proxy, std::size_t): Set the data of the specified input channel
+    // - get_channel() -> data_proxy : Get the data of specified input channel.
+    //  The node instance should accept the modification of data returned by get_channel
+    // - compute(): Update output with input.
+    //  If output is not available, nullptr returned.
+    // - outputs(): The type of output channels.
+    // - get_output(std::size_t): The specified output data.
+    //  It could not be mutable.
 
     export struct node_instance_facade : pro::facade_builder
             ::add_convention<type_id_dispatch, id_type() const>

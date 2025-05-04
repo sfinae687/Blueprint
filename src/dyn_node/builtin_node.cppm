@@ -67,7 +67,7 @@ namespace blueprint::dyn_node::builtin
         {
             if (val)
             {
-                return std::make_unique<int>(*val);
+                return &*val;
             } else
             {
                 return nullptr;
@@ -81,7 +81,7 @@ namespace blueprint::dyn_node::builtin
         {
             if (val)
             {
-                return std::make_unique<int>(*val);
+                return &const_cast<const int&>(*val);
             }
             else
             {

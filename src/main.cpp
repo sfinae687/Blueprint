@@ -15,7 +15,7 @@ void init_log()
     add_common_attributes();
     add_console_log(
         std::clog,
-        keywords::format = "[%TimeStamp%] [%ThreadID%] [%Module%] %Message%"
+        keywords::format = "[%TimeStamp%] [%ThreadID%] [%Module%] [%Severity%] %Message%"
     );
 }
 

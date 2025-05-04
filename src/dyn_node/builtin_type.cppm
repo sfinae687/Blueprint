@@ -58,7 +58,7 @@ namespace blueprint::dyn_node
         }
         export data_proxy clone(builtin_hint, int i)
         {
-            return std::make_unique<int>(i);
+            return std::make_shared<int>(i);
         }
 
         // utility
