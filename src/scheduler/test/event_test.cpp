@@ -24,7 +24,7 @@ struct event2
     using data_type = double;
 };
 
-TEST(BLUEPRINT_EVENT, QUEUE_TEST)
+TEST(BlueprintEvent, Queue)
 {
     using std::abs;
 
@@ -63,7 +63,7 @@ TEST(BLUEPRINT_EVENT, QUEUE_TEST)
 
 }
 
-TEST(BLUEPRINT_EVENT, QUEUE_CONSUME)
+TEST(BlueprintEvent, QueueConsume)
 {
     event_queue<event1, event2> queue{};
 

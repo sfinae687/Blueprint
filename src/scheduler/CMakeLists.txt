@@ -24,3 +24,6 @@ add_executable(blueprint_test_poller ./test/poller_test.cpp)
 target_link_libraries(blueprint_test_poller
         PRIVATE blueprint_scheduler GTest::gtest_main Boost::log_setup Boost::log
 )
+
+gtest_discover_tests(blueprint_test_event)
+gtest_discover_tests(blueprint_test_poller)

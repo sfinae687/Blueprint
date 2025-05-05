@@ -26,6 +26,7 @@ FetchContent_Declare(
         URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
 FetchContent_MakeAvailable(googletest)
+include(GoogleTest)
 
 # Proxy
 add_subdirectory(lib/proxy)
@@ -77,6 +78,9 @@ add_subdirectory(src/scheduler)
 # Blueprint Dynamic Node Description
 add_subdirectory(src/dyn_node)
 add_subdirectory(src/draw_node)
+
+# Blueprint Flow
+add_subdirectory(src/flow)
 
 # Blueprint
 add_executable(blueprint_app src/main.cpp)
