@@ -9,3 +9,4 @@ export module blueprint.flow;
 export import :node_instance_manage;
 export import :link_manage;
 export import :NOID;
+export import :link_events;

@@ -4,6 +4,7 @@ set(BP06_FLOW_INTERFACE
         node_instance_manage.cppm
         debug.cppm
         NOID.cppm
+        link_events.cppm
 )
 add_library(blueprint_flow ${BP06_FLOW_INTERFACE}
         node_instance_manage.cpp
@@ -27,7 +28,12 @@ add_executable(blueprint_flow_flow_test test/flow_manager_test.cpp)
 target_link_libraries(blueprint_flow_flow_test
     PRIVATE GTest::gtest_main blueprint_flow
 )
+add_executable(blueprint_flow_link_event_test test/flow_link_manager_event_test.cpp)
+target_link_libraries(blueprint_flow_link_event_test
+    PRIVATE GTest::gtest_main blueprint_flow
+)
 
 gtest_discover_tests(blueprint_flow_NOID_test)
 gtest_discover_tests(blueprint_flow_node_test)
 gtest_discover_tests(blueprint_flow_flow_test)
+gtest_discover_tests(blueprint_flow_link_event_test)

@@ -20,18 +20,6 @@ import :node_instance_manage;
 namespace blueprint::flow
 {
 
-    // Event
-
-    export enum class link_event_type {
-        ADD,
-        REMOVE,
-    };
-    export using link_pair = std::pair<node_instance_handler, node_instance_handler>;
-
-    export struct link_event
-    {
-        using data_type = std::tuple<link_event_type, link_pair>;
-    };
 
     // utility
 
@@ -89,6 +77,7 @@ namespace blueprint::flow
         using output_index_type = index_type::nth_index<2>::type;
 
         explicit link_manager(node_instance_manager&);
+        virtual ~link_manager() = default;
 
         // Copy control: Not copyable.
 
@@ -110,8 +99,9 @@ namespace blueprint::flow
         void remove_link(output_t output, input_t input);
 
 
-    private:
-        no_id do_connect(output_t output, input_t input);
+    protected:
+        virtual no_id do_connect(output_t output, input_t input);
+        virtual void do_remove(link_index_type::iterator);
 
         node_instance_manager& instance_info_;
 

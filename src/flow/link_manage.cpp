@@ -79,7 +79,7 @@ namespace blueprint::flow
         auto iter = input_index.find(input);
         if (iter != input_index.end() && std::get<2>(*iter) == output)
         {
-            input_index.erase(iter);
+            do_remove(index_.project<0>(iter));
         }
         else
         {
@@ -95,6 +95,13 @@ namespace blueprint::flow
         link_index.insert({new_id, input, output});
         return new_id;
     }
+
+    void link_manager::do_remove(link_index_type::iterator iter)
+    {
+        auto &&link_index = index_.get<0>();
+        link_index.erase(iter);
+    }
+
 
 
 

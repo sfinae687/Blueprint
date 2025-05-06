@@ -22,10 +22,10 @@ import :debug;
 
 namespace blueprint::scheduler
 {
-    export template <std::size_t THREAD_COUNT, template<typename> typename FB>
+    export template <std::size_t THREAD_COUNT, std::invocable<> FB>
     class thread_pool_executor
     {
-        using FW = FB<void()>;
+        using FW = FB;
 
     public:
         thread_pool_executor()
