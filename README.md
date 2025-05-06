@@ -4,7 +4,12 @@
 > 
 > ——發自我的多媒體技術大作業。
 
-## 模块
+适用于图形处理的节点编辑器工具。项目初衷在2D游戏中为图形资源提供一个可灵活调整的资源预处理程序（比如提供一个法线贴图生成）。目前的设计目标为：
+成为一个插件驱动的图形处理节点编辑器，并作为一些C++新特性的实验项目。
+
+## CONTRIBUTE
+
+### 模块
 
 - `blueprint.GUI` : GUI 上下文管理器
 - `blueprint` : 驱动程序：程序入口点，加载配置信息和扩展，绘制节点编辑器。
@@ -17,13 +22,16 @@
 - `blueprint.plugin_manage` 插件管理器
 - `blueprint.scheduler` 事件和调度器
 
-## 编译
+### 编译
 
-虽然理论上说，所有支持ISO C++23的，并受到CMake模块兼容的Linux平台编译器都可编译该程序。
+虽然理论上说，所有支持ISO C++23的，并受到CMake C++模块特性兼容的Linux平台编译器都可编译该程序。
 
-但因为C++模块的实现的滞后，目前仅有 `Clang 20.1.4` 及更高版本可以成功编译该程序。
+但由于CMake依赖于编译器提供的方法分析模块依赖关系以及C++模块实现的问题（Bug），目前仅有 `Clang 20.1.4` 及更高版本可以通过CMake成功编译该程序。
 
-## 依赖库
+因为预计会使用Linux上特有的某些系统调用，所以应该不可在MSVC上编译。但是这些系统调用在Windows上有等价版本，所以
+应该并不存在很大的移植障碍。
+
+### 依赖库
 
 - [Boost 1.88.0](https://www.boost.org/)
 - [Dear ImGUI](https://github.com/ocornut/imgui)
@@ -32,6 +40,7 @@
 - [OpenGL](https://opengl.org/)
 - [GLFW](https://github.com/glfw/glfw)
 - [Eigen](https://eigen.tuxfamily.org/)
+- [thread-pool](https://github.com/DeveloperPaul123/thread-pool)
 
 配置说明：
 
