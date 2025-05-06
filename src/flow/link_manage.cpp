@@ -33,7 +33,7 @@ namespace blueprint::flow
 
     }
 
-    bool link_manager::has_connected(input_t ch) const noexcept
+    bool link_manager::have_connection(input_t ch) const noexcept
     {
         auto &&input_index = index_.get<1>();
         return input_index.contains(ch);

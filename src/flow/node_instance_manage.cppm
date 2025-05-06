@@ -60,11 +60,13 @@ namespace blueprint::flow
     {
         friend node_instance_handler;
     public:
-
+        node_instance_manager() = default;
         node_instance_manager(const node_instance_manager& other) = delete;
         node_instance_manager& operator=(const node_instance_manager& other) = delete;
 
+        [[nodiscard("Ignore the return vlaue will lose the reference")]]
         node_instance_handler add_instance(dyn_node::node_instance_proxy p);
+
         [[nodiscard]] node_instance_handler get_instance(no_id) noexcept;
 
         // remove a node need a node_instance_handler.

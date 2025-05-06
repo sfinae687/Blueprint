@@ -98,13 +98,15 @@ namespace blueprint::flow
         // Connection Test
 
         [[nodiscard]] bool is_connected(output_t output, input_t input) const noexcept;
-        [[nodiscard]] bool has_connected(input_t ch) const noexcept;
+        [[nodiscard]] bool have_connection(input_t ch) const noexcept;
 
         // TODO Connection Test with direction
 
         // Link operation
 
+        [[nodiscard("Lost the only reference to link")]]
         std::optional<link_t> create_link(output_t output, input_t input);
+
         void remove_link(output_t output, input_t input);
 
 
