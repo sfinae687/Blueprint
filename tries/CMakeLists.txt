@@ -6,4 +6,4 @@ target_sources(tries_proxy
     PUBLIC FILE_SET CXX_MODULES FILES module_unit.cppm
 )
 
-target_link_libraries(tries_main PRIVATE tries_proxy)
+target_link_libraries(tries_main PRIVATE tries_proxy Boost::boost)

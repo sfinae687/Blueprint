@@ -20,10 +20,6 @@ import :node_instance_manage;
 namespace blueprint::flow
 {
 
-
-    // utility
-
-
     // link_manager
 
     namespace details
@@ -89,12 +85,22 @@ namespace blueprint::flow
         [[nodiscard]] bool is_connected(output_t output, input_t input) const noexcept;
         [[nodiscard]] bool have_connection(input_t ch) const noexcept;
 
-        // TODO Connection Test with direction
+        // query
+
+        [[nodiscard]] bool empty() const noexcept;
+
+        [[nodiscard]] std::vector<link_t> all_link() const noexcept;
+
+        [[nodiscard]] std::optional<std::pair<input_t, output_t>> query_link(link_t) const noexcept;
+
+        [[nodiscard]] std::vector<input_t> to_input(output_t) const noexcept;
+
+        [[nodiscard]] std::optional<output_t> to_output(input_t) const noexcept;
 
         // Link operation
 
         [[nodiscard("Lost the only reference to link")]]
-        std::optional<link_t> create_link(output_t output, input_t input);
+        std::optional<link_t> create_link(output_t output, input_t input) noexcept;
 
         void remove_link(output_t output, input_t input);
 

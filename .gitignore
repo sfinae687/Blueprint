@@ -34,3 +34,6 @@
 # CMake and build
 cmake-build*/
 build*/
+
+# IDE
+.idea/

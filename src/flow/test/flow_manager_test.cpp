@@ -8,11 +8,15 @@
 #include <proxy.h>
 #include <gtest/gtest.h>
 
+#include <ranges>
+#include <algorithm>
+
 import blueprint.flow;
 import blueprint.dyn_node;
 
 using namespace blueprint::flow;
 using namespace blueprint::dyn_node;
+namespace ranges = std::ranges;
 
 constexpr std::string_view TEST_TYPE2_ID = "test.int1";
 constexpr std::string_view TEST_TYPE1_ID = "test.int2";
@@ -32,6 +36,10 @@ struct test_node_instance
         return TEST_NODE_ID;
     }
     std::vector<id_type> channels() const {
+        if (from.empty())
+        {
+            return {};
+        }
         return {from};
     }
     [[nodiscard]] bool set_channel(std::size_t, data_proxy) const
@@ -47,6 +55,10 @@ struct test_node_instance
     }
     std::vector<id_type> outputs() const
     {
+        if (from.empty())
+        {
+            return {};
+        }
         return {to};
     }
     data_proxy get_output(std::size_t)
@@ -135,5 +147,91 @@ TEST(BlueprintFlowFlow, FlowTest)
     ASSERT_TRUE(lk_id1_rp);
     EXPECT_FALSE(lk_id_empty);
     EXPECT_EQ(*lk_id1, *lk_id1_rp);
+
+}
+
+TEST(BlueprintFlowFlow, QueryTest)
+{
+    node_instance_manager mg{};
+    link_manager lk(mg);
+
+    node_definition_proxy t1 = std::make_unique<test_node_definition>(TEST_TYPE1_ID, "");
+    node_definition_proxy t2 = std::make_unique<test_node_definition>("", TEST_TYPE2_ID);
+    node_definition_proxy t1t1 = std::make_unique<test_node_definition>(TEST_TYPE1_ID, TEST_TYPE1_ID);
+    node_definition_proxy t2t2 = std::make_unique<test_node_definition>(TEST_TYPE2_ID, TEST_TYPE2_ID);
+    node_definition_proxy t1t2 = std::make_unique<test_node_definition>(TEST_TYPE1_ID, TEST_TYPE2_ID);
+
+    auto t1_inst = t1->create_node();
+    auto t2_inst = t2->create_node();
+    auto t1t1_inst = t1t1->create_node();
+    auto t2t2_inst = t2t2->create_node();
+    auto t1t2_inst = t1t2->create_node();
+
+    auto t1h = mg.add_instance(std::move(t1_inst));
+    auto t2h = mg.add_instance(std::move(t2_inst));
+    auto t1t1h = mg.add_instance(std::move(t1t1_inst));
+    auto t2t2h = mg.add_instance(std::move(t2t2_inst));
+    auto t1t2h = mg.add_instance(std::move(t1t2_inst));
+
+    auto t1_id = t1h.node_id();
+    auto t2_id = t2h.node_id();
+    auto t1t1_id = t1t1h.node_id();
+    auto t2t2_id = t2t2h.node_id();
+    auto t1t2_id = t1t2h.node_id();
+
+    EXPECT_TRUE(lk.empty());
+
+    // link query
+
+    auto t1t1_i0 = input_channel_id(t1t1_id, 0);
+    auto t1t1_o0 = output_channel_id(t1t1_id, 0);
+    auto lk1 = lk.create_link(t1t1_o0, t1t1_i0);
+    ASSERT_TRUE(lk1);
+
+    auto t2t2_i0 = input_channel_id(t2t2_id, 0);
+    auto t2t2_o0 = output_channel_id(t2t2_id, 0);
+    auto lk2 = lk.create_link(t2t2_o0, t2t2_i0);
+    ASSERT_TRUE(lk2);
+
+    EXPECT_FALSE(lk.empty());
+
+    auto io1 = lk.query_link(*lk1);
+    ASSERT_TRUE(io1);
+    EXPECT_EQ(io1->first ,t1t1_i0);
+    EXPECT_EQ(io1->second, t1t1_o0);
+
+    auto io2 = lk.query_link(*lk2);
+    ASSERT_TRUE(io2);
+    EXPECT_EQ(io2->first, t2t2_i0);
+    EXPECT_EQ(io2->second, t2t2_o0);
+
+    lk.remove_link(io2->second, io2->first);
+    io2 = lk.query_link(*lk2);
+    EXPECT_FALSE(io2);
+
+    // input to output
+
+    auto ot1 = lk.to_output(t1t1_i0);
+    ASSERT_TRUE(ot1);
+    EXPECT_EQ(*ot1, t1t1_o0);
+
+    auto ot2 = lk.to_output(t2t2_i0);
+    EXPECT_FALSE(ot2);
+
+    // output to input
+
+    auto it2 = lk.to_input(t2t2_o0);
+    EXPECT_TRUE(it2.empty());
+
+    auto t1_i0 = input_channel_id(t1_id, 0);
+    auto lk3 = lk.create_link(t1t1_o0, t1_i0);
+    ASSERT_TRUE(lk3);
+
+    auto it1 = lk.to_input(t1t1_o0);
+    ASSERT_EQ(it1.size(), 2);
+    std::vector ans1{t1t1_i0, t1_i0};
+    ranges::sort(ans1);
+    ranges::sort(it1);
+    EXPECT_EQ(ans1, it1);
 
 }
