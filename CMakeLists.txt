@@ -11,6 +11,8 @@ include(cmake/CPM.cmake)
 
 # dependency
 
+set(BUILD_TESTING OFF)
+
 # OpenGL
 find_package(OpenGL REQUIRED)
 
@@ -52,18 +54,14 @@ set(IMNODES_IMGUI_TARGET_NAME imgui)
 add_subdirectory(lib/imnodes)
 
 # ThreadPool
-CPMAddPackage(
-        NAME thread-pool
-        GITHUB_REPOSITORY DeveloperPaul123/thread-pool
-        GIT_TAG 0.7.0 # change this to latest commit or release tag
-        OPTIONS
-        "TP_BUILD_TESTS OFF"
-        "TP_BUILD_BENCHMARKS OFF"
-        "TP_BUILD_EXAMPLES OFF"
-)
+set(TP_BUILD_TESTS OFF)
+set(TP_BUILD_BENCHMARKS OFF)
+set(TP_BUILD_EXAMPLES OFF)
+add_subdirectory(lib/thread-pool)
 
 # Blueprint Source
 
+set(BUILD_TESTING ON)
 enable_testing()
 
 # Blueprint GUI

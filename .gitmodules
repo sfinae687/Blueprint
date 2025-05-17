@@ -10,3 +10,6 @@
 [submodule "lib/imnodes"]
 	path = lib/imnodes
 	url = https://github.com/Nelarius/imnodes.git
+[submodule "lib/thread-pool"]
+	path = lib/thread-pool
+	url = https://github.com/DeveloperPaul123/thread-pool.git
