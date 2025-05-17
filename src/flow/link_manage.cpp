@@ -10,16 +10,19 @@ module;
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 
-#include <utility>
 #include <ranges>
+#include <utility>
 
 module blueprint.flow;
 import :link_manage;
 import :debug;
 import :NOID;
+import blueprint.dyn_node;
 
 namespace blueprint::flow
 {
+    namespace ranges = std::ranges;
+    namespace views = std::views;
 
     link_manager::link_manager(node_instance_manager& n) : instance_info_(n) {}
 
@@ -79,7 +82,7 @@ namespace blueprint::flow
         assert(input_isn);
         assert(output_isn);
 
-        if (input_isn->channels()[input_ind] != output_isn->channels()[output_ind])
+        if (dyn_node::util::passable(input_isn, input_ind, output_isn, output_ind))
         {
             return std::nullopt;
         }
@@ -100,6 +103,12 @@ namespace blueprint::flow
         {
             BOOST_LOG_SEV(flow_logger, warning) << "Try erasing the link that has not been existing";
         }
+    }
+
+    void link_manager::detach_node(no_id nd) noexcept
+    {
+        remove_node_output(nd);
+        remove_node_input(nd);
     }
 
     std::optional<std::pair<link_manager::input_t, link_manager::output_t>> link_manager::query_link(link_t lk) const noexcept
@@ -151,11 +160,42 @@ namespace blueprint::flow
 
     void link_manager::do_remove(link_index_type::iterator iter)
     {
-        auto &&link_index = index_.get<0>();
+        auto&& link_index = index_.get<0>();
         link_index.erase(iter);
     }
 
 
 
+    void link_manager::remove_node_input(no_id nd) noexcept
+    {
+        auto min_input_id = min_input_channel_id(nd);
+        auto max_input_id = max_input_channel_id(nd);
+
+        auto &&index = index_.get<1>();
+        auto l_iter = index.lower_bound(min_input_id);
+        auto u_iter = index.upper_bound(max_input_id);
+        index.erase(l_iter, u_iter);
+        for (auto c_iter = l_iter; c_iter != u_iter; )
+        {
+            auto n_iter = ranges::next(c_iter);
+            do_remove(index_.project<0>(c_iter));
+            c_iter = n_iter;
+        }
+    }
+    void link_manager::remove_node_output(no_id nd) noexcept
+    {
+        auto min_output_id = min_output_channel_id(nd);
+        auto max_output_id = max_output_channel_id(nd);
+
+        auto &&index = index_.get<2>();
+        auto l_iter = index.lower_bound(min_output_id);
+        auto u_iter = index.upper_bound(max_output_id);
+        for (auto c_iter = l_iter; c_iter != u_iter; )
+        {
+            auto n_iter = ranges::next(c_iter);
+            do_remove(index_.project<0>(c_iter));
+            c_iter = n_iter;
+        }
+    }
 
 } // namespace blueprint::flow

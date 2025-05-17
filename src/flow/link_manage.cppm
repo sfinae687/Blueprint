@@ -8,7 +8,7 @@
 module;
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/global_fun.hpp>
+#include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/key.hpp>
 
 #include <optional>
@@ -44,8 +44,8 @@ namespace blueprint::flow
                 element_type,
                 indexed_by<
                     hashed_unique<key<get<0>>>,
-                    hashed_unique<key<get<1>>>,
-                    hashed_non_unique<key<get<2>>>
+                    ordered_unique<key<get<1>>>,
+                    ordered_non_unique<key<get<2>>>
                 >
             >;
         };
@@ -89,12 +89,16 @@ namespace blueprint::flow
 
         [[nodiscard]] bool empty() const noexcept;
 
+        /// Get all link id.
         [[nodiscard]] std::vector<link_t> all_link() const noexcept;
 
+        /// Query the two side of the given link.
         [[nodiscard]] std::optional<std::pair<input_t, output_t>> query_link(link_t) const noexcept;
 
+        /// Query all input connected to the given output
         [[nodiscard]] std::vector<input_t> to_input(output_t) const noexcept;
 
+        /// Query the output connected to given input.
         [[nodiscard]] std::optional<output_t> to_output(input_t) const noexcept;
 
         // Link operation
@@ -103,6 +107,9 @@ namespace blueprint::flow
         std::optional<link_t> create_link(output_t output, input_t input) noexcept;
 
         void remove_link(output_t output, input_t input);
+
+        /// Remove all link about the given node.
+        void detach_node(no_id) noexcept;
 
 
     protected:
@@ -115,5 +122,9 @@ namespace blueprint::flow
 
         index_type index_{};
         no_id last_id_ = 0;
+
+    private:
+        void remove_node_input(no_id) noexcept;
+        void remove_node_output(no_id) noexcept;
     };
 } // namespace blueprint::flow

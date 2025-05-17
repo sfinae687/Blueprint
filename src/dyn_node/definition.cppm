@@ -142,12 +142,13 @@ namespace blueprint::dyn_node
     // PRO_DEF_MEM_DISPATCH(is_generic_dispatch, is_generic);
     // PRO_DEF_MEM_DISPATCH(generic_invoke_dispatch, generic_invoke);
 
-    export struct type_definition_facade
-        : pro::facade_builder ::add_convention<name_dispatch, text_type() const>::add_convention<
-              description_dispatch, text_type() const>::add_convention<id_dispatch, id_type() const>::
-              support_destruction<pro::constraint_level::nontrivial>::support_rtti ::build
-    {
-    };
+    export struct type_definition_facade : pro::facade_builder
+        ::add_convention<name_dispatch, text_type() const>
+        ::add_convention<description_dispatch, text_type() const>
+        ::add_convention<id_dispatch, id_type() const>
+        ::support_destruction<pro::constraint_level::nontrivial>
+        ::support_rtti ::build
+    { };
 
     PRO_DEF_FREE_AS_MEM_DISPATCH(type_id_dispatch, dyn_node::type_id, type_id);
     PRO_DEF_FREE_AS_MEM_DISPATCH(clone_dispatch, dyn_node::clone, clone);
@@ -155,13 +156,15 @@ namespace blueprint::dyn_node
     template <typename F>
     using copy_overload = pro::proxy<F>() const;
 
-    export struct data_interface_facade
-        : pro::facade_builder ::add_convention<type_id_dispatch, id_type() const>::
-              add_convention<clone_dispatch, pro::facade_aware_overload_t<copy_overload>>::support_copy<
-                  pro::constraint_level::nontrivial>::support_destruction<pro::constraint_level::nontrivial>::
-                  support_relocation<pro::constraint_level::nontrivial>::support_rtti ::support_direct_rtti ::build
-    {
-    };
+    export struct data_interface_facade : pro::facade_builder
+        ::add_convention<type_id_dispatch, id_type() const>
+        ::add_convention<clone_dispatch, pro::facade_aware_overload_t<copy_overload>>
+        ::support_copy<pro::constraint_level::nontrivial>
+        ::support_destruction<pro::constraint_level::nontrivial>
+        ::support_relocation<pro::constraint_level::nontrivial>
+        ::support_rtti
+        ::support_direct_rtti ::build
+    { };
 
     // Data proxy has reference meaning and reference counter (to redeclare memory) in it.
     // Other proxies have the ownship of its object.

@@ -9,6 +9,7 @@ export module blueprint.dyn_node;
 export import :definition;
 export import :builtin_type;
 export import :builtin_node;
+export import :utility;
 
 namespace blueprint::dyn_node
 {

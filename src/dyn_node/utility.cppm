@@ -58,6 +58,7 @@ namespace blueprint::dyn_node::util
         [[nodiscard]] std::span<const signature_t> signatures() const noexcept;
         [[nodiscard]] std::size_t current_variant() const noexcept;
         [[nodiscard]] bool set_variant(std::size_t) const noexcept;
+        [[nodiscard("Check the state of compute is always neccessary")]]
         bool compute(data_sequence) noexcept;
         [[nodiscard]] data_sequence output() const noexcept;
 
@@ -68,6 +69,20 @@ namespace blueprint::dyn_node::util
     };
     static_assert(pro::proxiable<std::unique_ptr<trivial_node_instance>, node_instance_facade>);
 
+    // primitive
 
+    export bool passable(const node_instance_proxy &from, std::size_t fi, const node_instance_proxy &to, std::size_t ti) noexcept;
+    export bool passable(const data_proxy &from, const node_instance_proxy &to, std::size_t ti) noexcept;
+
+    /**
+     * Get the current signature of a node.
+     * @return The current signature of the given node.
+     */
+    export const signature_t& current_signature(const node_instance_proxy &) noexcept;
+
+    /**
+     * The primitive to call the operation of a node. It will process the type check and some kind of transform.
+     */
+    export bool node_invoke(node_instance_proxy&, data_sequence) noexcept;
 
 } // namespace blueprint::dyn_node::util
