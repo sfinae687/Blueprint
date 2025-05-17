@@ -26,71 +26,41 @@ namespace blueprint::dyn_node::builtin
 
     export struct identity_node_instance
     {
-        friend id_type type_id(const identity_node_instance&)
+        friend id_type type_id(const identity_node_instance&) noexcept
         {
             return IDENTITY_ID;
         }
-        [[nodiscard]] std::vector<id_type> channels() const
+        [[nodiscard]] std::size_t current_variant() const noexcept
         {
-            return {INT_ID};
+            return 0;
         }
-        [[nodiscard]] std::vector<id_type> outputs() const
+        bool set_variant(std::size_t) noexcept
         {
-            return {INT_ID};
+            return false;
         }
-        bool set_channel(std::size_t i, data_proxy p)
+        [[nodiscard]] std::span<signature_t> signatures() const noexcept
         {
-            if (i > 0)
+            static signature_t sig = {{INT_ID}, {INT_ID}};
+            return {&sig, 1};
+        }
+
+        bool compute(data_sequence seq) noexcept
+        {
+            if (seq.size() != 1 || seq[0]->type_id() != INT_ID)
             {
                 return false;
             }
-
-            try
-            {
-                if (p->type_id() != INT_ID)
-                {
-                    return false;
-                }
-                else
-                {
-                    val = proxy_cast<int>(*p);
-                    return true;
-                }
-            }
-            catch (pro::bad_proxy_cast &e)
-            {
-                return false;
-            }
-            __builtin_unreachable();
+            val = proxy_cast<int>(seq[0]);
+            return true;
         }
-        [[nodiscard]] data_proxy get_channel(std::size_t i) const
+        [[nodiscard]] data_sequence output() const noexcept
         {
-            if (val)
-            {
-                return &*val;
-            } else
-            {
-                return nullptr;
-            }
-        }
-        void compute() const
-        {
-        }
-
-        [[nodiscard]] data_proxy get_output(std::size_t i) const
-        {
-            if (val)
-            {
-                return &const_cast<const int&>(*val);
-            }
-            else
-            {
-                return nullptr;
-            }
+            return {std::make_shared<int>(*val)};
         }
 
         std::optional<int> val = std::nullopt;
     };
+    static_assert(pro::proxiable<std::unique_ptr<identity_node_instance>, node_instance_facade>);
 
     export struct identity_node_definition
     {

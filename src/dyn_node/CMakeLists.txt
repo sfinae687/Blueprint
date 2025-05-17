@@ -3,8 +3,10 @@ set(BP06_DYN_NODE_INTERFACE
         builtin_type.cppm
         definition.cppm
         builtin_node.cppm
+        utility.cppm
 )
-add_library(blueprint_dyn_node ${BP06_DYN_NODE_INTERFACE})
+add_library(blueprint_dyn_node ${BP06_DYN_NODE_INTERFACE}
+        utility.cpp)
 target_sources(blueprint_dyn_node
     PUBLIC FILE_SET CXX_MODULES FILES ${BP06_DYN_NODE_INTERFACE}
 )

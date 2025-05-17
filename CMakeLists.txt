@@ -81,6 +81,7 @@ add_subdirectory(src/draw_node)
 
 # Blueprint Flow
 add_subdirectory(src/flow)
+add_subdirectory(src/constraint)
 
 # Blueprint
 add_executable(blueprint_app src/main.cpp)
