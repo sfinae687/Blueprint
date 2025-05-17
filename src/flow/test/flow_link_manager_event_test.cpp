@@ -5,8 +5,6 @@
 // Created by ll06 on 25-5-6.
 //
 
-#include "test_node_definition.h"
-
 #include <gtest/gtest.h>
 #include <proxy.h>
 
@@ -17,6 +15,11 @@ import blueprint.scheduler;
 using namespace blueprint::flow;
 using namespace blueprint::dyn_node;
 using namespace blueprint::scheduler;
+using namespace blueprint::dyn_node;
+using util::trivial_node_definition;
+
+constexpr std::string_view TEST_TYPE_ID = "test.type1";
+constexpr std::string_view TEST_NODE_ID = "test.node";
 
 TEST(BlueprintFlowEvent, Event)
 {
@@ -42,7 +45,10 @@ TEST(BlueprintFlowEvent, EventEmitter)
     node_instance_manager mg;
     link_manager_with_event lk(que, mg);
 
-    node_definition_proxy node_def = std::make_unique<test_node_definition>();
+    node_definition_proxy node_def = std::make_unique<trivial_node_definition>(
+        "Test", "Test", TEST_NODE_ID,
+        input_sequence_t{TEST_TYPE_ID}, output_sequence_t{TEST_TYPE_ID}
+    );
     auto aInst = node_def->create_node();
     auto inst_handler = mg.add_instance(std::move(aInst));
     auto inst_id = inst_handler.node_id();

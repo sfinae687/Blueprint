@@ -24,13 +24,15 @@ namespace blueprint::dyn_node
     export using id_type = std::string_view;
 
     // predefined type
-    constexpr id_type undefined_type = "core.undefined";
+    export constexpr id_type undefined_type = "core.undefined";
 
-    // node
+    // type alias
 
-    using input_sequence_t = std::pmr::vector<id_type>;
-    using output_sequence_t = std::pmr::vector<id_type>;
-    using signature_t = std::pair<input_sequence_t, output_sequence_t>;
+    export {
+        using input_sequence_t = std::pmr::vector<id_type>;
+        using output_sequence_t = std::pmr::vector<id_type>;
+        using signature_t = std::pair<input_sequence_t, output_sequence_t>;
+    }
 
     /// @defgroup Nodes And Types
     /// @{

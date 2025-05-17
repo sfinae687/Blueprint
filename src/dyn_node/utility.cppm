@@ -26,8 +26,8 @@ namespace blueprint::dyn_node::util
         using id_sequence = std::pmr::vector<id_type>;
 
     public:
-        trivial_node_definition(text_type name, text_type description, text_type id, id_sequence input,
-                                id_sequence output);
+        trivial_node_definition(text_type name, text_type description, text_type id, input_sequence_t input,
+                                output_sequence_t output);
         trivial_node_definition(const trivial_node_definition&) = delete;
         trivial_node_definition& operator=(const trivial_node_definition&) = delete;
 

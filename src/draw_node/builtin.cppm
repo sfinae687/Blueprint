@@ -28,7 +28,7 @@ namespace blueprint::draw_node
             using std::make_unique;
             if (!d)
             {
-                d = make_unique<int>(0);
+                d = std::make_shared<int>(0);
             }
 
             int &data_d = proxy_cast<int&>(*d);

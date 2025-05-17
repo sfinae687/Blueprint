@@ -9,7 +9,8 @@ set(BP06_FLOW_INTERFACE
 add_library(blueprint_flow ${BP06_FLOW_INTERFACE}
         node_instance_manage.cpp
         link_manage.cpp
-        NOID.cpp)
+)
+
 target_sources(blueprint_flow
     PUBLIC FILE_SET CXX_MODULES FILES ${BP06_FLOW_INTERFACE}
 )

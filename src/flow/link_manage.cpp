@@ -82,7 +82,7 @@ namespace blueprint::flow
         assert(input_isn);
         assert(output_isn);
 
-        if (dyn_node::util::passable(input_isn, input_ind, output_isn, output_ind))
+        if (! dyn_node::util::passable(output_isn, output_ind, input_isn, input_ind))
         {
             return std::nullopt;
         }

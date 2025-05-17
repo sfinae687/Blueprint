@@ -83,14 +83,14 @@ namespace blueprint
     {
         namespace ranges = std::ranges;
         namespace views = std::views;
+        using namespace blueprint::dyn_node;
 
         constexpr std::size_t offset_num = 3;
         constexpr std::size_t id_bit = sizeof(id) * CHAR_BIT;
         constexpr std::size_t id_upper_bounder = (std::size_t{1} << (id_bit - offset_num));
 
         auto tid = p->type_id();
-        auto inputs = p->channels();
-        auto outputs = p->channels();
+        auto [inputs, outputs] = util::current_signature(p);
 
         if (id >= id_upper_bounder)
         {

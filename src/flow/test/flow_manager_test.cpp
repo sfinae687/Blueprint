@@ -14,107 +14,38 @@
 import blueprint.flow;
 import blueprint.dyn_node;
 
+namespace ranges = std::ranges;
+
 using namespace blueprint::flow;
 using namespace blueprint::dyn_node;
-namespace ranges = std::ranges;
+using util::trivial_node_definition;
+using util::trivial_node_instance;
 
 constexpr std::string_view TEST_TYPE2_ID = "test.int1";
 constexpr std::string_view TEST_TYPE1_ID = "test.int2";
 constexpr std::string_view TEST_NODE_ID = "test.node";
-
-struct test_node_instance
-{
-    test_node_instance(std::string_view from, std::string_view to)
-        :from(from)
-        ,to(to)
-    {
-
-    }
-
-    [[nodiscard]] id_type type_id() const
-    {
-        return TEST_NODE_ID;
-    }
-    std::vector<id_type> channels() const {
-        if (from.empty())
-        {
-            return {};
-        }
-        return {from};
-    }
-    [[nodiscard]] bool set_channel(std::size_t, data_proxy) const
-    {
-        return false;
-    }
-    data_proxy get_channel(std::size_t)
-    {
-        return nullptr;
-    }
-    void compute() const
-    {
-    }
-    std::vector<id_type> outputs() const
-    {
-        if (from.empty())
-        {
-            return {};
-        }
-        return {to};
-    }
-    data_proxy get_output(std::size_t)
-    {
-        return nullptr;
-    }
-
-    std::string_view from;
-    std::string_view to;
-};
-
-static_assert(pro::proxiable<std::unique_ptr<test_node_instance>, node_instance_facade>);
-
-struct test_node_definition
-{
-    test_node_definition(std::string_view from, std::string_view to)
-        : from(from)
-        , to(to)
-    {
-
-    }
-
-    text_type name() const {
-        return "Test";
-    }
-    text_type description() const
-    {
-        return "Test";
-    }
-    id_type id() const
-    {
-        return TEST_NODE_ID;
-    }
-    node_instance_proxy create_node()
-    {
-        return std::make_unique<test_node_instance>(from, to);
-    }
-
-    std::string_view from;
-    std::string_view to;
-};
-
-static_assert(pro::proxiable<std::unique_ptr<test_node_definition>, node_definition_facade>);
 
 TEST(BlueprintFlowFlow, FlowTest)
 {
     node_instance_manager mg{};
     link_manager lk(mg);
 
-    node_definition_proxy t12t1 = std::make_unique<test_node_definition>(TEST_TYPE1_ID, TEST_TYPE1_ID);
+    node_definition_proxy t12t1 = std::make_unique<trivial_node_definition>(
+        "t12t1", "test", "test.t12t1",
+        input_sequence_t{TEST_TYPE1_ID}, output_sequence_t{TEST_TYPE1_ID}
+    );
     auto t1t1_inst = t12t1->create_node();
 
-    node_definition_proxy t22t2 = std::make_unique<test_node_definition>(TEST_TYPE2_ID, TEST_TYPE2_ID);
+    node_definition_proxy t22t2 = std::make_unique<trivial_node_definition>(
+        "t22t2", "Test", "test.t22t2",
+        input_sequence_t{TEST_TYPE2_ID}, output_sequence_t{TEST_TYPE2_ID}
+    );
     auto t2t2_inst = t22t2->create_node();
 
-    node_definition_proxy t12t2 = std::make_unique<test_node_definition>(TEST_TYPE1_ID, TEST_TYPE2_ID);
+    node_definition_proxy t12t2 = std::make_unique<trivial_node_definition>(
+        "t12t2", "Test", "test.t12t2",
+        input_sequence_t{TEST_TYPE1_ID}, output_sequence_t{TEST_TYPE2_ID}
+    );
     auto t1t2_inst = t12t2->create_node();
 
     auto h1 = mg.add_instance(std::move(t1t1_inst));
@@ -136,7 +67,7 @@ TEST(BlueprintFlowFlow, FlowTest)
     EXPECT_FALSE(lk.have_connection(id3ch1));
 
     auto lk_id1 = lk.create_link(id1och1, id3ch1);
-    ASSERT_TRUE(lk_id1);
+    ASSERT_TRUE(lk_id1) << "Unable to create a link";
     EXPECT_TRUE(lk.have_connection(id3ch1));
     EXPECT_TRUE(lk.is_connected(id1och1, id3ch1));
     EXPECT_FALSE(lk.is_connected(id1och1, id1ch1));
@@ -144,10 +75,18 @@ TEST(BlueprintFlowFlow, FlowTest)
     auto id2ch1 = input_channel_id(id2, 0);
     auto lk_id1_rp = lk.create_link(id1och1, id3ch1);
     auto lk_id_empty = lk.create_link(id1och1, id2ch1);
-    ASSERT_TRUE(lk_id1_rp);
-    EXPECT_FALSE(lk_id_empty);
-    EXPECT_EQ(*lk_id1, *lk_id1_rp);
+    ASSERT_TRUE(lk_id1_rp) << "Failed to get the link id of existing link";
+    EXPECT_FALSE(lk_id_empty) << "Create link with unmatched channel type";
+    EXPECT_EQ(*lk_id1, *lk_id1_rp) << "The link id for a existing link is not same";
 
+}
+
+auto create_def(input_sequence_t input, output_sequence_t output)
+{
+    return std::make_unique<trivial_node_definition>(
+        "Test", "test", "test.any_gen",
+        std::move(input), std::move(output)
+    );
 }
 
 TEST(BlueprintFlowFlow, QueryTest)
@@ -155,11 +94,11 @@ TEST(BlueprintFlowFlow, QueryTest)
     node_instance_manager mg{};
     link_manager lk(mg);
 
-    node_definition_proxy t1 = std::make_unique<test_node_definition>(TEST_TYPE1_ID, "");
-    node_definition_proxy t2 = std::make_unique<test_node_definition>("", TEST_TYPE2_ID);
-    node_definition_proxy t1t1 = std::make_unique<test_node_definition>(TEST_TYPE1_ID, TEST_TYPE1_ID);
-    node_definition_proxy t2t2 = std::make_unique<test_node_definition>(TEST_TYPE2_ID, TEST_TYPE2_ID);
-    node_definition_proxy t1t2 = std::make_unique<test_node_definition>(TEST_TYPE1_ID, TEST_TYPE2_ID);
+    node_definition_proxy t1 = create_def({TEST_TYPE1_ID}, {});
+    node_definition_proxy t2 = create_def({}, {TEST_TYPE2_ID});
+    node_definition_proxy t1t1 = create_def({TEST_TYPE1_ID}, {TEST_TYPE1_ID});
+    node_definition_proxy t2t2 = create_def({TEST_TYPE2_ID}, {TEST_TYPE2_ID});
+    node_definition_proxy t1t2 = create_def({TEST_TYPE1_ID}, {TEST_TYPE2_ID});
 
     auto t1_inst = t1->create_node();
     auto t2_inst = t2->create_node();
