@@ -103,18 +103,41 @@ namespace blueprint::flow
 
         // Link operation
 
-        [[nodiscard("Lost the only reference to link")]]
+        /**
+         * Create a link between output and input.
+         * create_link will performance the type checking and link existence test.
+         * If all tests are passed, do_connect is called to process the link create.
+         *
+         * @pre The input channel hasn't been to a output channel, or connected to the given output channel.
+         *
+         * @param output The output channel
+         * @param input The input channel
+         *
+         * @return The link id between output and link, or nullopt if fail.
+         * If the link has existed, the link id for the current link is returned.
+         */
         std::optional<link_t> create_link(output_t output, input_t input) noexcept;
 
-        void remove_link(output_t output, input_t input);
+        /**
+         * Remove the link.
+         *
+         * @pre The link has existed.
+         *
+         * @param output The output channel
+         * @param input The input channel
+         * @return True if success.
+         */
+        bool remove_link(output_t output, input_t input);
+
+        bool remove_link(link_t) noexcept;
 
         /// Remove all link about the given node.
-        void detach_node(no_id) noexcept;
+        bool detach_node(no_id) noexcept;
 
 
     protected:
-        virtual no_id do_connect(output_t output, input_t input);
-        virtual void do_remove(link_index_type::iterator);
+        virtual std::optional<no_id> do_connect(output_t output, input_t input);
+        virtual bool do_remove(link_index_type::iterator);
 
         node_instance_manager& instance_info_;
 

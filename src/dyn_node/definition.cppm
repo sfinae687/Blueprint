@@ -31,7 +31,11 @@ namespace blueprint::dyn_node
     export {
         using input_sequence_t = std::pmr::vector<id_type>;
         using output_sequence_t = std::pmr::vector<id_type>;
-        using signature_t = std::pair<input_sequence_t, output_sequence_t>;
+        struct signature_t
+        {
+            input_sequence_t input;
+            output_sequence_t output;
+        };
     }
 
     /// @defgroup Nodes And Types
@@ -157,6 +161,8 @@ namespace blueprint::dyn_node
 
     template <typename F>
     using copy_overload = pro::proxy<F>() const;
+    template <typename F>
+    using equal_to_overload = bool(const pro::proxy_indirect_accessor<F> &) const;
 
     export struct data_interface_facade : pro::facade_builder
         ::add_convention<type_id_dispatch, id_type() const>

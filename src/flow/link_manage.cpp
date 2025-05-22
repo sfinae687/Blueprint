@@ -59,7 +59,7 @@ namespace blueprint::flow
 
     std::optional<link_manager::link_t> link_manager::create_link(output_t output, input_t input) noexcept
     {
-        auto &&input_index = index_.get<1>();
+        auto&& input_index = index_.get<1>();
 
         auto iter = input_index.find(input);
         if (iter != input_index.end())
@@ -76,39 +76,49 @@ namespace blueprint::flow
         auto output_node = node_id(output);
         auto output_ind = channel_index(output);
 
-        auto &&input_isn = instance_info_.get_instance(input_node).node_instance();
-        auto &&output_isn = instance_info_.get_instance(output_node).node_instance();
+        auto&& input_isn = instance_info_.get_handler(input_node).node_instance();
+        auto&& output_isn = instance_info_.get_handler(output_node).node_instance();
 
         assert(input_isn);
         assert(output_isn);
 
-        if (! dyn_node::util::passable(output_isn, output_ind, input_isn, input_ind))
+        if (!dyn_node::util::passable(output_isn, output_ind, input_isn, input_ind))
         {
             return std::nullopt;
         }
         return do_connect(output, input);
-
     }
 
-    void link_manager::remove_link(output_t output, input_t input)
+    bool link_manager::remove_link(output_t output, input_t input)
     {
         auto&& input_index = index_.get<1>();
 
         auto iter = input_index.find(input);
         if (iter != input_index.end() && std::get<2>(*iter) == output)
         {
-            do_remove(index_.project<0>(iter));
+            return do_remove(index_.project<0>(iter));
         }
-        else
+        BOOST_LOG_SEV(flow_logger, warning) << "Try erasing the link that has not been existing";
+        return false;
+    }
+    bool link_manager::remove_link(link_t id) noexcept
+    {
+        auto&& link_index = index_.get<0>();
+
+        auto iter = link_index.find(id);
+        if (iter != link_index.end())
         {
-            BOOST_LOG_SEV(flow_logger, warning) << "Try erasing the link that has not been existing";
+            return do_remove(iter);
         }
+        BOOST_LOG_SEV(flow_logger, warning) << "Try erasing the link that has not been existing";
+        return false;
     }
 
-    void link_manager::detach_node(no_id nd) noexcept
+    bool link_manager::detach_node(no_id nd) noexcept
     {
         remove_node_output(nd);
         remove_node_input(nd);
+        return true;
     }
 
     std::optional<std::pair<link_manager::input_t, link_manager::output_t>> link_manager::query_link(link_t lk) const noexcept
@@ -140,7 +150,7 @@ namespace blueprint::flow
     }
     std::optional<link_manager::output_t> link_manager::to_output(input_t input_id) const noexcept
     {
-        auto &&input_index = index_.get<1>();
+        auto&& input_index = index_.get<1>();
         auto iter = input_index.find(input_id);
 
         if (iter == input_index.end())
@@ -150,18 +160,19 @@ namespace blueprint::flow
         return std::get<2>(*iter);
     }
 
-    no_id link_manager::do_connect(output_t output, input_t input)
+    std::optional<no_id> link_manager::do_connect(output_t output, input_t input)
     {
         auto new_id = last_id_++;
-        auto &&link_index = index_.get<0>();
+        auto&& link_index = index_.get<0>();
         link_index.insert({new_id, input, output});
         return new_id;
     }
 
-    void link_manager::do_remove(link_index_type::iterator iter)
+    bool link_manager::do_remove(link_index_type::iterator iter)
     {
         auto&& link_index = index_.get<0>();
         link_index.erase(iter);
+        return true;
     }
 
 

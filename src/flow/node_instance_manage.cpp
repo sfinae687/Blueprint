@@ -38,7 +38,7 @@ namespace blueprint::flow
         auto rt = list_.insert({current_id, {std::move(p), current_id}}).first;
         return {*this, rt};
     }
-    node_instance_handler node_instance_manager::get_instance(no_id id) noexcept
+    node_instance_handler node_instance_manager::get_handler(no_id id) noexcept
     {
         std::shared_lock gd(lock_);
         auto iter = list_.find(id);

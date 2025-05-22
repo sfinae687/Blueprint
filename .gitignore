@@ -37,3 +37,7 @@ build*/
 
 # IDE
 .idea/
+
+# generate document
+
+doc/doxygen/

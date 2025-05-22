@@ -67,7 +67,7 @@ namespace blueprint::flow
         [[nodiscard("Ignore the return vlaue will lose the reference")]]
         node_instance_handler add_instance(dyn_node::node_instance_proxy p);
 
-        [[nodiscard]] node_instance_handler get_instance(no_id) noexcept;
+        [[nodiscard]] node_instance_handler get_handler(no_id) noexcept;
 
         // remove a node need a node_instance_handler.
 

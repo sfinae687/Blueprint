@@ -40,12 +40,12 @@ TEST(BlueprintFlowNode, NodeInstanceManage)
     ASSERT_EQ(pt1, pt2);
 
     auto id = handler.node_id();
-    auto handler2 = mg.get_instance(id);
+    auto handler2 = mg.get_handler(id);
 
     ASSERT_EQ(handler, handler2);
     ASSERT_NE(handler, nullptr);
 
-    auto handler3 = mg.get_instance(0x114);
+    auto handler3 = mg.get_handler(0x114);
     ASSERT_EQ(handler3, nullptr);
     ASSERT_EQ(handler3, node_instance_handler{});
 

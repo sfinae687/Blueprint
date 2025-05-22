@@ -8,6 +8,7 @@
 module;
 #include <boost/mp11.hpp>
 
+#include <optional>
 #include <utility>
 #include <compare>
 
@@ -70,15 +71,15 @@ namespace blueprint::flow
         link_manager_with_event(Q& que, node_instance_manager& mg) : link_manager(mg), event_queue(que) {}
 
     protected:
-        no_id do_connect(output_t output, input_t input) override;
-        void do_remove(link_index_type::iterator) override;
+        std::optional<no_id> do_connect(output_t output, input_t input) override;
+        bool do_remove(link_index_type::iterator) override;
 
     private:
         Q& event_queue;
     };
 
     template <details::event_queue_with_link_event_type Q>
-    no_id link_manager_with_event<Q>::do_connect(output_t output, input_t input)
+    std::optional<no_id> link_manager_with_event<Q>::do_connect(output_t output, input_t input)
     {
 
         event_queue.template push<link_event>({
@@ -88,7 +89,7 @@ namespace blueprint::flow
         return link_manager::do_connect(output, input);
     }
     template <details::event_queue_with_link_event_type Q>
-    void link_manager_with_event<Q>::do_remove(link_index_type::iterator iterator)
+    bool link_manager_with_event<Q>::do_remove(link_index_type::iterator iterator)
     {
         auto [lk, input, output] = *iterator;
 

@@ -75,13 +75,13 @@ namespace blueprint::dyn_node::util
     bool
     passable(const node_instance_proxy &from, std::size_t fi, const node_instance_proxy &to, std::size_t ti) noexcept
     {
-        return current_signature(from).second.at(fi) == current_signature(to).first.at(ti);
+        return current_signature(from).output.at(fi) == current_signature(to).input.at(ti);
     }
 
     bool
     passable(const data_proxy &from, const node_instance_proxy &to, std::size_t ti) noexcept
     {
-        return from->type_id() == current_signature(to).first.at(ti);
+        return from->type_id() == current_signature(to).input.at(ti);
     }
 
     const signature_t& current_signature(const node_instance_proxy &nd) noexcept
