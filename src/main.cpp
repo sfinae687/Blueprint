@@ -1,7 +1,7 @@
 // Copyright (c) 2025 sfinea687
 // Licensed under the MIT License. See LICENSE in the project root for details.
 
-import blueprint.gui;
+import blueprint;
 
 #include "imgui.h"
 
@@ -11,8 +11,10 @@ import blueprint.gui;
 
 void init_log()
 {
-    boost::log::add_console_log(std::clog);
-
+    using namespace boost::log;
+    boost::log::add_console_log(std::clog,
+        keywords::format = " [%Severity%]: %Message%"
+    );
 }
 
 int main(int argc, char *argv[])
@@ -20,15 +22,9 @@ int main(int argc, char *argv[])
 
     init_log();
 
-    blueprint::GUI::init_gui();
+    auto app_gd = blueprint::app_guard();
 
-    blueprint::GUI::window wd("Hello", 640, 480);
-    wd.set_draw_op([&]
-    {
-        ImGui::Text("Hello Gui.");
-    });
-    wd.render_loop();
+    blueprint::blueprint_application app{};
 
-    blueprint::GUI::final_gui();
-    return 0;
+    return app.run();
 }

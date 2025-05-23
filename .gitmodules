@@ -7,3 +7,6 @@
 [submodule "lib/glfw"]
 	path = lib/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "lib/imnodes"]
+	path = lib/imnodes
+	url = https://github.com/Nelarius/imnodes.git
