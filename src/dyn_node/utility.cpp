@@ -14,6 +14,8 @@ module;
 #include <memory>
 #include <ranges>
 #include <algorithm>
+#include <iostream>
+#include <format>
 
 module blueprint.dyn_node;
 import :utility;
@@ -86,7 +88,9 @@ namespace blueprint::dyn_node::util
 
     const signature_t& current_signature(const node_instance_proxy &nd) noexcept
     {
-        return nd->signatures()[nd->current_variant()];
+        auto ind = nd->current_variant();
+        auto &&sigs = nd->signatures();
+        return sigs[ind];
     }
 
     bool node_invoke(node_instance_proxy &nd, data_sequence seq) noexcept

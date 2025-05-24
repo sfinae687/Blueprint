@@ -55,7 +55,7 @@ namespace blueprint::constraint
      * All nodes that have dependency to the node will be updated at the same time.
      *
      */
-    class constraint_flow final : public flow::link_manager
+    export class constraint_flow final : public flow::link_manager
     {
         using node_id = flow::no_id;
         using input_id = flow::no_id;
@@ -140,10 +140,12 @@ namespace blueprint::constraint
         // node state
 
         /// The state of the given node
-        node_state state(flow::no_id) const noexcept;
+        node_state& state(flow::no_id) noexcept;
 
         bool mark_computing(flow::no_id) noexcept;
         bool mark_clean(flow::no_id) noexcept;
+        bool mark_dirty(flow::no_id) noexcept;
+        bool mark_error(flow::no_id) noexcept;
 
     protected:
 
@@ -152,7 +154,8 @@ namespace blueprint::constraint
         bool do_remove(link_index_type::iterator) override;
 
     private:
-        // primitive
+        std::size_t& revision(node_id id) noexcept;
+
         /**
          * Trace the new link information without further check.
          *
@@ -195,7 +198,7 @@ namespace blueprint::constraint
          *
          * @return True if the channel is consistent with last clean result.
          */
-        bool is_consistent(input_id) const noexcept;
+        bool is_consistent(input_id) noexcept;
 
         enum class input_link_state_t
         {
@@ -216,6 +219,7 @@ namespace blueprint::constraint
         // basic link
 
         std::unordered_map<node_id, node_state> status_{};
+        std::unordered_map<node_id, std::size_t> clean_rv_{};
         std::unordered_map<input_id, dyn_node::data_proxy> set_date_{};
 
         // state trace
@@ -226,6 +230,7 @@ namespace blueprint::constraint
         struct input_connected
         {
             output_id output_id;
+            std::size_t clean_revision;
         };
 
         using clean_state = boost::variant2::variant<

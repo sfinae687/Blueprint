@@ -19,6 +19,7 @@ module blueprint.constraint;
 import :constraint_infomation;
 import :debug;
 import blueprint.dyn_node;
+import blueprint.flow;
 
 namespace blueprint::constraint
 {
@@ -53,7 +54,6 @@ namespace blueprint::constraint
 
         // Otherwise, check input connect state
 
-        node_state old_state = status_iter->second;
 
         auto&& node_inst = instance_info_.get_handler(id).node_instance();
         assert(node_inst != nullptr);
@@ -61,12 +61,12 @@ namespace blueprint::constraint
         const auto input_size = input.size();
 
         const auto min_input_channel = flow::input_channel_id(id, 0);
-        const auto max_input_channel = flow::output_channel_id(id, input_size - 1);
+        const auto max_input_channel = flow::input_channel_id(id, input_size);
 
         auto&& ct = input_state_counter_[id];
         ct.consistent = ct.inconsistent = ct.undefined = 0;
 
-        for (auto i = min_input_channel; i <= max_input_channel; ++i)
+        for (auto i = min_input_channel; i < max_input_channel; ++i)
         {
             if (input_channel_state(i) == input_link_state_t::UNDEFINED)
             {
@@ -82,11 +82,7 @@ namespace blueprint::constraint
             }
         }
 
-        do_flush_state_by_count(id);
-
-        auto new_state = state(id);
-
-        return new_state != old_state;
+        return do_flush_state_by_count(id);
     }
 
     bool constraint_flow::set_date(input_id in, dyn_node::data_proxy p, bool is_dirty) noexcept
@@ -243,18 +239,19 @@ namespace blueprint::constraint
     constraint_flow::gather_input(flow::no_id id) const noexcept
     {
         auto nd = flow::node_id(id);
-        auto &&nd_inst = instance_info_.get_handler(id).node_instance();
+        auto&& nd_inst = instance_info_.get_handler(id).node_instance();
         const auto sig = dyn_node::util::current_signature(nd_inst);
         auto input_size = sig.input.size();
 
         dyn_node::data_sequence seq{};
-        for (std::size_t i=0; i<input_size; ++i)
+        for (std::size_t i = 0; i < input_size; ++i)
         {
             auto dd = seek_input(flow::input_channel_id(id, i));
             if (dd)
             {
                 seq.emplace_back(std::move(dd.value()));
-            } else
+            }
+            else
             {
                 return std::unexpected(gather_input_error::undefined_input);
             }
@@ -263,7 +260,16 @@ namespace blueprint::constraint
         return seq;
     }
 
-    node_state constraint_flow::state(flow::no_id id) const noexcept { return status_.at(id); }
+    node_state& constraint_flow::state(flow::no_id id) noexcept
+    {
+        auto st_iter = status_.find(id);
+        if (st_iter == status_.end())
+        {
+            flush_node(id);
+            st_iter = status_.find(id);
+        }
+        return st_iter->second;
+    }
 
     bool constraint_flow::mark_computing(flow::no_id id) noexcept
     {
@@ -276,7 +282,6 @@ namespace blueprint::constraint
             BOOST_LOG_SEV(constraint_log, warning) << "Recalculate a clean node";
         }
 
-        auto nd = flow::node_id(id);
         auto &&nd_inst = instance_info_.get_handler(id).node_instance();
         const auto sig = dyn_node::util::current_signature(nd_inst);
         auto input_size = sig.input.size();
@@ -284,31 +289,62 @@ namespace blueprint::constraint
         for (std::size_t i=0; i<input_size; ++i)
         {
             using enum input_link_state_t;
-            auto ins = input_channel_state(id);
-            assert(ins != UNDEFINED);
 
             auto in_id = flow::input_channel_id(id, i);
+            auto ins = input_channel_state(in_id);
+            assert(ins != UNDEFINED);
+
             switch (ins)
             {
             case SET:
                 clean_lk_[in_id] = input_set{};
                 break;
             case CONNECTED:
-                clean_lk_[in_id] = input_connected{*to_output(in_id)};
+                clean_lk_[in_id] = input_connected{*to_output(in_id), revision(id)};
                 break;
             default:
                 __builtin_unreachable();
             }
         }
 
+        status_[id] = node_state::COMPUTING;
         return true;
     }
 
     bool constraint_flow::mark_clean(flow::no_id id) noexcept
     {
         using enum node_state;
-        assert(state(id) == COMPUTING);
+        if (state(id) != COMPUTING)
+        {
+            return false;
+        }
         status_[id] = CLEAN;
+        clean_rv_[id]++;
+        update_from_node(id);
+        return true;
+    }
+
+    bool constraint_flow::mark_dirty(flow::no_id id) noexcept
+    {
+        using enum node_state;
+        if (state(id) != CLEAN)
+        {
+            return false;
+        }
+        status_[id] = DIRTY;
+        update_from_node(id);
+        return true;
+    }
+
+    bool constraint_flow::mark_error(flow::no_id id) noexcept
+    {
+        using enum node_state;
+        if (state(id) != COMPUTING)
+        {
+            return false;
+        }
+        status_[id] = ERROR;
+        update_from_node(id);
         return true;
     }
 
@@ -340,6 +376,15 @@ namespace blueprint::constraint
 
         return do_drop_link(iterator);
     }
+    std::size_t& constraint_flow::revision(node_id id) noexcept
+    {
+        auto rv_iter = clean_rv_.find(id);
+        if (rv_iter == clean_rv_.end())
+        {
+            rv_iter = clean_rv_.insert(rv_iter, {id, -1});
+        }
+        return rv_iter->second;
+    }
     std::optional<constraint_flow::input_id> constraint_flow::do_trace_link(output_id out, input_id in) noexcept
     {
         const auto in_node = flow::node_id(in);
@@ -369,7 +414,7 @@ namespace blueprint::constraint
 
         if (do_flush_state_by_count(in_node))
         {
-            update_from_node(in);
+            update_from_node(flow::node_id(in));
         }
 
         return new_link;
@@ -404,7 +449,6 @@ namespace blueprint::constraint
         assert(is_updatable(state(in_node)));
 
         auto&& clean_state = clean_lk_[in];
-        auto&& cs_p = get_if<input_connected>(&clean_state);
 
         const auto current_consistent = is_consistent(in);
         auto&& ct = input_state_counter_[in_node];
@@ -427,13 +471,9 @@ namespace blueprint::constraint
             assert(input_size == ct_sum);
         }
 
-        const auto old_state = state(in_node);
-        do_flush_state_by_count(in_node);
-        const auto new_state = state(in_node);
-
-        if (old_state != new_state)
+        if (do_flush_state_by_count(in_node))
         {
-            update_from_node(in);
+            update_from_node(in_node);
         }
         return true;
     }
@@ -445,7 +485,15 @@ namespace blueprint::constraint
         auto&& ct = input_state_counter_[id];
         auto&& st = status_[id];
         const auto raw_st = st;
-        if (ct.undefined != 0)
+
+        if (ct.inconsistent == 0 && ct.consistent == 0 && ct.undefined == 0)
+        {
+            if (raw_st != CLEAN)
+            {
+                st = DIRTY;
+            }
+        }
+        else if (ct.undefined != 0)
         {
             st = NOT_PREPARED;
         }
@@ -476,7 +524,7 @@ namespace blueprint::constraint
 
     }
 
-    bool constraint_flow::is_consistent(input_id in) const noexcept
+    bool constraint_flow::is_consistent(input_id in) noexcept
     {
         namespace hof = boost::hof;
 
@@ -513,7 +561,9 @@ namespace blueprint::constraint
                 assert(current_link.has_value());
                 const auto output_state = state(flow::node_id(*current_link));
 
-                return *current_link == ic.output_id && output_state == node_state::CLEAN;
+                return *current_link == ic.output_id
+                    && output_state == node_state::CLEAN
+                    && revision(ic.output_id) == ic.clean_revision;
             }
         )
         , clean_state);
@@ -524,7 +574,7 @@ namespace blueprint::constraint
         const auto is_set = set_date_.contains(in);
         const auto is_linked = have_connection(in);
 
-        assert(is_set != is_linked);
+        assert(!is_set || !is_linked);
 
         if (is_linked)
         {
@@ -541,7 +591,14 @@ namespace blueprint::constraint
     {
         using enum input_link_state_t;
 
-        auto &&st = input_state_counter_[in];
+        const auto in_node = flow::node_id(in);
+        auto st_iter = input_state_counter_.find(in_node);
+        if (st_iter == input_state_counter_.end())
+        {
+            flush_node(in_node);
+            st_iter = input_state_counter_.find(in_node);
+        }
+        auto &&st = st_iter->second;
         if (input_channel_state(in) == UNDEFINED)
         {
             return st.undefined;
