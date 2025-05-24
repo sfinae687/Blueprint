@@ -12,5 +12,5 @@ target_sources(blueprint_draw_node
 )
 target_link_libraries(blueprint_draw_node
     PUBLIC msft_proxy
-    PRIVATE blueprint_dyn_node imgui Boost::log
+    PRIVATE blueprint_dyn_node blueprint_builtin_node imgui Boost::log
 )

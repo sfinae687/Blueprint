@@ -14,21 +14,23 @@ module;
 export module blueprint.draw_node:builtin;
 import :draw_rule;
 import blueprint.dyn_node;
+import blueprint.builtin_node;
 
 namespace blueprint::draw_node
 {
     using dyn_node::data_proxy;
+    using namespace dyn_node;
 
     // Types
 
-    export void draw_int(data_proxy &d, data_draw_context context)
+    export void draw_signed(data_proxy &d, data_draw_context context)
     {
         if (! context.is_connected && context.channel == data_channel_type_t::input)
         {
             using std::make_unique;
             if (!d)
             {
-                d = std::make_shared<int>(0);
+                d = std::make_shared<builtin::builtin_signed_type>(0);
             }
 
             int &data_d = proxy_cast<int&>(*d);
@@ -51,7 +53,7 @@ namespace blueprint::draw_node
         using namespace dyn_node::builtin;
 
         type_draw_map_t rt;
-        rt[INT_ID] = &draw_int;
+        rt[SIGNED_INTEGRAL_ID] = &draw_signed;
 
         return rt;
     }
@@ -62,7 +64,7 @@ namespace blueprint::draw_node
         using namespace dyn_node::builtin;
 
         node_draw_map_t rt;
-        rt[IDENTITY_ID] = &node_draw_noop;
+        // rt[IDENTITY_ID] = &node_draw_noop;
 
         return rt;
     }

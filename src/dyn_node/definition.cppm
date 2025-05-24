@@ -217,9 +217,9 @@ namespace blueprint::dyn_node
     PRO_DEF_MEM_DISPATCH(create_node_dispatch, create_node);
 
     export struct node_definition_facade : pro::facade_builder
-        ::add_convention<name_dispatch, text_type() const>
-        ::add_convention<description_dispatch, text_type() const>
-        ::add_convention<id_dispatch, id_type() const>
+        ::add_convention<name_dispatch, text_type() const noexcept>
+        ::add_convention<description_dispatch, text_type() const noexcept>
+        ::add_convention<id_dispatch, id_type() const noexcept>
         ::add_convention<create_node_dispatch, pro::proxy<node_instance_facade>()>
         ::support_destruction<pro::constraint_level::nontrivial>
         ::build

@@ -2,25 +2,20 @@
 //  Licensed under the MIT License. See LICENSE in the project root for details.
 
 //
-// Created by ll06 on 25-5-14.
+// Created by ll06 on 25-5-24.
 //
 
 module;
 #include <proxy.h>
-
-#include <ranges>
-#include <span>
-#include <utility>
 #include <vector>
 
-export module blueprint.dyn_node:utility;
+export module blueprint.dyn_node:trivial_node;
 import :definition;
 
 namespace blueprint::dyn_node::util
 {
 
-    // trivial node
-
+    /// trivial node provides basic information about a node, but it doesn't provide any actually computable service.
     export class trivial_node_definition
     {
         using id_sequence = std::pmr::vector<id_type>;
@@ -69,20 +64,4 @@ namespace blueprint::dyn_node::util
     };
     static_assert(pro::proxiable<std::unique_ptr<trivial_node_instance>, node_instance_facade>);
 
-    // primitive
-
-    export bool passable(const node_instance_proxy &from, std::size_t fi, const node_instance_proxy &to, std::size_t ti) noexcept;
-    export bool passable(const data_proxy &from, const node_instance_proxy &to, std::size_t ti) noexcept;
-
-    /**
-     * Get the current signature of a node.
-     * @return The current signature of the given node.
-     */
-    export const signature_t& current_signature(const node_instance_proxy &) noexcept;
-
-    /**
-     * The primitive to call the operation of a node. It will process the type check and some kind of transform.
-     */
-    export bool node_invoke(node_instance_proxy&, data_sequence) noexcept;
-
-} // namespace blueprint::dyn_node::util
+}

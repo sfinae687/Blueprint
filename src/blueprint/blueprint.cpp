@@ -22,6 +22,7 @@ module blueprint;
 import blueprint.gui;
 import blueprint.dyn_node;
 import blueprint.draw_node;
+import blueprint.builtin_node;
 
 namespace blueprint
 {
