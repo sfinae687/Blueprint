@@ -6,13 +6,24 @@ set(BP06_FLOW_INTERFACE
         NOID.cppm
         link_events.cppm
 )
-add_library(blueprint_flow ${BP06_FLOW_INTERFACE}
+
+set(BP06_CONSTRAINT_INTERFACE
+        constraint.cppm
+        node_state.cppm
+        constraint_flow.cppm
+        constraint_debug.cppm
+)
+
+add_library(blueprint_flow
+        ${BP06_FLOW_INTERFACE}
         node_instance_manage.cpp
         link_manage.cpp
+        ${BP06_CONSTRAINT_INTERFACE}
+        constraint_flow.cpp
 )
 
 target_sources(blueprint_flow
-    PUBLIC FILE_SET CXX_MODULES FILES ${BP06_FLOW_INTERFACE}
+    PUBLIC FILE_SET CXX_MODULES FILES ${BP06_FLOW_INTERFACE} ${BP06_CONSTRAINT_INTERFACE}
 )
 target_link_libraries(blueprint_flow
     PUBLIC blueprint_dyn_node blueprint_scheduler Boost::log Boost::boost
