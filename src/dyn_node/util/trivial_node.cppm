@@ -39,7 +39,7 @@ namespace blueprint::dyn_node::util
         id_sequence node_input;
         id_sequence node_output;
     };
-    static_assert(pro::proxiable<std::unique_ptr<trivial_node_definition>, node_definition_facade>);
+    static_assert(pro::proxiable<std::shared_ptr<trivial_node_definition>, node_definition_facade>);
 
     export class trivial_node_instance
     {

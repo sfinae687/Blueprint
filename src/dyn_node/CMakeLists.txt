@@ -16,4 +16,3 @@ target_link_libraries( blueprint_dyn_node
         PUBLIC imnodes msft_proxy
         PRIVATE Boost::boost Boost::log
 )
-add_subdirectory(builtin)

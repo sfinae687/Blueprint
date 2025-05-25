@@ -9,11 +9,13 @@ module;
 #include <boost/log/common.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/scope/scope_exit.hpp>
+#include <unordered_set>
 
 export module blueprint;
 import blueprint.gui;
 import blueprint.dyn_node;
 import blueprint.draw_node;
+import blueprint.plugin;
 
 namespace blueprint
 {
@@ -45,7 +47,9 @@ namespace blueprint
         void setup_logger();
         void update();
         void draw();
+
         void load_builtin();
+        void load_component(plugin::component_package);
 
         void draw_nodes(dyn_node::node_instance_proxy p, std::size_t id);
 
@@ -61,13 +65,17 @@ namespace blueprint
         // application state
         bool main_open = true;
 
-        // Node And Types
+        // Node And Types definition
         dyn_node::node_definitions_t node_def_;
         dyn_node::type_definitions_t type_def_;
 
-        // Draw Node and Type
+        // Draw Rule for Node and Type
         draw_node::node_draw_map_t node_draw_;
         draw_node::type_draw_map_t type_draw_;
+
+        // Menu definition
+        using menu_def_t = std::unordered_map<std::string, std::unordered_set<std::string_view>>;
+        menu_def_t menu_def_;
     };
 
 

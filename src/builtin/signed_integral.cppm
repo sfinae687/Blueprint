@@ -38,15 +38,15 @@ namespace blueprint::dyn_node
 
         export struct sint_definition
         {
-            /*NOLINT*/ [[nodiscard]] text_type name() const
+            /*NOLINT*/ [[nodiscard]] text_type name() const noexcept
             {
                 return "Signed Integral";
             }
-            /*NOLINT*/ [[nodiscard]] text_type description() const
+            /*NOLINT*/ [[nodiscard]] text_type description() const noexcept
             {
                 return "The builtin type of signed integral.";
             }
-            /*NOLINT*/ [[nodiscard]] id_type id() const
+            /*NOLINT*/ [[nodiscard]] id_type id() const noexcept
             {
                 return SIGNED_INTEGRAL_ID;
             }

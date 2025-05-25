@@ -37,7 +37,7 @@ namespace blueprint::dyn_node::util
         std::string id_;
         data_proxy data_;
     };
-    static_assert(pro::proxiable<std::unique_ptr<constant_node_definition>, node_definition_facade>);
+    static_assert(pro::proxiable<std::shared_ptr<constant_node_definition>, node_definition_facade>);
 
     export class constant_node_instance
     {

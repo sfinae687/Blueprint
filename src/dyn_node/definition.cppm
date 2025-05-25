@@ -152,6 +152,8 @@ namespace blueprint::dyn_node
         ::add_convention<name_dispatch, text_type() const>
         ::add_convention<description_dispatch, text_type() const>
         ::add_convention<id_dispatch, id_type() const>
+        ::support_copy<pro::constraint_level::nontrivial>
+        ::support_relocation<pro::constraint_level::nontrivial>
         ::support_destruction<pro::constraint_level::nontrivial>
         ::support_rtti ::build
     { };
@@ -221,6 +223,8 @@ namespace blueprint::dyn_node
         ::add_convention<description_dispatch, text_type() const noexcept>
         ::add_convention<id_dispatch, id_type() const noexcept>
         ::add_convention<create_node_dispatch, pro::proxy<node_instance_facade>()>
+        ::support_copy<pro::constraint_level::nontrivial>
+        ::support_relocation<pro::constraint_level::nontrivial>
         ::support_destruction<pro::constraint_level::nontrivial>
         ::build
     {};

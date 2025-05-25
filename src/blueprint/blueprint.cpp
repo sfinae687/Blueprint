@@ -17,6 +17,10 @@ module;
 
 #include <iomanip>
 #include <ranges>
+#include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 module blueprint;
 import blueprint.gui;
@@ -26,6 +30,10 @@ import blueprint.builtin_node;
 
 namespace blueprint
 {
+
+    namespace ranges = std::ranges;
+    namespace views = std::views;
+
 
     /// Constructor, it defines the all GUI, and connect another necessary component.
     blueprint_application::blueprint_application()
@@ -117,11 +125,9 @@ namespace blueprint
 
     void blueprint_application::load_builtin()
     {
-        BOOST_LOG_SEV(logger, info) << "Loading builtin Nodes";
-        node_def_ = dyn_node::builtin::builtin_definitions();
+        BOOST_LOG_SEV(logger, info) << "Loading builtin Components";
+        load_component(dyn_node::builtin::builtin_components());
 
-        BOOST_LOG_SEV(logger, info) << "Loading builtin Types";
-        type_def_ = dyn_node::builtin::builtin_type_definitions();
 
         BOOST_LOG_SEV(logger, info) << "Loading builtin Nodes draw rule";
         node_draw_ = draw_node::builtin_node_draw_map();
@@ -131,5 +137,51 @@ namespace blueprint
 
         BOOST_LOG_SEV(logger, info) << "Finish to load builtin node information";
     }
+    void blueprint_application::load_component(plugin::component_package pkg)
+    {
+        for (auto ty : pkg.types | views::as_rvalue)
+        {
+            if (type_def_.contains(ty->id()))
+            {
+                BOOST_LOG_SEV(logger, error) << "Load a type has be loaded. The later definition will be ignored";
+            }
+            else
+            {
+                auto id = ty->id();
+                type_def_[id] = std::move(ty);
+            }
+        }
 
-}
+        for (auto nd : pkg.nodes | views::as_rvalue)
+        {
+            if (node_def_.contains(nd->id()))
+            {
+                BOOST_LOG_SEV(logger, error) << "Load a node has be loaded. The later definition will be ignored";
+            }
+            else
+            {
+                auto id = nd->id();
+                node_def_[id] = std::move(nd);
+            }
+        }
+
+        for (auto [name, ids] : pkg.groups | views::as_rvalue)
+        {
+            std::string cname{name.begin(), name.end()};
+            auto &&cur_list = menu_def_[cname];
+            for (auto id : ids)
+            {
+                if (cur_list.contains(id))
+                {
+                    BOOST_LOG_SEV(logger, error) << "Create a menu entry has exists";
+                }
+                else
+                {
+                    cur_list.insert(id);
+                }
+            }
+
+        }
+    }
+
+} // namespace blueprint
