@@ -10,6 +10,7 @@ module;
 #include <imgui.h>
 
 #include <memory>
+#include <format>
 
 export module blueprint.draw_node:builtin;
 import :draw_rule;
@@ -20,21 +21,85 @@ namespace blueprint::draw_node
 {
     using dyn_node::data_proxy;
     using namespace dyn_node;
+    using namespace dyn_node::builtin;
 
     // Types
 
-    export void draw_signed(data_proxy &d, data_draw_context context)
+    export void draw_signed(data_draw_context &context)
     {
-        if (! context.is_connected && context.channel == data_channel_type_t::input)
+        if (context.is_connected)
         {
-            using std::make_unique;
-            if (!d)
+            if (context.data)
             {
-                d = std::make_shared<builtin::builtin_signed_type>(0);
+                auto num = proxy_cast<builtin_signed_type>(*context.data);
+                ImGui::Text("%s", std::format("{}", num).c_str());
+            }
+            else
+            {
+                ImGui::Text("Unknown");
+            }
+        }
+        else
+        {
+            bool reset = false;
+            builtin_signed_type num = 0;
+            if (!context.data)
+            {
+                reset = true;
+            }
+            else
+            {
+                num = proxy_cast<builtin_signed_type>(*context.data);
+            }
+            if (ImGui::InputScalar("Signed Integral", ImGuiDataType_S64, &num))
+            {
+                reset = true;
             }
 
-            int &data_d = proxy_cast<int&>(*d);
-            ImGui::InputInt("Int", &data_d);
+            if (reset)
+            {
+                context.data = std::make_shared<builtin_signed_type>(num);
+            }
+            context.set_data = reset;
+        }
+    }
+
+    export void draw_unsigned(data_draw_context &context)
+    {
+        if (context.is_connected)
+        {
+            if (context.data)
+            {
+                auto num = proxy_cast<builtin_unsigned_type>(*context.data);
+                ImGui::Text("%s", std::format("{}", num).c_str());
+            }
+            else
+            {
+                ImGui::Text("Unknown");
+            }
+        }
+        else
+        {
+            bool reset = false;
+            builtin_unsigned_type num = 0;
+            if (!context.data)
+            {
+                reset = true;
+            }
+            else
+            {
+                num = proxy_cast<builtin_unsigned_type>(*context.data);
+            }
+            if (ImGui::InputScalar("Unsigned Integral", ImGuiDataType_U64, &num))
+            {
+                reset = true;
+            }
+
+            if (reset)
+            {
+                context.data = std::make_shared<builtin_unsigned_type>(num);
+            }
+            context.set_data = reset;
         }
     }
 
@@ -54,6 +119,7 @@ namespace blueprint::draw_node
 
         type_draw_map_t rt;
         rt[SIGNED_INTEGRAL_ID] = &draw_signed;
+        rt[UNSIGNED_INTEGRAL_ID] = &draw_unsigned;
 
         return rt;
     }

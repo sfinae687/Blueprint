@@ -9,6 +9,7 @@ module;
 #include <boost/log/common.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/scope/scope_exit.hpp>
+#include <map>
 #include <unordered_set>
 
 export module blueprint;
@@ -57,6 +58,7 @@ namespace blueprint
 
         void draw_node(flow::node_instance_handler hd);
         void draw_editor_menu();
+        draw_node::data_draw_context& make_draw_context(flow::no_id);
 
         void to_remove_node(flow::no_id);
         void to_create_node(dyn_node::id_type);
@@ -80,6 +82,9 @@ namespace blueprint
         // Draw Rule for Node and Type
         draw_node::node_draw_map_t node_draw_;
         draw_node::type_draw_map_t type_draw_;
+
+        std::map<flow::no_id, draw_node::data_draw_context>
+        draw_contexts_;
 
         // Node and link instance
         flow::node_instance_manager node_instance_;

@@ -109,7 +109,7 @@ namespace blueprint::constraint
         /// get the data of output channel the input channel is connected to, or the set date for the
         /// input channel.
 
-        seek_data_result seek_date(flow::no_id) const noexcept;
+        seek_data_result seek_data(flow::no_id) const noexcept;
 
         seek_data_result seek_input(input_id) const noexcept;
 

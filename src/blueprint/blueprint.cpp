@@ -21,6 +21,8 @@ module;
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <map>
+#include <expected>
 
 module blueprint;
 import blueprint.gui;
@@ -111,14 +113,34 @@ namespace blueprint
         // Title
 
         // const auto title_id = std::format("NodeTitle##{}", type_id);
-        ImGui::Text(name.data());
+        ImGui::Text("%s", name.data());
 
         // Attribute
+        auto try_draw_type = [&](dyn_node::id_type tid, flow::no_id id)
+        {
+            if (type_draw_.contains(tid))
+            {
+                auto &&ctx = make_draw_context(id);
+                type_draw_[tid](ctx);
+                if (flow::channel_type(id) == flow::channel_type_t::INPUT &&
+                    ! ctx.is_connected
+                    && ctx.set_data)
+                {
+                    link_.set_date(id, ctx.data);
+                }
+            }
+            else
+            {
+                auto type_name = type_def_[tid]->name();
+                ImGui::Text("%s", type_name.data());
+            }
+        };
 
         for (auto &&[ind, ip] : inputs | views::enumerate)
         {
             auto input_id = flow::input_channel_id(id, ind);
             ImNodes::BeginInputAttribute(input_id);
+            try_draw_type(ip, input_id);
             ImNodes::EndInputAttribute();
         }
 
@@ -131,6 +153,10 @@ namespace blueprint
         }
 
         // Node Content
+        if (node_draw_.contains(type_id))
+        {
+            node_draw_[type_id](p);
+        }
 
         ImNodes::EndNode();
 
@@ -226,9 +252,56 @@ namespace blueprint
             ImGui::EndPopup();
         }
     }
-    void blueprint_application::to_remove_node(flow::no_id)
+    draw_node::data_draw_context& blueprint_application::make_draw_context(flow::no_id id)
     {
+        using flow::channel_type_t;
+        using draw_node::data_channel_type_t;
+        auto &&ct = draw_contexts_[id];
+        ct.channel = flow::channel_type(id) ==
+            channel_type_t::INPUT ? data_channel_type_t::input : data_channel_type_t::output;
 
+        if (ct.channel == data_channel_type_t::input)
+        {
+            ct.is_connected = link_.have_connection(id);
+        }
+        else
+        {
+            ct.is_connected = ! link_.to_input(id).empty();
+        }
+
+        if (auto sk_data = link_.seek_data(id))
+        {
+            ct.data = sk_data.value();
+        }
+        else
+        {
+            ct.data = nullptr;
+        }
+        ct.set_data = false;
+        // todo ct.id = ?;
+        return ct;
+    }
+
+    void blueprint_application::to_remove_node(flow::no_id id)
+    {
+        auto handler = node_instance_.get_handler(id);
+
+        auto min_input = flow::min_input_channel_id(id);
+        auto max_input = flow::max_input_channel_id(id);
+        auto min_output = flow::min_output_channel_id(id);
+        auto max_output = flow::max_output_channel_id(id);
+
+        auto min_input_iter = draw_contexts_.lower_bound(min_input);
+        auto max_input_iter = draw_contexts_.upper_bound(max_input);
+        auto min_output_iter = draw_contexts_.lower_bound(min_output);
+        auto max_output_iter = draw_contexts_.upper_bound(max_output);
+
+        draw_contexts_.erase(min_input_iter, max_input_iter);
+        draw_contexts_.erase(min_output_iter, max_output_iter);
+
+        link_.detach_node(id);
+
+        handler.remove();
     }
 
     void blueprint_application::to_create_node(dyn_node::id_type id)

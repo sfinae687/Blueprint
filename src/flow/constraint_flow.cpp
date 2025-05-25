@@ -181,7 +181,7 @@ namespace blueprint::constraint
         return true;
     }
 
-    constraint_flow::seek_data_result constraint_flow::seek_date(flow::no_id id) const noexcept
+    constraint_flow::seek_data_result constraint_flow::seek_data(flow::no_id id) const noexcept
     {
         switch (flow::channel_type(id))
         {
