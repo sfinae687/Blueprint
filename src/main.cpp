@@ -14,7 +14,7 @@ void init_log()
     using namespace boost::log;
     add_common_attributes();
     add_console_log(
-        std::clog,
+        std::cout,
         keywords::format = "[%TimeStamp%] [%ThreadID%] [%Module%] [%Severity%] %Message%"
     );
 }

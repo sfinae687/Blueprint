@@ -6,7 +6,12 @@
 //
 
 module;
+#include <proxy.h>
+
 #include <shared_mutex>
+#include <unordered_map>
+#include <memory>
+#include <vector>
 
 module blueprint.flow;
 import blueprint.dyn_node;
@@ -47,6 +52,17 @@ namespace blueprint::flow
             return nullptr;
         }
         return {*this, iter};
+    }
+    std::vector<node_instance_handler> node_instance_manager::dump_handler() noexcept
+    {
+        std::shared_lock gd(lock_);
+
+        std::vector<node_instance_handler> rt{};
+        for (auto iter = list_.begin(); iter != list_.end(); ++iter)
+        {
+            rt.push_back({*this, iter});
+        }
+        return rt;
     }
 
 

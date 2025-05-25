@@ -33,12 +33,13 @@ namespace blueprint
 
     namespace ranges = std::ranges;
     namespace views = std::views;
-
+    using namespace std::string_literals;
 
     /// Constructor, it defines the all GUI, and connect another necessary component.
     blueprint_application::blueprint_application()
         : gui_("Blueprint Node editor", 720, 360)
-        , nodes_(gui_)
+        , imnodes_context_(gui_)
+        , link_(node_instance_)
     {
         using namespace GUI;
 
@@ -75,9 +76,14 @@ namespace blueprint
                 ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
 
             ImNodes::BeginNodeEditor();
-            ImNodes::BeginNode(0);
-            ImGui::Dummy(ImVec2(80.0f, 45.0f));
-            ImNodes::EndNode();
+
+            for (auto &&hd : node_instance_.dump_handler())
+            {
+                draw_node(hd);
+            }
+
+            draw_editor_menu();
+
             ImNodes::EndNodeEditor();
 
             ImGui::EndChild();
@@ -88,37 +94,45 @@ namespace blueprint
 
     }
 
-    void blueprint_application::draw_nodes(dyn_node::node_instance_proxy p, std::size_t id)
+    void blueprint_application::draw_node(flow::node_instance_handler hd)
     {
         namespace ranges = std::ranges;
         namespace views = std::views;
         using namespace blueprint::dyn_node;
 
-        constexpr std::size_t offset_num = 3;
-        constexpr std::size_t id_bit = sizeof(id) * CHAR_BIT;
-        constexpr std::size_t id_upper_bounder = (std::size_t{1} << (id_bit - offset_num));
+        auto &&p = hd.node_instance();
+        const auto id = hd.node_id();
+        const auto type_id = p->type_id();
+        const auto name = node_def_[type_id]->name();
+        const auto [inputs, outputs] = util::current_signature(p);
 
-        auto tid = p->type_id();
-        auto [inputs, outputs] = util::current_signature(p);
+        ImNodes::BeginNode(id);
 
-        if (id >= id_upper_bounder)
-        {
-            BOOST_LOG_SEV(logger, warning)
-            << "The id of a noded of " << std::quoted(tid) << "type is too large. It may causes unexpected behavior.";
-        }
-        if (inputs.size() + outputs.size() >= (std::size_t{1} << offset_num))
-        {
-            BOOST_LOG_SEV(logger, warning)
-            << "The number of channels of " << std::quoted(tid) << " is too large. It may causes unexpected behavior.";
-        }
+        // Title
+
+        // const auto title_id = std::format("NodeTitle##{}", type_id);
+        ImGui::Text(name.data());
+
+        // Attribute
 
         for (auto &&[ind, ip] : inputs | views::enumerate)
         {
-            auto iid = (id << offset_num) + ind;
-            ImNodes::BeginInputAttribute(iid);
-            // type_draw_[ip]()
+            auto input_id = flow::input_channel_id(id, ind);
+            ImNodes::BeginInputAttribute(input_id);
             ImNodes::EndInputAttribute();
         }
+
+        for (auto &&[ind, ip] : outputs | views::enumerate)
+        {
+            auto output_id = flow::output_channel_id(id, ind);
+            ImNodes::BeginOutputAttribute(output_id);
+
+            ImNodes::EndOutputAttribute();
+        }
+
+        // Node Content
+
+        ImNodes::EndNode();
 
     }
 
@@ -168,7 +182,7 @@ namespace blueprint
         for (auto [name, ids] : pkg.groups | views::as_rvalue)
         {
             std::string cname{name.begin(), name.end()};
-            auto &&cur_list = menu_def_[cname];
+            auto&& cur_list = menu_def_[cname];
             for (auto id : ids)
             {
                 if (cur_list.contains(id))
@@ -180,8 +194,48 @@ namespace blueprint
                     cur_list.insert(id);
                 }
             }
-
         }
+    }
+    void blueprint_application::draw_editor_menu()
+    {
+        if (ImNodes::IsEditorHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        {
+            ImGui::OpenPopup(editor_menu_id.data());
+        }
+
+        if (ImGui::BeginPopup(editor_menu_id.data()))
+        {
+            for (auto&& [group_name, members] : menu_def_)
+            {
+                std::string group_menu_id = group_name + "##GroupMenu";
+                if (ImGui::BeginMenu(group_menu_id.c_str()))
+                {
+                    for (auto&& ent : members)
+                    {
+                        auto node_name = node_def_[ent]->name();
+                        auto item_id = node_name.data() + "##"s + group_menu_id;
+                        if (ImGui::MenuItem(item_id.c_str()))
+                        {
+                            BOOST_LOG_SEV(logger, trace) << "Create node: " << ent;
+                            to_create_node(ent);
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+            }
+            ImGui::EndPopup();
+        }
+    }
+    void blueprint_application::to_remove_node(flow::no_id)
+    {
+
+    }
+
+    void blueprint_application::to_create_node(dyn_node::id_type id)
+    {
+        auto &&def = node_def_[id];
+        auto new_instance = def->create_node();
+        node_instance_.add_instance(std::move(new_instance));
     }
 
 } // namespace blueprint

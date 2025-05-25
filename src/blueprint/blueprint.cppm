@@ -16,6 +16,8 @@ import blueprint.gui;
 import blueprint.dyn_node;
 import blueprint.draw_node;
 import blueprint.plugin;
+import blueprint.flow;
+import blueprint.constraint;
 
 namespace blueprint
 {
@@ -34,6 +36,8 @@ namespace blueprint
         using application_logger_t =
             boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level>;
         using enum boost::log::trivial::severity_level;
+
+        static constexpr std::string_view editor_menu_id = "EditorMenu";
     public:
         blueprint_application();
         ~blueprint_application() = default;
@@ -51,7 +55,11 @@ namespace blueprint
         void load_builtin();
         void load_component(plugin::component_package);
 
-        void draw_nodes(dyn_node::node_instance_proxy p, std::size_t id);
+        void draw_node(flow::node_instance_handler hd);
+        void draw_editor_menu();
+
+        void to_remove_node(flow::no_id);
+        void to_create_node(dyn_node::id_type);
 
 
         // logger
@@ -60,7 +68,7 @@ namespace blueprint
         // context manager
 
         GUI::window gui_;
-        GUI::imnodes_context nodes_;
+        GUI::imnodes_context imnodes_context_;
 
         // application state
         bool main_open = true;
@@ -73,9 +81,14 @@ namespace blueprint
         draw_node::node_draw_map_t node_draw_;
         draw_node::type_draw_map_t type_draw_;
 
+        // Node and link instance
+        flow::node_instance_manager node_instance_;
+        constraint::constraint_flow link_;
+
         // Menu definition
         using menu_def_t = std::unordered_map<std::string, std::unordered_set<std::string_view>>;
         menu_def_t menu_def_;
+
     };
 
 

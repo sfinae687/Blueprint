@@ -8,6 +8,7 @@
 module;
 #include <compare>
 #include <unordered_map>
+#include <vector>
 #include <shared_mutex>
 
 
@@ -64,10 +65,11 @@ namespace blueprint::flow
         node_instance_manager(const node_instance_manager& other) = delete;
         node_instance_manager& operator=(const node_instance_manager& other) = delete;
 
-        [[nodiscard("Ignore the return vlaue will lose the reference")]]
         node_instance_handler add_instance(dyn_node::node_instance_proxy p);
 
         [[nodiscard]] node_instance_handler get_handler(no_id) noexcept;
+
+        std::vector<node_instance_handler> dump_handler() noexcept;
 
         // remove a node need a node_instance_handler.
 
