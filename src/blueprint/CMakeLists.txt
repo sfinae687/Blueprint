@@ -1,5 +1,6 @@
 set(BP06_BLUEPRINT_INTERFACE
     ./blueprint.cppm
+    style.cppm
 )
 add_library(blueprint
     ${BP06_BLUEPRINT_INTERFACE}

@@ -12,6 +12,8 @@ module;
 #include <map>
 #include <unordered_set>
 
+#include "imgui.h"
+
 export module blueprint;
 import blueprint.gui;
 import blueprint.dyn_node;
@@ -39,6 +41,11 @@ namespace blueprint
         using enum boost::log::trivial::severity_level;
 
         static constexpr std::string_view editor_menu_id = "EditorMenu";
+
+        struct new_node_context
+        {
+            ImVec2 pos;
+        };
     public:
         blueprint_application();
         ~blueprint_application() = default;
@@ -61,7 +68,7 @@ namespace blueprint
         draw_node::data_draw_context& make_draw_context(flow::no_id);
 
         void to_remove_node(flow::no_id);
-        void to_create_node(dyn_node::id_type);
+        void to_create_node(dyn_node::id_type, new_node_context);
 
 
         // logger
@@ -89,6 +96,8 @@ namespace blueprint
         // Node and link instance
         flow::node_instance_manager node_instance_;
         constraint::constraint_flow link_;
+
+        std::unordered_map<flow::no_id, new_node_context> new_node_;
 
         // Menu definition
         using menu_def_t = std::unordered_map<std::string, std::unordered_set<std::string_view>>;

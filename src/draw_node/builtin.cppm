@@ -23,10 +23,13 @@ namespace blueprint::draw_node
     using namespace dyn_node;
     using namespace dyn_node::builtin;
 
+    constexpr std::size_t widget_max_width = 128;
+
     // Types
 
     export void draw_signed(data_draw_context &context)
     {
+
         if (context.is_connected)
         {
             if (context.data)
@@ -51,7 +54,10 @@ namespace blueprint::draw_node
             {
                 num = proxy_cast<builtin_signed_type>(*context.data);
             }
-            if (ImGui::InputScalar("Signed Integral", ImGuiDataType_S64, &num))
+            ImGui::Text("Integral");
+            ImGui::SameLine(0, 10.f);
+            ImGui::SetNextItemWidth(widget_max_width);
+            if (ImGui::InputScalar("",  ImGuiDataType_S64, &num))
             {
                 reset = true;
             }
@@ -66,6 +72,7 @@ namespace blueprint::draw_node
 
     export void draw_unsigned(data_draw_context &context)
     {
+        ImGui::SetNextItemWidth(widget_max_width);
         if (context.is_connected)
         {
             if (context.data)
@@ -90,7 +97,11 @@ namespace blueprint::draw_node
             {
                 num = proxy_cast<builtin_unsigned_type>(*context.data);
             }
-            if (ImGui::InputScalar("Unsigned Integral", ImGuiDataType_U64, &num))
+
+            ImGui::Text("Unsigned");
+            ImGui::SameLine(0, 10.f);
+            ImGui::SetNextItemWidth(widget_max_width);
+            if (ImGui::InputScalar("", ImGuiDataType_U64, &num))
             {
                 reset = true;
             }

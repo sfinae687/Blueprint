@@ -25,6 +25,7 @@ module;
 #include <expected>
 
 module blueprint;
+import :style;
 import blueprint.gui;
 import blueprint.dyn_node;
 import blueprint.draw_node;
@@ -103,17 +104,29 @@ namespace blueprint
         using namespace blueprint::dyn_node;
 
         auto &&p = hd.node_instance();
-        const auto id = hd.node_id();
+        const auto node_id = hd.node_id();
         const auto type_id = p->type_id();
         const auto name = node_def_[type_id]->name();
         const auto [inputs, outputs] = util::current_signature(p);
+        const auto node_st = link_.state(node_id);
 
-        ImNodes::BeginNode(id);
+
+        ImNodes::BeginNode(node_id);
+        if (new_node_.contains(node_id))
+        {
+            ImNodes::SetNodeScreenSpacePos(node_id, new_node_[node_id].pos);
+            new_node_.erase(node_id);
+        }
 
         // Title
 
+        ImNodes::BeginNodeTitleBar();
         // const auto title_id = std::format("NodeTitle##{}", type_id);
+        ImNodes::PushColorStyle(ImNodesCol_TitleBar, node_state_color(node_st));
         ImGui::Text("%s", name.data());
+        ImNodes::PopColorStyle();
+
+        ImNodes::EndNodeTitleBar();
 
         // Attribute
         auto try_draw_type = [&](dyn_node::id_type tid, flow::no_id id)
@@ -138,7 +151,7 @@ namespace blueprint
 
         for (auto &&[ind, ip] : inputs | views::enumerate)
         {
-            auto input_id = flow::input_channel_id(id, ind);
+            auto input_id = flow::input_channel_id(node_id, ind);
             ImNodes::BeginInputAttribute(input_id);
             try_draw_type(ip, input_id);
             ImNodes::EndInputAttribute();
@@ -146,9 +159,10 @@ namespace blueprint
 
         for (auto &&[ind, ip] : outputs | views::enumerate)
         {
-            auto output_id = flow::output_channel_id(id, ind);
+            auto output_id = flow::output_channel_id(node_id, ind);
+            auto atx_name = type_def_[ip]->name();
             ImNodes::BeginOutputAttribute(output_id);
-
+            ImGui::Text("%s", atx_name.data());
             ImNodes::EndOutputAttribute();
         }
 
@@ -243,7 +257,9 @@ namespace blueprint
                         if (ImGui::MenuItem(item_id.c_str()))
                         {
                             BOOST_LOG_SEV(logger, trace) << "Create node: " << ent;
-                            to_create_node(ent);
+                            to_create_node(ent, {
+                                .pos = ImGui::GetCursorScreenPos()
+                            });
                         }
                     }
                     ImGui::EndMenu();
@@ -302,13 +318,19 @@ namespace blueprint
         link_.detach_node(id);
 
         handler.remove();
+
+        if (new_node_.contains(id))
+        {
+            new_node_.erase(id);
+        }
     }
 
-    void blueprint_application::to_create_node(dyn_node::id_type id)
+    void blueprint_application::to_create_node(dyn_node::id_type id, new_node_context ctx)
     {
         auto &&def = node_def_[id];
         auto new_instance = def->create_node();
-        node_instance_.add_instance(std::move(new_instance));
+        auto hd = node_instance_.add_instance(std::move(new_instance));
+        new_node_[hd.node_id()] = std::move(ctx);
     }
 
 } // namespace blueprint
