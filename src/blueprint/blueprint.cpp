@@ -67,7 +67,7 @@ namespace blueprint
 
     void blueprint_application::update()
     {
-
+        process_link();
     }
     void blueprint_application::draw()
     {
@@ -78,6 +78,7 @@ namespace blueprint
             ImGui::BeginChild("NodeEditor",
                 ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
 
+            ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
             ImNodes::BeginNodeEditor();
 
             for (auto &&hd : node_instance_.dump_handler())
@@ -85,9 +86,12 @@ namespace blueprint
                 draw_node(hd);
             }
 
+            draw_link();
+
             draw_editor_menu();
 
             ImNodes::EndNodeEditor();
+            ImNodes::PopAttributeFlag();
 
             ImGui::EndChild();
 
@@ -110,7 +114,12 @@ namespace blueprint
         const auto [inputs, outputs] = util::current_signature(p);
         const auto node_st = link_.state(node_id);
 
+        auto title_col = node_state_color(node_st);
+        auto select_mix = ImColor(0x00, 0xa6, 0xfb, 124);
 
+        ImNodes::PushColorStyle(ImNodesCol_TitleBar, title_col);
+        ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, mix_color(title_col, select_mix));
+        ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, mix_color(title_col, select_mix));
         ImNodes::BeginNode(node_id);
         if (new_node_.contains(node_id))
         {
@@ -122,10 +131,7 @@ namespace blueprint
 
         ImNodes::BeginNodeTitleBar();
         // const auto title_id = std::format("NodeTitle##{}", type_id);
-        ImNodes::PushColorStyle(ImNodesCol_TitleBar, node_state_color(node_st));
         ImGui::Text("%s", name.data());
-        ImNodes::PopColorStyle();
-
         ImNodes::EndNodeTitleBar();
 
         // Attribute
@@ -139,7 +145,7 @@ namespace blueprint
                     ! ctx.is_connected
                     && ctx.set_data)
                 {
-                    link_.set_date(id, ctx.data);
+                    // link_.set_date(id, ctx.data);
                 }
             }
             else
@@ -173,6 +179,10 @@ namespace blueprint
         }
 
         ImNodes::EndNode();
+
+        ImNodes::PopColorStyle();
+        ImNodes::PopColorStyle();
+        ImNodes::PopColorStyle();
 
     }
 
@@ -270,11 +280,11 @@ namespace blueprint
     }
     draw_node::data_draw_context& blueprint_application::make_draw_context(flow::no_id id)
     {
-        using flow::channel_type_t;
         using draw_node::data_channel_type_t;
-        auto &&ct = draw_contexts_[id];
-        ct.channel = flow::channel_type(id) ==
-            channel_type_t::INPUT ? data_channel_type_t::input : data_channel_type_t::output;
+        using flow::channel_type_t;
+        auto&& ct = draw_contexts_[id];
+        ct.channel =
+            flow::channel_type(id) == channel_type_t::INPUT ? data_channel_type_t::input : data_channel_type_t::output;
 
         if (ct.channel == data_channel_type_t::input)
         {
@@ -282,7 +292,7 @@ namespace blueprint
         }
         else
         {
-            ct.is_connected = ! link_.to_input(id).empty();
+            ct.is_connected = !link_.to_input(id).empty();
         }
 
         if (auto sk_data = link_.seek_data(id))
@@ -296,6 +306,32 @@ namespace blueprint
         ct.set_data = false;
         // todo ct.id = ?;
         return ct;
+    }
+
+    void blueprint_application::process_link()
+    {
+        int d_id;
+        if (ImNodes::IsLinkDestroyed(&d_id))
+        {
+            link_.remove_link(d_id);
+        }
+
+        int new_out, new_in;
+        if (ImNodes::IsLinkCreated(&new_out, &new_in))
+        {
+            link_.create_link(new_out, new_in);
+        }
+    }
+
+    void blueprint_application::draw_link()
+    {
+        auto all_link = link_.all_link();
+
+        for (auto id : all_link)
+        {
+            auto [in, out] = *link_.query_link(id);
+            ImNodes::Link(id, out, in);
+        }
     }
 
     void blueprint_application::to_remove_node(flow::no_id id)

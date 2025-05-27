@@ -66,7 +66,13 @@ namespace blueprint
         void draw_node(flow::node_instance_handler hd);
         void draw_editor_menu();
         draw_node::data_draw_context& make_draw_context(flow::no_id);
+        void process_link();
+        void draw_link();
+        void draw_node_menu();
 
+
+
+        void to_create_link(flow::no_id output, flow::no_id input);
         void to_remove_node(flow::no_id);
         void to_create_node(dyn_node::id_type, new_node_context);
 
