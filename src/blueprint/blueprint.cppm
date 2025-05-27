@@ -6,13 +6,16 @@
 //
 
 module;
+#include <imgui.h>
+
 #include <boost/log/common.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/scope/scope_exit.hpp>
+
 #include <map>
 #include <unordered_set>
+#include <queue>
 
-#include "imgui.h"
 
 export module blueprint;
 import blueprint.gui;
@@ -36,6 +39,7 @@ namespace blueprint
 
     export class blueprint_application
     {
+        using self = blueprint_application;
         using application_logger_t =
             boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level>;
         using enum boost::log::trivial::severity_level;
@@ -64,17 +68,19 @@ namespace blueprint
         void load_component(plugin::component_package);
 
         void draw_node(flow::node_instance_handler hd);
-        void draw_editor_menu();
         draw_node::data_draw_context& make_draw_context(flow::no_id);
         void process_link();
         void draw_link();
+        /* TODO */ void draw_editor_menu();
         void draw_node_menu();
 
 
 
         void to_create_link(flow::no_id output, flow::no_id input);
         void to_remove_node(flow::no_id);
+        void do_remove_node(flow::no_id);
         void to_create_node(dyn_node::id_type, new_node_context);
+        void do_create_node(dyn_node::id_type id, new_node_context ctx);
 
 
         // logger
@@ -104,6 +110,10 @@ namespace blueprint
         constraint::constraint_flow link_;
 
         std::unordered_map<flow::no_id, new_node_context> new_node_;
+
+        // Node change queue
+        std::queue<flow::no_id> to_remove_nodes_;
+        std::queue<std::pair<dyn_node::id_type, new_node_context>> to_create_nodes_;
 
         // Menu definition
         using menu_def_t = std::unordered_map<std::string, std::unordered_set<std::string_view>>;

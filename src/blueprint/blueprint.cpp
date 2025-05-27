@@ -67,6 +67,18 @@ namespace blueprint
 
     void blueprint_application::update()
     {
+        while (! to_remove_nodes_.empty())
+        {
+            auto &&cur_ent = to_remove_nodes_.front();
+            do_remove_node(cur_ent);
+            to_remove_nodes_.pop();
+        }
+        while (! to_create_nodes_.empty())
+        {
+            auto &&cur_ent = to_create_nodes_.front();
+            do_create_node(cur_ent.first, cur_ent.second);
+            to_create_nodes_.pop();
+        }
         process_link();
     }
     void blueprint_application::draw()
@@ -131,7 +143,13 @@ namespace blueprint
 
         ImNodes::BeginNodeTitleBar();
         // const auto title_id = std::format("NodeTitle##{}", type_id);
+        const auto remove_label = std::format("[x]##{}##", type_id, node_id);
         ImGui::Text("%s", name.data());
+        ImGui::SameLine(0, 8.0);
+        if (ImGui::Button(remove_label.c_str()))
+        {
+            to_remove_node(node_id);
+        }
         ImNodes::EndNodeTitleBar();
 
         // Attribute
@@ -145,7 +163,7 @@ namespace blueprint
                     ! ctx.is_connected
                     && ctx.set_data)
                 {
-                    // link_.set_date(id, ctx.data);
+                    link_.set_date(id, ctx.data);
                 }
             }
             else
@@ -246,9 +264,11 @@ namespace blueprint
             }
         }
     }
+
     void blueprint_application::draw_editor_menu()
     {
-        if (ImNodes::IsEditorHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        if (ImNodes::IsEditorHovered()
+            && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
         {
             ImGui::OpenPopup(editor_menu_id.data());
         }
@@ -333,8 +353,35 @@ namespace blueprint
             ImNodes::Link(id, out, in);
         }
     }
+    void blueprint_application::draw_node_menu()
+    {
+        int selected_node;
+        std::string node_menu_id;
+        if (ImNodes::IsNodeHovered(&selected_node)
+            && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        {
+            node_menu_id = std::format("node-menu##{}", node_menu_id);
+            ImGui::OpenPopup(node_menu_id.c_str());
+        }
+
+        if (ImGui::BeginPopup(node_menu_id.data()))
+        {
+            auto delete_id = "remove##" + node_menu_id;
+            if (ImGui::MenuItem(delete_id.c_str()))
+            {
+                to_remove_node(selected_node);
+            }
+            ImGui::EndPopup();
+        }
+
+    }
 
     void blueprint_application::to_remove_node(flow::no_id id)
+    {
+        to_remove_nodes_.emplace(id);
+    }
+
+    void blueprint_application::do_remove_node(flow::no_id id)
     {
         auto handler = node_instance_.get_handler(id);
 
@@ -363,7 +410,12 @@ namespace blueprint
 
     void blueprint_application::to_create_node(dyn_node::id_type id, new_node_context ctx)
     {
-        auto &&def = node_def_[id];
+        to_create_nodes_.emplace(std::move(id), std::move(ctx));
+    }
+
+    void blueprint_application::do_create_node(dyn_node::id_type id, new_node_context ctx)
+    {
+        auto&& def = node_def_[id];
         auto new_instance = def->create_node();
         auto hd = node_instance_.add_instance(std::move(new_instance));
         new_node_[hd.node_id()] = std::move(ctx);
