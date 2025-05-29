@@ -75,6 +75,7 @@ add_subdirectory(src/scheduler)
 
 # Blueprint Dynamic Node Description
 add_subdirectory(src/dyn_node)
+add_subdirectory(src/stk_node)
 add_subdirectory(src/draw_node)
 add_subdirectory(src/plugin_manage)
 add_subdirectory(src/builtin)
