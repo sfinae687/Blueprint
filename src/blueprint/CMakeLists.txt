@@ -18,4 +18,5 @@ target_link_libraries(blueprint
             blueprint_builtin_node
             blueprint_plugin
             blueprint_flow
+            dp::thread-pool
 )

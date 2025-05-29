@@ -14,6 +14,7 @@ module;
 #include <boost/variant2.hpp>
 
 #include <expected>
+#include <ranges>
 
 module blueprint.constraint;
 import :constraint_infomation;
@@ -24,6 +25,8 @@ import blueprint.flow;
 namespace blueprint::constraint
 {
     using enum boost::log::trivial::severity_level;
+    namespace ranges = std::ranges;
+    namespace views = std::views;
 
     constraint_flow::constraint_flow(flow::node_instance_manager& nd)
         : link_manager(nd)
@@ -348,6 +351,16 @@ namespace blueprint::constraint
         return true;
     }
 
+    std::vector<constraint_flow::node_id> constraint_flow::dump_ready() noexcept
+    {
+        auto ans = status_ | views::keys | views::filter([&](node_id id)
+        {
+            return is_ready(id);
+        });
+
+        return ranges::to<std::vector>(ans);
+    }
+
     std::optional<unsigned long> constraint_flow::do_connect(output_t output, input_t input)
     {
         using enum node_state;
@@ -451,7 +464,16 @@ namespace blueprint::constraint
         auto&& clean_state = clean_lk_[in];
 
         const auto current_consistent = is_consistent(in);
-        auto&& ct = input_state_counter_[in_node];
+
+        auto ct_iter = input_state_counter_.find(in);
+        if (ct_iter == input_state_counter_.end())
+        {
+            flush_node(in_node);
+            update_from_node(in_node);
+            return true;
+        }
+
+        auto&& ct = ct_iter->second;
         if (current_consistent)
         {
             ct.inconsistent--;
@@ -536,37 +558,67 @@ namespace blueprint::constraint
             return false;
         }
 
-        auto &&clean_state = clean_state_iter->second;
+        auto&& clean_state = clean_state_iter->second;
 
-        return visit<bool>(hof::match(
-            [&] (input_undefined) constexpr
+        return visit<bool>(hof::match([&](input_undefined) constexpr
+                                      { return current_state == input_link_state_t::UNDEFINED; },
+                                      [&](input_set) { return current_state == input_link_state_t::SET; },
+                                      [&](input_set_changed) { return false; },
+                                      [&](input_connected ic)
+                                      {
+                                          if (current_state != input_link_state_t::CONNECTED)
+                                          {
+                                              return false;
+                                          }
+                                          auto current_link = to_output(in);
+                                          assert(current_link.has_value());
+                                          const auto output_state = state(flow::node_id(*current_link));
+
+                                          return *current_link == ic.output_id && output_state == node_state::CLEAN &&
+                                              revision(ic.output_id) == ic.clean_revision;
+                                      }),
+                           clean_state);
+    }
+
+    bool constraint_flow::is_ready(node_id id) noexcept
+    {
+        using enum node_state;
+        if (state(id) != DIRTY)
+        {
+            return false;
+        }
+
+        auto &&inst = instance_info_.get_handler(id).node_instance();
+        auto sig = dyn_node::util::current_signature(inst);
+        auto input_size = sig.input.size();
+
+        bool ready_flag = true;
+        for (int i=0; i<input_size; ++i)
+        {
+            auto input_channel_id = flow::input_channel_id(id, i);
+            switch (input_channel_state(input_channel_id))
             {
-                return current_state == input_link_state_t::UNDEFINED;
-            },
-            [&] (input_set)
+
+            case input_link_state_t::CONNECTED:
             {
-                return current_state == input_link_state_t::SET;
-            },
-            [&] (input_set_changed)
-            {
-                return false;
-            },
-            [&] (input_connected ic)
-            {
-                if (current_state != input_link_state_t::CONNECTED)
+                auto output_channel_id = to_output(input_channel_id);
+                assert(output_channel_id);
+                auto output_node = flow::node_id(*output_channel_id);
+                if (state(output_node) != CLEAN)
                 {
-                    return false;
+                    ready_flag = false;
+                    goto CHECK_END;
                 }
-                auto current_link = to_output(in);
-                assert(current_link.has_value());
-                const auto output_state = state(flow::node_id(*current_link));
-
-                return *current_link == ic.output_id
-                    && output_state == node_state::CLEAN
-                    && revision(ic.output_id) == ic.clean_revision;
+                break;
             }
-        )
-        , clean_state);
+            default:
+                break;
+            }
+        }
+        CHECK_END:
+
+        return ready_flag;
+
     }
 
     auto constraint_flow::input_channel_state(input_id in) const noexcept -> input_link_state_t

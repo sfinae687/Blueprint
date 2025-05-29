@@ -12,6 +12,7 @@ module;
 #include <expected>
 #include <unordered_map>
 #include <optional>
+#include <vector>
 
 export module blueprint.constraint:constraint_infomation;
 import :node_state;
@@ -147,6 +148,8 @@ namespace blueprint::constraint
         bool mark_dirty(flow::no_id) noexcept;
         bool mark_error(flow::no_id) noexcept;
 
+        std::vector<node_id> dump_ready() noexcept;
+
     protected:
 
         std::optional<unsigned long> do_connect(output_t output, input_t input) override;
@@ -199,6 +202,8 @@ namespace blueprint::constraint
          * @return True if the channel is consistent with last clean result.
          */
         bool is_consistent(input_id) noexcept;
+
+        bool is_ready(node_id) noexcept;
 
         enum class input_link_state_t
         {

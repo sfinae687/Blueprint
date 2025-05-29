@@ -42,6 +42,7 @@ namespace blueprint::flow
         bool operator== (std::nullptr_t) const {return manager_ == nullptr || it_ == list_type::iterator{};}
 
         [[nodiscard]] const dyn_node::node_instance_proxy& node_instance() const noexcept;
+        [[nodiscard]] dyn_node::node_instance_proxy& node_instance() noexcept;
 
         [[nodiscard]] no_id node_id() const noexcept;
 

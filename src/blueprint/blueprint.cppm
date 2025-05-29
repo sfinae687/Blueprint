@@ -7,10 +7,12 @@
 
 module;
 #include <imgui.h>
+#include <thread_pool/thread_pool.h>
 
 #include <boost/log/common.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/scope/scope_exit.hpp>
+#include <boost/lockfree/queue.hpp>
 
 #include <map>
 #include <unordered_set>
@@ -81,6 +83,9 @@ namespace blueprint
         void do_remove_node(flow::no_id);
         void to_create_node(dyn_node::id_type, new_node_context);
         void do_create_node(dyn_node::id_type id, new_node_context ctx);
+        void to_computing(flow::no_id);
+        void to_finish_computing(flow::no_id);
+        void do_finish_computing(flow::no_id);
 
 
         // logger
@@ -99,8 +104,8 @@ namespace blueprint
         dyn_node::type_definitions_t type_def_;
 
         // Draw Rule for Node and Type
-        draw_node::node_draw_map_t node_draw_;
-        draw_node::type_draw_map_t type_draw_;
+        draw_node::node_draw_map_t node_draw_{};
+        draw_node::type_draw_map_t type_draw_{};
 
         std::map<flow::no_id, draw_node::data_draw_context>
         draw_contexts_;
@@ -111,13 +116,21 @@ namespace blueprint
 
         std::unordered_map<flow::no_id, new_node_context> new_node_;
 
-        // Node change queue
-        std::queue<flow::no_id> to_remove_nodes_;
-        std::queue<std::pair<dyn_node::id_type, new_node_context>> to_create_nodes_;
-
         // Menu definition
         using menu_def_t = std::unordered_map<std::string, std::unordered_set<std::string_view>>;
         menu_def_t menu_def_;
+
+        // Update flag
+        bool begin_compute_flag = false;
+
+        // event queue
+        std::queue<flow::no_id> to_remove_nodes_;
+        std::queue<std::pair<dyn_node::id_type, new_node_context>> to_create_nodes_;
+        std::unordered_set<flow::no_id> in_computing_;
+        boost::lockfree::queue<flow::no_id> to_finish_compute_;
+
+        // executor
+        dp::thread_pool<> executor_;
 
     };
 

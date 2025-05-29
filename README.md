@@ -24,7 +24,7 @@ Blueprint 使用 [C++ Module](https://zh.cppreference.com/w/cpp/language/modules
 - `blueprint.flow` : 数据流描述：定义和描述节点实例的链接管理，
 - `bluerpint.stk_node` : 从动态信息中”找回“静态类型，或将静态类型封装成动态信息。
 - `blueprint.dyn_node` 节点描述：描述节点编辑器中的节点（操作）和边（数据类型）的行为。用于跨越DLL边界。
-- `blueprint.scheduler` 事件和调度器。<small>得承认，第一次设计这东西很容易设计成一坨。</small>
+- `blueprint.scheduler` 事件和调度器。<small>得承认，第一次设计这东西很容易设计成一坨。</small> **已弃用**
 
 诚然，该项目模块之间耦合十分紧密，只保持住了基本的层级关系，并非良好设计。
 

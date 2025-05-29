@@ -30,7 +30,7 @@ namespace blueprint
         case COMPUTING:
             return {0xf4, 0x8c, 0x06};
         case CLEAN:
-            return {0xa8, 0xe6, 0xcf};
+            return {0x6a, 0x99, 0x4e};
         case ERROR:
             return {0xf7, 0x38, 0x59};
         default:

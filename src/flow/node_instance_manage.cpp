@@ -28,6 +28,12 @@ namespace blueprint::flow
         return it_->second.first;
     }
 
+    dyn_node::node_instance_proxy& node_instance_handler::node_instance() noexcept
+    {
+        return it_->second.first;
+    }
+
+
     void node_instance_handler::remove()
     {
         std::lock_guard gd(manager_->lock_);

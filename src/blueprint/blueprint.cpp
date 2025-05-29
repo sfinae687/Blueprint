@@ -30,6 +30,7 @@ import blueprint.gui;
 import blueprint.dyn_node;
 import blueprint.draw_node;
 import blueprint.builtin_node;
+import blueprint.constraint;
 
 namespace blueprint
 {
@@ -38,11 +39,12 @@ namespace blueprint
     namespace views = std::views;
     using namespace std::string_literals;
 
-    /// Constructor, it defines the all GUI, and connect another necessary component.
+    /// Constructor, it defines the all GUI, and connect another necessary part.
     blueprint_application::blueprint_application()
         : gui_("Blueprint Node editor", 720, 360)
         , imnodes_context_(gui_)
         , link_(node_instance_)
+        , to_finish_compute_(64)
     {
         using namespace GUI;
 
@@ -67,6 +69,29 @@ namespace blueprint
 
     void blueprint_application::update()
     {
+
+        if (begin_compute_flag)
+        {
+            auto all_ready = link_.dump_ready();
+            if (all_ready.empty() && in_computing_.empty())
+            {
+                begin_compute_flag = false;
+            }
+            else
+            {
+                for (auto id : all_ready)
+                {
+                    link_.mark_computing(id);
+                    to_computing(id);
+                }
+            }
+        }
+
+        to_finish_compute_.consume_all([this] (flow::no_id id)
+        {
+            do_finish_computing(id);
+        });
+
         while (! to_remove_nodes_.empty())
         {
             auto &&cur_ent = to_remove_nodes_.front();
@@ -107,7 +132,10 @@ namespace blueprint
 
             ImGui::EndChild();
 
-            ImGui::Text("hello world");
+            if (ImGui::Button("Compute"))
+            {
+                begin_compute_flag = true;
+            }
         }
         ImGui::End();
 
@@ -419,6 +447,28 @@ namespace blueprint
         auto new_instance = def->create_node();
         auto hd = node_instance_.add_instance(std::move(new_instance));
         new_node_[hd.node_id()] = std::move(ctx);
+        link_.state(hd.node_id());
     }
 
+    void blueprint_application::to_computing(flow::no_id id)
+    {
+        executor_.enqueue_detach(
+            [this, id]
+            {
+                auto&& inst = node_instance_.get_handler(id).node_instance();
+                auto inputs = link_.gather_input(id);
+                assert(inputs.has_value());
+                inst->compute(std::move(inputs.value()));
+                to_finish_computing(id);
+            });
+
+        in_computing_.insert(id);
+    }
+
+    void blueprint_application::to_finish_computing(flow::no_id id) { to_finish_compute_.push(id); }
+    void blueprint_application::do_finish_computing(flow::no_id id)
+    {
+        link_.mark_clean(id);
+        in_computing_.erase(id);
+    }
 } // namespace blueprint
