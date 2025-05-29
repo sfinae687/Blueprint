@@ -178,8 +178,14 @@ namespace blueprint::stk_node
     {
         using helper = details::mapper_helper<DS...>;
     public:
+
+        template <typename T>
+        static constexpr bool deducible_by_target = (! hana::is_empty(helper::template transformable_ds<T>)).value;
+        template <typename T>
+        static constexpr bool deducible_by_source = (! hana::is_empty(helper::template acceptable_ds<T>)).value;
+
         template<typename T>
-            requires ((! hana::is_empty(helper::template transformable_ds<T>)).value)
+            requires deducible_by_target<T>
         constexpr auto deduced_by_target()
         {
             using namespace boost::hana::literals;
@@ -188,7 +194,7 @@ namespace blueprint::stk_node
         }
 
         template <typename T>
-            requires ((! hana::is_empty(helper::template acceptable_ds<T>)).value)
+            requires deducible_by_source<T>
         constexpr auto deduced_by_source()
         {
             using namespace boost::hana::literals;
@@ -196,5 +202,17 @@ namespace blueprint::stk_node
             return sel_seq[0_c];
         }
     };
+
+    namespace details
+    {
+        template <typename T>
+        struct is_mapper : std::false_type {};
+
+        template <type_desc auto... DS>
+        struct is_mapper<mapper<DS...>> : std::true_type {};
+    }
+
+    template <typename T>
+    concept type_mapper = details::is_mapper<T>::value;
 
 }

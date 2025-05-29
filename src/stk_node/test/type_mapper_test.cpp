@@ -56,4 +56,3 @@ TEST(TypeMapperTest, Mapper)
     static_assert(std::same_as<decltype(t1), int_td_t>);
     static_assert(std::same_as<decltype(t2), uint_td_t>);
 }
-
