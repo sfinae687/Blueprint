@@ -115,7 +115,6 @@ namespace blueprint
             ImGui::BeginChild("NodeEditor",
                 ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
 
-            ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
             ImNodes::BeginNodeEditor();
 
             for (auto &&hd : node_instance_.dump_handler())
@@ -128,7 +127,6 @@ namespace blueprint
             draw_editor_menu();
 
             ImNodes::EndNodeEditor();
-            ImNodes::PopAttributeFlag();
 
             ImGui::EndChild();
 
@@ -151,7 +149,9 @@ namespace blueprint
         const auto node_id = hd.node_id();
         const auto type_id = p->type_id();
         const auto name = node_def_[type_id]->name();
-        const auto [inputs, outputs] = util::current_signature(p);
+        const auto all_sig = p->signatures();
+        const auto sig_ind = p->current_variant();
+        const auto [inputs, outputs] = all_sig[sig_ind];
         const auto node_st = link_.state(node_id);
 
         auto title_col = node_state_color(node_st);
@@ -167,13 +167,40 @@ namespace blueprint
             new_node_.erase(node_id);
         }
 
-        // Title
+        // TitleBar
 
         ImNodes::BeginNodeTitleBar();
         // const auto title_id = std::format("NodeTitle##{}", type_id);
-        const auto remove_label = std::format("[x]##{}##", type_id, node_id);
+
+        if (all_sig.size() > 1)
+        {
+            auto left_button = std::format("<##node-left##{}", node_id);
+            auto right_button = std::format(">##node-right##{}", node_id);
+            if (ImGui::Button(left_button.c_str()))
+            {
+                if (sig_ind > 0)
+                {
+                    to_switch_variant(node_id, sig_ind -1);
+                }
+            }
+            ImGui::SameLine();
+            auto variant_hint = std::format("{}/{}", sig_ind+1, all_sig.size());
+            ImGui::Text("%s", variant_hint.c_str());
+            ImGui::SameLine();
+            if (ImGui::Button(right_button.c_str()))
+            {
+                if (sig_ind+1 < all_sig.size())
+                {
+                    to_switch_variant(node_id, sig_ind+1);
+                }
+            }
+            ImGui::SameLine(0, 8);
+        }
+
         ImGui::Text("%s", name.data());
         ImGui::SameLine(0, 8.0);
+
+        const auto remove_label = std::format("[x]##{}##", type_id, node_id);
         if (ImGui::Button(remove_label.c_str()))
         {
             to_remove_node(node_id);
@@ -201,6 +228,7 @@ namespace blueprint
             }
         };
 
+        ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
         for (auto &&[ind, ip] : inputs | views::enumerate)
         {
             auto input_id = flow::input_channel_id(node_id, ind);
@@ -208,6 +236,7 @@ namespace blueprint
             try_draw_type(ip, input_id);
             ImNodes::EndInputAttribute();
         }
+        ImNodes::PopAttributeFlag();
 
         for (auto &&[ind, ip] : outputs | views::enumerate)
         {
@@ -447,7 +476,7 @@ namespace blueprint
         auto new_instance = def->create_node();
         auto hd = node_instance_.add_instance(std::move(new_instance));
         new_node_[hd.node_id()] = std::move(ctx);
-        link_.state(hd.node_id());
+        link_.flush_node(hd.node_id());
     }
 
     void blueprint_application::to_computing(flow::no_id id)
@@ -470,5 +499,19 @@ namespace blueprint
     {
         link_.mark_clean(id);
         in_computing_.erase(id);
+    }
+
+    void blueprint_application::to_switch_variant(flow::no_id id, std::size_t ind)
+    {
+        auto &&inst = node_instance_.get_handler(id).node_instance();
+        auto current_ind = inst->current_variant();
+        if (current_ind != ind)
+        {
+            auto sz = inst->signatures().size();
+            link_.detach_node(id);
+            assert(ind < sz);
+            inst->set_variant(ind);
+        }
+
     }
 } // namespace blueprint

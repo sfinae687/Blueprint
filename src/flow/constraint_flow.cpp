@@ -138,7 +138,7 @@ namespace blueprint::constraint
 
         // 3. update channel-state-counter and channel state
 
-        auto &&st = input_state_counter_[in];
+        auto &&st = input_state_counter_[in_node];
         if (input_consistent)
         {
             st.consistent++;
@@ -465,7 +465,7 @@ namespace blueprint::constraint
 
         const auto current_consistent = is_consistent(in);
 
-        auto ct_iter = input_state_counter_.find(in);
+        auto ct_iter = input_state_counter_.find(in_node);
         if (ct_iter == input_state_counter_.end())
         {
             flush_node(in_node);

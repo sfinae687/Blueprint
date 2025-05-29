@@ -86,6 +86,7 @@ namespace blueprint
         void to_computing(flow::no_id);
         void to_finish_computing(flow::no_id);
         void do_finish_computing(flow::no_id);
+        void to_switch_variant(flow::no_id, std::size_t i);
 
 
         // logger
