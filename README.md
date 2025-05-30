@@ -45,11 +45,12 @@ Blueprint 使用 [C++ Module](https://zh.cppreference.com/w/cpp/language/modules
 - [OpenGL](https://opengl.org/)
 - [GLFW](https://github.com/glfw/glfw)
 - [Eigen](https://eigen.tuxfamily.org/)
+- [OpenCV](https://opencv.org/)
 - [thread-pool](https://github.com/DeveloperPaul123/thread-pool)
 
 配置说明：
 
-- Boost请在自行安装，并将安装目录配置到 `CMAKE_PREFIX` 变量中。
+- OpenCV、Boost请在自行安装，并将安装目录配置到 `CMAKE_PREFIX` 变量中。
 - OpenGL可以选择任意一种实现。
 - GLFW依赖于以下库，需自行安装：
   - `libxkbcommon`
