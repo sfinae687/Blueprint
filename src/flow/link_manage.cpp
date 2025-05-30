@@ -188,7 +188,6 @@ namespace blueprint::flow
         auto &&index = index_.get<1>();
         auto l_iter = index.lower_bound(min_input_id);
         auto u_iter = index.upper_bound(max_input_id);
-        index.erase(l_iter, u_iter);
         for (auto c_iter = l_iter; c_iter != u_iter; )
         {
             auto n_iter = ranges::next(c_iter);

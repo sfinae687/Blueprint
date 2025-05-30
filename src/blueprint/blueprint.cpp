@@ -41,7 +41,7 @@ namespace blueprint
 
     /// Constructor, it defines the all GUI, and connect another necessary part.
     blueprint_application::blueprint_application()
-        : gui_("Blueprint Node editor", 720, 360)
+        : gui_("Blueprint Node editor", 1080, 720)
         , imnodes_context_(gui_)
         , link_(node_instance_)
         , to_finish_compute_(64)

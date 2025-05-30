@@ -59,6 +59,10 @@ set(TP_BUILD_BENCHMARKS OFF)
 set(TP_BUILD_EXAMPLES OFF)
 add_subdirectory(lib/thread-pool)
 
+# Image and Matrix
+add_subdirectory(lib/eigen)
+find_package(OpenCV REQUIRED)
+
 # Blueprint Source
 
 set(BUILD_TESTING ON)
