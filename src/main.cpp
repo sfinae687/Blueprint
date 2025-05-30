@@ -12,8 +12,10 @@ import blueprint;
 void init_log()
 {
     using namespace boost::log;
-    boost::log::add_console_log(std::clog,
-        keywords::format = " [%Severity%]: %Message%"
+    add_common_attributes();
+    add_console_log(
+        std::cout,
+        keywords::format = "[%TimeStamp%] [%ThreadID%] [%Module%] [%Severity%] %Message%"
     );
 }
 

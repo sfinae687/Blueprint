@@ -7,8 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 include(FetchContent)
+include(cmake/CPM.cmake)
 
 # dependency
+
+set(BUILD_TESTING OFF)
 
 # OpenGL
 find_package(OpenGL REQUIRED)
@@ -25,6 +28,7 @@ FetchContent_Declare(
         URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
 FetchContent_MakeAvailable(googletest)
+include(GoogleTest)
 
 # Proxy
 add_subdirectory(lib/proxy)
@@ -45,18 +49,46 @@ add_library(imgui_backend ${IMGUI_BACKEND_SOURCE})
 target_include_directories(imgui_backend PUBLIC lib/imgui/backends)
 target_link_libraries(imgui_backend PUBLIC imgui)
 
-#ImNodes
+# ImNodes
 set(IMNODES_IMGUI_TARGET_NAME imgui)
 add_subdirectory(lib/imnodes)
 
-# Blueprint-gui
+# ThreadPool
+set(TP_BUILD_TESTS OFF)
+set(TP_BUILD_BENCHMARKS OFF)
+set(TP_BUILD_EXAMPLES OFF)
+add_subdirectory(lib/thread-pool)
+
+# Image and Matrix
+add_subdirectory(lib/eigen)
+find_package(OpenCV REQUIRED)
+
+# Blueprint Source
+
+set(BUILD_TESTING ON)
+enable_testing()
+
+# Blueprint GUI
 add_subdirectory(src/gui)
 
 # Blueprint Context
 add_subdirectory(src/blueprint)
+
+# Blueprint Dynamic Node Description
+add_subdirectory(src/dyn_node)
+add_subdirectory(src/stk_node)
+add_subdirectory(src/draw_node)
+add_subdirectory(src/plugin_manage)
+add_subdirectory(src/builtin)
+
+# Blueprint Flow
+add_subdirectory(src/flow)
 
 # Blueprint
 add_executable(blueprint_app src/main.cpp)
 target_link_libraries(blueprint_app
         PRIVATE blueprint Boost::log_setup
 )
+
+# Others
+add_subdirectory(tries)

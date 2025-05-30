@@ -1,6 +1,6 @@
 set(BP06_BLUEPRINT_INTERFACE
     ./blueprint.cppm
-    draw_node.cppm
+    style.cppm
 )
 add_library(blueprint
     ${BP06_BLUEPRINT_INTERFACE}
@@ -12,4 +12,11 @@ target_sources(blueprint
 target_link_libraries(blueprint
     PUBLIC Boost::boost imgui
     PRIVATE blueprint_gui
+            blueprint_dyn_node
+            blueprint_draw_node
+            Boost::log
+            blueprint_builtin_node
+            blueprint_plugin
+            blueprint_flow
+            dp::thread-pool
 )
