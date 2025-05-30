@@ -4,7 +4,6 @@ set(BP06_FLOW_INTERFACE
         node_instance_manage.cppm
         debug.cppm
         NOID.cppm
-        link_events.cppm
 )
 
 set(BP06_CONSTRAINT_INTERFACE
@@ -26,7 +25,7 @@ target_sources(blueprint_flow
     PUBLIC FILE_SET CXX_MODULES FILES ${BP06_FLOW_INTERFACE} ${BP06_CONSTRAINT_INTERFACE}
 )
 target_link_libraries(blueprint_flow
-    PUBLIC blueprint_dyn_node blueprint_scheduler Boost::log Boost::boost
+    PUBLIC blueprint_dyn_node Boost::log Boost::boost
 )
 
 add_executable(blueprint_flow_NOID_test test/NOID_test.cpp)
@@ -41,10 +40,6 @@ add_executable(blueprint_flow_flow_test test/link_manager_test.cpp)
 target_link_libraries(blueprint_flow_flow_test
     PRIVATE GTest::gtest_main blueprint_flow
 )
-add_executable(blueprint_flow_link_event_test test/link_manager_event_test.cpp)
-target_link_libraries(blueprint_flow_link_event_test
-    PRIVATE GTest::gtest_main blueprint_flow
-)
 add_executable(blueprint_constraint_test test/constraint_test.cpp)
 target_link_libraries(blueprint_constraint_test
     PRIVATE GTest::gtest_main blueprint_flow
@@ -53,5 +48,4 @@ target_link_libraries(blueprint_constraint_test
 gtest_discover_tests(blueprint_flow_NOID_test)
 gtest_discover_tests(blueprint_flow_node_test)
 gtest_discover_tests(blueprint_flow_flow_test)
-gtest_discover_tests(blueprint_flow_link_event_test)
 gtest_discover_tests(blueprint_constraint_test)

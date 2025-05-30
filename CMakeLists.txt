@@ -70,9 +70,6 @@ add_subdirectory(src/gui)
 # Blueprint Context
 add_subdirectory(src/blueprint)
 
-# Blueprint Event and Scheduler
-add_subdirectory(src/scheduler)
-
 # Blueprint Dynamic Node Description
 add_subdirectory(src/dyn_node)
 add_subdirectory(src/stk_node)
