@@ -138,6 +138,7 @@ namespace blueprint::flow
     protected:
         virtual std::optional<no_id> do_connect(output_t output, input_t input);
         virtual bool do_remove(link_index_type::iterator);
+        virtual bool do_detach(no_id) noexcept;
 
         node_instance_manager& instance_info_;
 

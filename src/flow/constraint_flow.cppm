@@ -10,8 +10,9 @@ module;
 #include <boost/hana.hpp>
 
 #include <expected>
-#include <unordered_map>
+#include <map>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 export module blueprint.constraint:constraint_infomation;
@@ -156,6 +157,8 @@ namespace blueprint::constraint
 
         bool do_remove(link_index_type::iterator) override;
 
+        bool do_detach(flow::no_id) noexcept override;
+
     private:
         std::size_t& revision(node_id id) noexcept;
 
@@ -225,7 +228,7 @@ namespace blueprint::constraint
 
         std::unordered_map<node_id, node_state> status_{};
         std::unordered_map<node_id, std::size_t> clean_rv_{};
-        std::unordered_map<input_id, dyn_node::data_proxy> set_date_{};
+        std::map<input_id, dyn_node::data_proxy> set_date_{};
 
         // state trace
 
@@ -245,7 +248,7 @@ namespace blueprint::constraint
             input_connected
         >;
         /// record the clean link state for the current result.
-        std::unordered_map<input_id, clean_state> clean_lk_{};
+        std::map<input_id, clean_state> clean_lk_{};
 
         struct input_state_counter_t
         {

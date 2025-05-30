@@ -212,8 +212,7 @@ namespace blueprint::constraint
             return std::unexpected(undefined);
         }
 
-        auto set_iter = set_date_.find(in);
-        if (set_iter != set_date_.end())
+        if (auto set_iter = set_date_.find(in); set_iter != set_date_.end())
         {
             return set_iter->second;
         }
@@ -235,6 +234,11 @@ namespace blueprint::constraint
         auto &&inst = instance_info_.get_handler(output_node).node_instance();
 
         auto &&outputs = inst->output();
+
+        if (output_ind >= outputs.size())
+        {
+            return unexpected(undefined);
+        }
 
         return outputs[output_ind];
     }
@@ -389,6 +393,22 @@ namespace blueprint::constraint
 
         return do_drop_link(iterator);
     }
+
+    bool constraint_flow::do_detach(flow::no_id id) noexcept
+    {
+        status_.erase(id);
+        clean_rv_.erase(id);
+        input_state_counter_.erase(id);
+
+        auto min_input_id = flow::min_input_channel_id(id);
+        auto max_input_id = flow::max_input_channel_id(id);
+
+        set_date_.erase(set_date_.lower_bound(min_input_id), set_date_.lower_bound(max_input_id));
+        clean_lk_.erase(clean_lk_.lower_bound(min_input_id), clean_lk_.lower_bound(max_input_id));
+
+        return true;
+    }
+
     std::size_t& constraint_flow::revision(node_id id) noexcept
     {
         auto rv_iter = clean_rv_.find(id);
@@ -588,7 +608,9 @@ namespace blueprint::constraint
             return false;
         }
 
-        auto &&inst = instance_info_.get_handler(id).node_instance();
+        auto hd = instance_info_.get_handler(id);
+        assert(hd != nullptr);
+        auto &&inst = hd.node_instance();
         auto sig = dyn_node::util::current_signature(inst);
         auto input_size = sig.input.size();
 

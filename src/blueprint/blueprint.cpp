@@ -359,6 +359,9 @@ namespace blueprint
     {
         using draw_node::data_channel_type_t;
         using flow::channel_type_t;
+
+        // TODO Rewrite ?
+
         auto&& ct = draw_contexts_[id];
         ct.channel =
             flow::channel_type(id) == channel_type_t::INPUT ? data_channel_type_t::input : data_channel_type_t::output;

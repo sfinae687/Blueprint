@@ -19,6 +19,7 @@ import blueprint.dyn_node;
 namespace blueprint::stk_node
 {
     namespace hana = boost::hana;
+    using namespace boost::hana::literals;
 
     export template<char const * ID, typename DATA, typename DEF>
     struct basic_type_desc
@@ -79,7 +80,7 @@ namespace blueprint::stk_node
     {
         template <type_desc auto td, typename T>
             requires details::transform_helper<td, T>::transformable
-        T operator() (typename decltype(+td.data_type)::type &d)
+        T operator() (typename decltype(+td.data_type)::type &d) const
         {
             using helper = details::transform_helper<td, T>;
             if constexpr (helper::exactly_match)
@@ -127,7 +128,7 @@ namespace blueprint::stk_node
     {
         template <type_desc auto td, typename S>
             requires details::accept_helper<td, S>::acceptable
-        typename details::accept_helper<td, S>::data_type operator() (S &&s)
+        typename details::accept_helper<td, S>::data_type operator() (S &&s) const
         {
             using helper = details::accept_helper<td, S>;
             if constexpr (helper::exactly_match)
@@ -172,7 +173,6 @@ namespace blueprint::stk_node
         };
     }
 
-    using namespace boost::hana::literals;
     export template <type_desc auto... DS>
     class mapper
     {
@@ -186,7 +186,7 @@ namespace blueprint::stk_node
 
         template<typename T>
             requires deducible_by_target<T>
-        constexpr auto deduced_by_target()
+        constexpr auto deduced_by_target() const
         {
             using namespace boost::hana::literals;
             constexpr auto sel_seq = helper::template transformable_ds<T>;
@@ -195,7 +195,7 @@ namespace blueprint::stk_node
 
         template <typename T>
             requires deducible_by_source<T>
-        constexpr auto deduced_by_source()
+        constexpr auto deduced_by_source() const
         {
             using namespace boost::hana::literals;
             constexpr auto sel_seq = helper::template acceptable_ds<T>;

@@ -31,13 +31,17 @@
 *.out
 *.app
 
+# Module and Cache
+gcm.cache
+.cache
+
 # CMake and build
 cmake-build*/
 build*/
 
 # IDE
 .idea/
+.vscode/
 
 # generate document
-
 doc/doxygen/

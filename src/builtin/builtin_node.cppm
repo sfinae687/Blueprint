@@ -18,12 +18,15 @@ import blueprint.plugin;
 export import :signed_integral;
 export import :unsigned_integral;
 export import :identity_node;
+export import :integral_arithmetic;
 
 namespace blueprint::dyn_node::builtin
 {
 
     export plugin::component_package builtin_components()
     {
+        using namespace blueprint::builtin;
+
         using std::make_shared;
         using std::make_unique;
 
@@ -37,12 +40,43 @@ namespace blueprint::dyn_node::builtin
         auto signed_node_id = signed_node->id();
         auto unsigned_node_id = unsigned_node->id();
 
+        node_definition_proxy signed_add = make_shared<sint_plus_node>();
+        node_definition_proxy unsigned_add = make_shared<uint_plus_node>();
+        node_definition_proxy signed_sub = make_shared<sint_sub_node>();
+        node_definition_proxy  unsigned_sub = make_shared<uint_sub_node>();
+        node_definition_proxy signed_mul = make_shared<sint_mul_node>();
+        node_definition_proxy unsigned_mul = make_shared<uint_mul_node>();
+        auto signed_plus_id = signed_add->id();
+        auto unsigned_plus_id = unsigned_add->id();
+        auto signed_sub_id = signed_sub->id();
+        auto unsigned_sub_id = unsigned_sub->id();
+        auto signed_mul_id = signed_mul->id();
+        auto unsigned_mul_id = unsigned_mul->id();
+
         plugin::component_package pkg{
             .types = {{std::move(signed_int), std::move(unsigned_int)}},
-            .nodes = {{std::move(signed_node), std::move(unsigned_node)}},
+            .nodes = {
+                {
+                    std::move(signed_node),
+                    std::move(unsigned_node),
+                    std::move(signed_add),
+                    std::move(unsigned_add),
+                    std::move(signed_sub),
+                    std::move(unsigned_sub),
+                    std::move(signed_mul),
+                    std::move(unsigned_mul)
+                }
+            },
             .groups = {
                 {
                     "Core", {signed_node_id, unsigned_node_id}
+                },
+                {
+                    "Arithmetic", {
+                        signed_plus_id, unsigned_plus_id,
+                        signed_sub_id, unsigned_sub_id,
+                        signed_mul_id, unsigned_mul_id
+                    }
                 },
             },
         };

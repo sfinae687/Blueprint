@@ -20,7 +20,7 @@ namespace blueprint::dyn_node
     namespace builtin
     {
         export using builtin_signed_type = long long;
-        export constexpr std::string_view SIGNED_INTEGRAL_ID = "core.integral.signed";
+        export constexpr char SIGNED_INTEGRAL_ID[] = "core.integral.signed";
         struct builtin_hint {};
     }
 

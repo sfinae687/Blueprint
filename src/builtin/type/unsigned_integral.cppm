@@ -22,7 +22,7 @@ namespace blueprint::dyn_node
     namespace builtin
     {
         export using builtin_unsigned_type = unsigned long long;
-        export constexpr std::string_view UNSIGNED_INTEGRAL_ID = "core.integral.unsigned";
+        export constexpr char UNSIGNED_INTEGRAL_ID[] = "core.integral.unsigned";
 
         struct builtin_hint {};
     }

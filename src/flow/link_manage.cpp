@@ -118,7 +118,7 @@ namespace blueprint::flow
     {
         remove_node_output(nd);
         remove_node_input(nd);
-        return true;
+        return do_detach(nd);
     }
 
     std::optional<std::pair<link_manager::input_t, link_manager::output_t>> link_manager::query_link(link_t lk) const noexcept
@@ -174,7 +174,10 @@ namespace blueprint::flow
         link_index.erase(iter);
         return true;
     }
-
+    bool link_manager::do_detach(no_id) noexcept
+    {
+        return true;
+    }
 
 
     void link_manager::remove_node_input(no_id nd) noexcept

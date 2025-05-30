@@ -24,15 +24,14 @@ import :type_mapper;
 namespace blueprint::stk_node
 {
 
-
     template <type_mapper auto tmp, typename T>
-        requires (tmp.template deduciable_by_source<T>)
+        requires (tmp.template deducible_by_source<T>)
     constexpr dyn_node::data_proxy result_proxy(T &&t)
     {
         type_desc auto td = tmp.template deduced_by_source<T>();
 
         using data_type = typename decltype(+td.data_type)::type;
-        return std::make_shared<data_type>(accept<td>(std::forward<T>(t)));
+        return std::make_shared<data_type>(accept.operator()<td>(std::forward<T>(t)));
     }
 
     template <type_mapper auto tmp, typename T>
@@ -45,7 +44,7 @@ namespace blueprint::stk_node
 
         using data_type = typename decltype(+td.data_type)::type;
         data_type &dd = proxy_cast<data_type&>(*p);
-        return transform<tmp>(dd);
+        return transform.operator()<td, T>(dd);
     }
 
     namespace details
@@ -58,7 +57,7 @@ namespace blueprint::stk_node
 
             static constexpr dyn_node::output_sequence_t id_seq()
             {
-                type_desc auto td = tmp.template deduced_by_source<Rt>;
+                type_desc auto td = tmp.template deduced_by_source<Rt>();
                 return {td.hana_id.c_str()};
             }
 
@@ -96,17 +95,17 @@ namespace blueprint::stk_node
         };
 
         template <type_mapper auto tmp, typename Rt, typename... Args>
-        class func_node_helper
+        struct func_node_helper
         {
             static constexpr bool matchable =
                 result_mapper_helper<tmp, Rt>::matchable
-                && (... && tmp.template deduceible_by_target<Args>);
+                && (... && tmp.template deducible_by_target<Args>);
 
             static dyn_node::signature_t deduced_signature()
             {
                 dyn_node::output_sequence_t output_seq = result_mapper_helper<tmp, Rt>::id_seq();
                 dyn_node::input_sequence_t input_seq = {
-                    (tmp.template deduced_by_target<Args>).hana_id.c_str()...
+                    (tmp.template deduced_by_target<Args>()).hana_id.c_str()...
                 };
                 return {std::move(input_seq), std::move(output_seq)};
             }
@@ -115,7 +114,7 @@ namespace blueprint::stk_node
 
     export template <type_mapper auto tmp, typename Rt, typename... Args>
         requires details::func_node_helper<tmp, Rt, Args...>::matchable
-    class func_node
+    class deduced_func_node
     {
         using helper = details::func_node_helper<tmp, Rt, Args...>;
         using fn_type = std::move_only_function<Rt(Args...)>;
@@ -124,7 +123,7 @@ namespace blueprint::stk_node
         class func_node_instance
         {
         public:
-            explicit func_node_instance(func_node &d)
+            explicit func_node_instance(deduced_func_node &d)
                 : def_(d)
             {}
 
@@ -147,12 +146,12 @@ namespace blueprint::stk_node
             }
             bool compute(dyn_node::data_sequence ds) noexcept
             {
-                if (def_.arg_sz != ds.size())
+                if (arg_sz != ds.size())
                 {
                     return false;
                 }
 
-                auto ind_pk = hana::make_range(hana::size_c<0>, hana::size_c<def_.arg_sz>);
+                auto ind_pk = hana::make_range(hana::size_c<0>, hana::size_c<arg_sz>);
                 auto args = hana::unpack(ind_pk, [&](auto... ind)
                 {
                     return hana::make_tuple(
@@ -174,12 +173,12 @@ namespace blueprint::stk_node
 
         private:
             dyn_node::data_sequence output_;
-            func_node &def_;
+            deduced_func_node &def_;
         };
         friend class func_node_instance;
         static_assert(pro::proxiable<std::unique_ptr<func_node_instance>, dyn_node::node_instance_facade>);
 
-        func_node(fn_type fn, dyn_node::text_type name, dyn_node::text_type description, dyn_node::id_type id)
+        deduced_func_node(fn_type fn, dyn_node::text_type name, dyn_node::text_type description, dyn_node::id_type id)
             : name_(name)
             , description_(description)
             , id_(id)
