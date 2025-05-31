@@ -241,6 +241,7 @@ namespace blueprint
         for (auto &&[ind, ip] : outputs | views::enumerate)
         {
             auto output_id = flow::output_channel_id(node_id, ind);
+            assert(type_def_.contains(ip));
             auto atx_name = type_def_[ip]->name();
             ImNodes::BeginOutputAttribute(output_id);
             ImGui::Text("%s", atx_name.data());
@@ -250,7 +251,17 @@ namespace blueprint
         // Node Content
         if (node_draw_.contains(type_id))
         {
-            node_draw_[type_id](p);
+            auto id_text = std::format("{}", node_id);
+            draw_node::node_draw_context ctx{
+                .node = p,
+                .id = id_text,
+                .set_dirty = false
+            };
+            node_draw_[type_id](ctx);
+            if (ctx.set_dirty)
+            {
+                link_.mark_dirty(node_id);
+            }
         }
 
         ImNodes::EndNode();

@@ -39,9 +39,13 @@ namespace blueprint::draw_node
     export using type_draw_operation = std::move_only_function<void(data_draw_context&)>;
     export using type_draw_map_t = std::unordered_map<dyn_node::id_type, type_draw_operation>;
 
+    export struct node_draw_context
+    {
+        dyn_node::node_instance_proxy &node; /// [in]
+        std::string_view id; /// [in] unique id for the node
+        bool set_dirty; /// [out] The inner state of the node has changed.
+    };
 
-
-
-    export using node_additional_draw_operation = std::move_only_function<void(const dyn_node::node_instance_proxy &)>;
-    export using node_draw_map_t = std::unordered_map<dyn_node::id_type, node_additional_draw_operation>;
+    export using node_draw_operation = std::move_only_function<void(node_draw_context &)>;
+    export using node_draw_map_t = std::unordered_map<dyn_node::id_type, node_draw_operation>;
 }

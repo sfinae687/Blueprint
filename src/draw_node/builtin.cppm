@@ -16,6 +16,7 @@ export module blueprint.draw_node:builtin;
 import :draw_rule;
 import blueprint.dyn_node;
 import blueprint.builtin_node;
+import blueprint.gui;
 
 namespace blueprint::draw_node
 {
@@ -25,7 +26,9 @@ namespace blueprint::draw_node
 
     constexpr std::size_t widget_max_width = 128;
 
-    // Types
+    // Types //
+
+    // Integral
 
     export void draw_signed(data_draw_context &context)
     {
@@ -114,35 +117,26 @@ namespace blueprint::draw_node
         }
     }
 
-    // Nodes
+    // Nodes //
 
-    export void node_draw_noop(dyn_node::node_instance_proxy)
+    export void node_draw_noop(node_draw_context &)
     {
         /* NOOP */
     }
 
-    // utility
-
-    export type_draw_map_t builtin_type_draw_map()
+    export void draw_matrix_editor(node_draw_context &ctx)
     {
-        using namespace dyn_node;
-        using namespace dyn_node::builtin;
+        using namespace blueprint::builtin;
 
-        type_draw_map_t rt;
-        rt[SIGNED_INTEGRAL_ID] = &draw_signed;
-        rt[UNSIGNED_INTEGRAL_ID] = &draw_unsigned;
+        auto &&nd = ctx.node;
+        auto node_id = ctx.id;
 
-        return rt;
+        auto &&editor = proxy_cast<matrix_editor_node&>(*nd);
+        auto &&mat = *editor.mat_;
+        if (GUI::matrix_editor(node_id, mat))
+        {
+            ctx.set_dirty = true;
+        }
     }
 
-    export node_draw_map_t builtin_node_draw_map()
-    {
-        using namespace dyn_node;
-        using namespace dyn_node::builtin;
-
-        node_draw_map_t rt;
-        // rt[IDENTITY_ID] = &node_draw_noop;
-
-        return rt;
-    }
 }

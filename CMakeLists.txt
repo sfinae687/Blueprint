@@ -62,6 +62,9 @@ add_subdirectory(lib/thread-pool)
 # Image and Matrix
 add_subdirectory(lib/eigen)
 find_package(OpenCV REQUIRED)
+add_library(BlueprintOpenCVInterface INTERFACE)
+target_include_directories(BlueprintOpenCVInterface INTERFACE ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(BlueprintOpenCVInterface INTERFACE ${OpenCV_LIBS})
 
 # Blueprint Source
 

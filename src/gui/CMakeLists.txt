@@ -16,5 +16,5 @@ target_sources(blueprint_gui
 )
 target_link_libraries(blueprint_gui
         PUBLIC imnodes imgui OpenGL::GL glfw msft_proxy
-        PRIVATE imgui_backend Boost::log
+        PRIVATE imgui_backend Boost::log Eigen3::Eigen BlueprintOpenCVInterface
 )

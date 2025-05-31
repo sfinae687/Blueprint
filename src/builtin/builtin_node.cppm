@@ -17,8 +17,10 @@ import blueprint.dyn_node;
 import blueprint.plugin;
 export import :signed_integral;
 export import :unsigned_integral;
+export import :matrix;
 export import :identity_node;
 export import :integral_arithmetic;
+export import :matrix_editor;
 
 namespace blueprint::dyn_node::builtin
 {
@@ -34,6 +36,9 @@ namespace blueprint::dyn_node::builtin
         type_definition_proxy unsigned_int = make_shared<uint_definition>();
         auto signed_id = signed_int->id();
         auto unsigned_id = unsigned_int->id();
+
+        type_definition_proxy matrix_def = make_shared<matrix_definition>();
+        auto matrix_id = matrix_def->id();
 
         node_definition_proxy signed_node = make_shared<identity_node_definition>(signed_int);
         node_definition_proxy unsigned_node = make_shared<identity_node_definition>(unsigned_int);
@@ -53,8 +58,17 @@ namespace blueprint::dyn_node::builtin
         auto signed_mul_id = signed_mul->id();
         auto unsigned_mul_id = unsigned_mul->id();
 
-        plugin::component_package pkg{
-            .types = {{std::move(signed_int), std::move(unsigned_int)}},
+        node_definition_proxy matrix_editor = make_shared<matrix_editor_def>();
+        auto matrix_editor_id = matrix_editor->id();
+
+        return {
+            .types = {
+                {
+                    std::move(signed_int),
+                    std::move(unsigned_int),
+                    std::move(matrix_def)
+                }
+            },
             .nodes = {
                 {
                     std::move(signed_node),
@@ -64,7 +78,8 @@ namespace blueprint::dyn_node::builtin
                     std::move(signed_sub),
                     std::move(unsigned_sub),
                     std::move(signed_mul),
-                    std::move(unsigned_mul)
+                    std::move(unsigned_mul),
+                    std::move(matrix_editor),
                 }
             },
             .groups = {
@@ -78,10 +93,13 @@ namespace blueprint::dyn_node::builtin
                         signed_mul_id, unsigned_mul_id
                     }
                 },
+                {
+                    "Matrix", {
+                        matrix_editor_id
+                    }
+                }
             },
         };
-
-        return pkg;
     }
 
 }
