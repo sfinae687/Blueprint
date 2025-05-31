@@ -23,6 +23,7 @@ namespace blueprint::draw_node
     using dyn_node::data_proxy;
     using namespace dyn_node;
     using namespace dyn_node::builtin;
+    using namespace blueprint::builtin;
 
     constexpr std::size_t widget_max_width = 128;
 
@@ -114,6 +115,19 @@ namespace blueprint::draw_node
                 context.data = std::make_shared<builtin_unsigned_type>(num);
             }
             context.set_data = reset;
+        }
+    }
+
+    export void draw_matrix(data_draw_context &context)
+    {
+        if (context.data)
+        {
+            auto &&mat = proxy_cast<const builtin_matrix_t&>(*context.data);
+            GUI::matrix_editor(context.id, mat);
+        }
+        else
+        {
+            ImGui::Text("Unknown Matrix");
         }
     }
 

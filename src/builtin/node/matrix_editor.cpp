@@ -14,6 +14,9 @@ import :matrix_editor;
 
 namespace blueprint::builtin
 {
+
+    // Matrix Editor
+
     id_type matrix_editor_def::id() const noexcept
     {
         return matrix_editor_id;
@@ -68,7 +71,53 @@ namespace blueprint::builtin
         return {mat_};
     }
 
+    // Matrix Display
 
+    id_type matrix_display_def::id() const noexcept
+    {
+        return matrix_display_id;
+    }
+    text_type matrix_display_def::name() const noexcept
+    {
+        return "Matrix Display";
+    }
+    text_type matrix_display_def::description() const noexcept
+    {
+        return "Display the matrix inputted";
+    }
 
+    node_instance_proxy matrix_display_def::create_node() noexcept
+    {
+        return std::make_unique<matrix_display_node>();
+    }
+    id_type matrix_display_node::type_id() const noexcept
+    {
+        return matrix_display_id;
+    }
+    std::size_t matrix_display_node::current_variant() const noexcept
+    {
+        return 0;
+    }
+    bool matrix_display_node::set_variant(std::size_t) noexcept
+    {
+        return false;
+    }
+    std::span<const signature_t> matrix_display_node::signatures() const noexcept
+    {
+        static dyn_node::signature_t sig{
+            .input = {matrix_id},
+            .output =  {}
+        };
+
+        return {&sig, 1};
+    }
+    bool matrix_display_node::compute(data_sequence ds) noexcept
+    {
+        return ds.size() == 1;
+    }
+    data_sequence matrix_display_node::output() const noexcept
+    {
+        return {};
+    }
 
 } // namespace blueprint::builtin

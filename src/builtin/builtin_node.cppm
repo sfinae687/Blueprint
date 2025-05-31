@@ -59,7 +59,9 @@ namespace blueprint::dyn_node::builtin
         auto unsigned_mul_id = unsigned_mul->id();
 
         node_definition_proxy matrix_editor = make_shared<matrix_editor_def>();
+        node_definition_proxy matrix_display = make_shared<matrix_display_def>();
         auto matrix_editor_id = matrix_editor->id();
+        auto matrix_display_id = matrix_display->id();
 
         return {
             .types = {
@@ -80,6 +82,7 @@ namespace blueprint::dyn_node::builtin
                     std::move(signed_mul),
                     std::move(unsigned_mul),
                     std::move(matrix_editor),
+                    std::move(matrix_display),
                 }
             },
             .groups = {
@@ -95,7 +98,8 @@ namespace blueprint::dyn_node::builtin
                 },
                 {
                     "Matrix", {
-                        matrix_editor_id
+                        matrix_editor_id,
+                        matrix_display_id,
                     }
                 }
             },

@@ -150,8 +150,10 @@ namespace blueprint::GUI
             5,
         };
 
-        const std::string txt = mat.format(mat_format);
-        ImGui::Text(txt.c_str());
+        std::stringstream str_in;
+        str_in << mat.format(mat_format);
+        std::string str = str_in.str();
+        ImGui::Text("%s", str.c_str());
 
         return false;
     }

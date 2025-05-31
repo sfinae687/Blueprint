@@ -22,6 +22,7 @@ namespace blueprint::draw_node
         type_draw_map_t rt;
         rt[SIGNED_INTEGRAL_ID] = &draw_signed;
         rt[UNSIGNED_INTEGRAL_ID] = &draw_unsigned;
+        rt[matrix_id] = &draw_matrix;
 
         return rt;
     }

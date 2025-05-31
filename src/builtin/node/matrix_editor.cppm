@@ -23,6 +23,7 @@ namespace blueprint::builtin
     using dyn_node::node_instance_proxy;
 
     export constexpr char matrix_editor_id[] = "core.matrix-editor";
+    export constexpr char matrix_display_id[] = "core.matrix-display";
 
     export class matrix_editor_def
     {
@@ -39,7 +40,6 @@ namespace blueprint::builtin
     public:
         matrix_editor_node();
 
-
         [[nodiscard]] id_type type_id() const noexcept;
         [[nodiscard]] std::span<const signature_t> signatures() const noexcept;
         [[nodiscard]] std::size_t current_variant() const noexcept;
@@ -48,5 +48,26 @@ namespace blueprint::builtin
         [[nodiscard]] data_sequence output() const noexcept;
 
         std::shared_ptr<builtin_matrix_t> mat_;
+    };
+
+    export class matrix_display_def
+    {
+    public:
+        id_type id() const noexcept;
+        text_type name() const noexcept;
+        text_type description() const noexcept;
+
+        node_instance_proxy create_node() noexcept;
+    };
+
+    export class matrix_display_node
+    {
+    public:
+        [[nodiscard]] id_type type_id() const noexcept;
+        [[nodiscard]] std::span<const signature_t> signatures() const noexcept;
+        [[nodiscard]] std::size_t current_variant() const noexcept;
+        bool set_variant(std::size_t) noexcept;
+        bool compute(data_sequence) noexcept;
+        [[nodiscard]] data_sequence output() const noexcept;
     };
 }
