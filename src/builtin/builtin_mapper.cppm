@@ -14,6 +14,8 @@ import blueprint.dyn_node;
 import blueprint.stk_node;
 import :signed_integral;
 import :unsigned_integral;
+import :matrix;
+import :image;
 
 namespace blueprint::builtin
 {
@@ -52,6 +54,14 @@ namespace blueprint::builtin
     };
     constexpr uint_type_desc_t uint_type_desc;
 
-    using builtin_mapper_t = stk_node::mapper<int_type_desc, uint_type_desc>;
+    constexpr stk_node::basic_type_desc<matrix_id, builtin_matrix_t, matrix_definition> matrix_type_desc{};
+    constexpr stk_node::basic_type_desc<image_id, builtin_image_t, image_definition> image_type_desc{};
+
+    using builtin_mapper_t = stk_node::mapper<
+        int_type_desc,
+        uint_type_desc,
+        matrix_type_desc,
+        image_type_desc
+    >;
     constexpr builtin_mapper_t builtin_mapper{};
 }

@@ -4,7 +4,7 @@ set(BP06_DYN_NODE_INTERFACE
         util/utility.cppm
         util/trivial_node.cppm
         util/constant_node.cppm
-        util/template_definition.cppm
+        util/any_context.cppm
 )
 add_library(blueprint_dyn_node ${BP06_DYN_NODE_INTERFACE}
         util/utility.cpp

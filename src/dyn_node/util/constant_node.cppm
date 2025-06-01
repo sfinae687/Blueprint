@@ -15,6 +15,7 @@ module;
 
 export module blueprint.dyn_node:constant_factory;
 import :definition;
+import :any_context;
 
 namespace blueprint::dyn_node::util
 {
@@ -51,7 +52,7 @@ namespace blueprint::dyn_node::util
     };
     static_assert(pro::proxiable<std::shared_ptr<constant_node_definition>, node_definition_facade>);
 
-    class constant_node_instance
+    class constant_node_instance : public any_context
     {
         friend constant_node_definition;
     public:
@@ -71,7 +72,6 @@ namespace blueprint::dyn_node::util
         void set_output(dyn_node::data_proxy) noexcept;
 
     private:
-
 
         id_type id_;
         data_proxy data_;

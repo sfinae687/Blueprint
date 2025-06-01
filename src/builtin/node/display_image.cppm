@@ -15,12 +15,13 @@ module;
 
 export module blueprint.builtin_node:display_image;
 import blueprint.dyn_node;
+import blueprint.stk_node;
 import blueprint.gui;
 import :image;
 
 namespace blueprint::builtin
 {
-    using dyn_node::util::template_definition;
+    using stk_node::template_definition;
     using dyn_node::data_sequence;
     using dyn_node::signature_t;
 

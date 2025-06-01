@@ -14,12 +14,17 @@ module;
 #include <concepts>
 #include <type_traits>
 
+export module blueprint.stk_node:template_definition;
+import blueprint.dyn_node;
 
-export module blueprint.dyn_node:template_definition;
-import :definition;
-
-namespace blueprint::dyn_node::util
+namespace blueprint::stk_node
 {
+
+    using dyn_node::text_type;
+    using dyn_node::node_instance;
+    using dyn_node::id_type;
+    using dyn_node::node_instance_proxy;
+
     export template <const char Id[], const char Name[], const char Description[], node_instance T, typename CTX = void>
     class template_definition
     {

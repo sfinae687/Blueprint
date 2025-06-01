@@ -30,5 +30,6 @@ target_link_libraries(blueprint_builtin_node
         Eigen3::Eigen
         BlueprintOpenCVInterface
         blueprint_gui
+        blueprint_stk_node
         nfd
 )

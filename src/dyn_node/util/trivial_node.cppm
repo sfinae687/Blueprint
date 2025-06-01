@@ -9,8 +9,11 @@ module;
 #include <proxy/proxy.h>
 #include <vector>
 
+#include <any>
+
 export module blueprint.dyn_node:trivial_node;
 import :definition;
+import :any_context;
 
 namespace blueprint::dyn_node::util
 {
@@ -41,7 +44,7 @@ namespace blueprint::dyn_node::util
     };
     static_assert(pro::proxiable<std::shared_ptr<trivial_node_definition>, node_definition_facade>);
 
-    export class trivial_node_instance
+    export class trivial_node_instance : public any_context
     {
     public:
         trivial_node_instance(id_type id, input_sequence_t input, output_sequence_t output);

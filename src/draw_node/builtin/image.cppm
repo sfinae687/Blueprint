@@ -68,6 +68,13 @@ namespace blueprint::draw_node
                 node_inst.set_output(std::make_shared<cv::Mat>(std::move(img)));
                 ctx.set_dirty = true;
             }
+
+            node_inst.set_context<std::string>(out_path);
+        }
+
+        if (node_inst.is_set())
+        {
+            ImGui::Text("Path:%s", node_inst.get_context<std::string&>().c_str());
         }
 
     }
