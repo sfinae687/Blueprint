@@ -138,14 +138,15 @@ namespace blueprint::GUI
     }
     image::image(ImTextureID id, image_type ty, ImVec2 sz) : ty_(ty), tid_(id), height(sz.x), width(sz.y) {}
 
-    image::image(const cv::Mat& mat)
-        : ty_(deduced_image_type(mat))
-        , tid_(load_opencv_image(mat))
-        , width(mat.cols)
-        , height(mat.rows)
+    image::image(const cv::Mat& mat) :
+        ty_(deduced_image_type(mat)), tid_(load_opencv_image(mat)), width(mat.cols), height(mat.rows)
     {
         assert(ty_ != image_type::none);
         bind_swizzle();
+    }
+    image::operator bool()
+    {
+        return ty_ != image_type::none;
     }
 
     image& image::operator=(const cv::Mat& mat)

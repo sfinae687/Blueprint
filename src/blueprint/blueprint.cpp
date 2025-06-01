@@ -93,9 +93,10 @@ namespace blueprint
             }
         }
 
-        to_finish_compute_.consume_all([this] (flow::no_id id)
+        to_finish_compute_.consume_all([this] (auto item)
         {
-            do_finish_computing(id);
+            auto [id, ans] = item;
+            do_finish_computing(id, ans);
         });
 
         while (! to_remove_nodes_.empty())
@@ -508,17 +509,24 @@ namespace blueprint
                 auto&& inst = node_instance_.get_handler(id).node_instance();
                 auto inputs = link_.gather_input(id);
                 assert(inputs.has_value());
-                inst->compute(std::move(inputs.value()));
-                to_finish_computing(id);
+                auto rt = inst->compute(std::move(inputs.value()));
+                to_finish_computing(id, rt);
             });
 
         in_computing_.insert(id);
     }
 
-    void blueprint_application::to_finish_computing(flow::no_id id) { to_finish_compute_.push(id); }
-    void blueprint_application::do_finish_computing(flow::no_id id)
+    void blueprint_application::to_finish_computing(flow::no_id id, bool res) { to_finish_compute_.push({id, res}); }
+    void blueprint_application::do_finish_computing(flow::no_id id, bool res)
     {
-        link_.mark_clean(id);
+        if (res)
+        {
+            link_.mark_clean(id);
+        }
+        else
+        {
+            link_.mark_error(id);
+        }
         in_computing_.erase(id);
     }
 

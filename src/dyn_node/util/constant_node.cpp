@@ -7,8 +7,10 @@
 
 module;
 #include <proxy/proxy.h>
+
 #include <string>
 #include <string_view>
+#include <iostream>
 
 module blueprint.dyn_node;
 import :definition;
@@ -22,6 +24,8 @@ namespace blueprint::dyn_node::util
     {
         return constant_id_base + id.data();
     }
+
+    // definition
 
     constant_node_definition::constant_node_definition(data_proxy d)
         : constant_node_definition(d, make_constant_id(d->type_id()))
@@ -44,8 +48,6 @@ namespace blueprint::dyn_node::util
 
     }
 
-
-
     id_type constant_node_definition::id() const noexcept
     {
         return id_;
@@ -65,6 +67,8 @@ namespace blueprint::dyn_node::util
     {
         return std::make_unique<constant_node_instance>(id_, data_ ? data_->clone() : nullptr, *this);
     }
+
+    // Instance
 
     id_type constant_node_instance::type_id() const noexcept
     {
@@ -86,21 +90,24 @@ namespace blueprint::dyn_node::util
         return false;
     }
 
-    bool constant_node_instance::compute(data_sequence) noexcept
+    bool constant_node_instance::compute(data_sequence ds) noexcept
     {
-        return false;
+        return ds.size() == 0;
     }
 
-    data_sequence constant_node_instance::output() const noexcept { return {data_}; }
-    void constant_node_instance::set_output(dyn_node::data_proxy d) noexcept
+    data_sequence constant_node_instance::output() const noexcept
+    {
+        return {data_};
+    }
+    void constant_node_instance::set_output(data_proxy d) noexcept
     {
         assert(d->type_id() == def_.sig_.output[0]);
         data_ = std::move(d);
+        assert(data_->type_id() == def_.sig_.output[0]);
     }
 
     constant_node_instance::constant_node_instance(id_type id, data_proxy d, constant_node_definition &def)
         : id_(id), data_(std::move(d)), def_(def)
-    {
-    }
+    {}
 
 } // namespace blueprint::dyn_node::util

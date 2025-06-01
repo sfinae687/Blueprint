@@ -84,8 +84,8 @@ namespace blueprint
         void to_create_node(dyn_node::id_type, new_node_context);
         void do_create_node(dyn_node::id_type id, new_node_context ctx);
         void to_computing(flow::no_id);
-        void to_finish_computing(flow::no_id);
-        void do_finish_computing(flow::no_id);
+        void to_finish_computing(flow::no_id, bool);
+        void do_finish_computing(flow::no_id, bool);
         void to_switch_variant(flow::no_id, std::size_t i);
 
 
@@ -128,7 +128,13 @@ namespace blueprint
         std::queue<flow::no_id> to_remove_nodes_;
         std::queue<std::pair<dyn_node::id_type, new_node_context>> to_create_nodes_;
         std::unordered_set<flow::no_id> in_computing_;
-        boost::lockfree::queue<flow::no_id> to_finish_compute_;
+
+        struct compute_result
+        {
+            flow::no_id node_id;
+            bool success;
+        };
+        boost::lockfree::queue<compute_result> to_finish_compute_;
 
         // executor
         dp::thread_pool<> executor_;

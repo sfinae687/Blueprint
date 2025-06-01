@@ -56,6 +56,7 @@ namespace blueprint::dyn_node::util
         friend constant_node_definition;
     public:
         constant_node_instance(id_type id, data_proxy d, constant_node_definition &def);
+        constant_node_instance() = delete;
 
         // node interface
 
@@ -70,6 +71,7 @@ namespace blueprint::dyn_node::util
         void set_output(dyn_node::data_proxy) noexcept;
 
     private:
+
 
         id_type id_;
         data_proxy data_;

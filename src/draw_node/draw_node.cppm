@@ -38,6 +38,7 @@ namespace blueprint::draw_node
         node_draw_map_t rt;
         rt[matrix_editor_id] = &draw_matrix_editor;
         rt[load_image_node_id] = &draw_load_image;
+        rt[display_image_id] = &draw_display_image;
         return rt;
     }
 

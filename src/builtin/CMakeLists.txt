@@ -9,6 +9,7 @@ set(BP06_BUILTIN_NODE_INTERFACE
         node/matrix_editor.cppm
         type/image.cppm
         node/load_image.cppm
+        node/display_image.cppm
 )
 add_library(blueprint_builtin_node
         ${BP06_BUILTIN_NODE_INTERFACE}
@@ -28,5 +29,6 @@ target_link_libraries(blueprint_builtin_node
         blueprint_stk_node
         Eigen3::Eigen
         BlueprintOpenCVInterface
+        blueprint_gui
         nfd
 )

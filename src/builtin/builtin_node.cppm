@@ -24,6 +24,7 @@ export import :integral_arithmetic;
 export import :matrix_editor;
 export import :image;
 export import :load_image;
+export import :display_image;
 
 namespace blueprint::dyn_node::builtin
 {
@@ -82,6 +83,8 @@ namespace blueprint::dyn_node::builtin
 
         auto load_image = def_load_image_node();
         auto load_image_id = load_image->id();
+        auto display_image = def_node<display_image_definition>();
+        auto display_image_id = display_image->id();
 
         return {
             .types = {
@@ -105,6 +108,7 @@ namespace blueprint::dyn_node::builtin
                     std::move(matrix_editor),
                     std::move(matrix_display),
                     std::move(load_image),
+                    std::move(display_image),
                 }
             },
             .groups = {
@@ -127,6 +131,7 @@ namespace blueprint::dyn_node::builtin
                 {
                     "Image", {
                         load_image_id,
+                        display_image_id,
                     }
                 }
             },

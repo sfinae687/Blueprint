@@ -192,7 +192,9 @@ namespace blueprint::GUI
         image& operator= (image &&) noexcept;
 
         image(ImTextureID id, image_type ty, ImVec2 sz);
-        image(const cv::Mat &);
+        explicit image(const cv::Mat &);
+
+        explicit operator bool();
 
         image& operator= (const cv::Mat &);
 

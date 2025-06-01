@@ -28,12 +28,14 @@ namespace blueprint::draw_node
     using namespace builtin;
     using namespace dyn_node::builtin;
 
+    // Load
+
     export void draw_load_image(node_draw_context &ctx)
     {
         using dyn_node::util::constant_node_instance;
         auto &&nd = ctx.node;
         auto id = ctx.id;
-        auto node_inst = proxy_cast<constant_node_instance&>(*nd);
+        auto &&node_inst = proxy_cast<constant_node_instance&>(*nd);
 
         bool flush_flag = false;
 
@@ -66,6 +68,19 @@ namespace blueprint::draw_node
                 node_inst.set_output(std::make_shared<cv::Mat>(std::move(img)));
                 ctx.set_dirty = true;
             }
+        }
+
+    }
+
+    // Display
+
+    export void draw_display_image(node_draw_context &ctx)
+    {
+        auto &&nd = proxy_cast<display_image_instance&>(*ctx.node);
+        nd.flush_image();
+        if (! nd.display())
+        {
+            ImGui::Text("Unable to display the image");
         }
 
     }
