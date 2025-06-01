@@ -19,4 +19,5 @@ target_link_libraries(blueprint
             blueprint_plugin
             blueprint_flow
             dp::thread-pool
+            BlueprintOpenCVInterface
 )

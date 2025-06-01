@@ -9,10 +9,16 @@
 module;
 #define IMGUI_DEFINE_MATH_OPERATORS
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/common.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
+
 #include <imgui.h>
 #include <imnodes.h>
+
+#include <boost/log/attributes.hpp>
+#include <boost/log/common.hpp>
+
 #include <proxy.h>
 
 #include <iomanip>
@@ -51,8 +57,8 @@ namespace blueprint
         setup_logger();
         load_builtin();
 
-        gui_.set_update_operation([this]() {update();});
-        gui_.set_draw_operation([this]() {draw();});
+        gui_.set_update_operation([this] {update();});
+        gui_.set_draw_operation([this] {draw();});
     }
 
     int blueprint_application::run()

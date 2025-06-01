@@ -10,14 +10,17 @@
 
 module;
 #include <Eigen/Dense>
+#include <opencv2/core.hpp>
 #include <imgui.h>
 
 #include <boost/hana.hpp>
 
-#include <string_view>
 #include <concepts>
 #include <ranges>
+#include <string_view>
 #include <vector>
+
+#include "../../lib/glfw/src/internal.h"
 
 export module blueprint.gui:begin;
 
@@ -30,6 +33,9 @@ namespace blueprint::GUI
     {
         constexpr std::size_t input_number_width = 64;
     }
+
+
+    // --- Window ---//
 
     /**
      * Begin a window fill viewport, and keep staying in the background.
@@ -68,6 +74,8 @@ namespace blueprint::GUI
             }
         }
     }
+
+    // --- Input --- //
 
     export template <std::integral T>
     constexpr auto imgui_data_type = details::get_imgui_data_type_enum<T>();
@@ -157,4 +165,51 @@ namespace blueprint::GUI
 
         return false;
     }
+
+    // --- Image --- //
+
+    export ImTextureID load_opencv_image(const cv::Mat& image);
+    export void unload_texture(ImTextureID);
+
+    /**
+     * class image manages the resource to render an image to GUI.
+     */
+    export class image
+    {
+    public:
+        enum class image_type
+        {
+            none,
+            rgba,
+            gray,
+        };
+
+        image() = default;
+        image(const image &) = delete;
+        image(image &&) noexcept;
+        ~image();
+        image& operator= (const image &) = delete;
+        image& operator= (image &&) noexcept;
+
+        image(ImTextureID id, image_type ty, ImVec2 sz);
+        image(const cv::Mat &);
+
+        image& operator= (const cv::Mat &);
+
+        [[nodiscard]] image_type type() const;
+        [[nodiscard]] ImTextureID id() const;
+
+        void show() const;
+
+    private:
+
+        void release();
+        void bind_swizzle() const;
+
+        image_type ty_ = image_type::none;
+        GLuint tid_;
+
+        std::size_t width;
+        std::size_t height;
+    };
 }
