@@ -19,7 +19,7 @@ module;
 #include <boost/log/attributes.hpp>
 #include <boost/log/common.hpp>
 
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <iomanip>
 #include <ranges>

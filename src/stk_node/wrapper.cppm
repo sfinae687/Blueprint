@@ -6,7 +6,7 @@
 //
 
 module;
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <boost/callable_traits.hpp>
 #include <boost/hof.hpp>

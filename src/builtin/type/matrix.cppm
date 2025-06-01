@@ -8,7 +8,7 @@
 module;
 #include <Eigen/Dense>
 
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <memory>
 

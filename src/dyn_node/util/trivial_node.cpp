@@ -7,7 +7,7 @@
 
 module;
 #include <boost/hof.hpp>
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <algorithm>
 #include <ranges>

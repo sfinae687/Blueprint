@@ -6,7 +6,7 @@
 //
 
 module;
-#include <proxy.h>
+#include <proxy/proxy.h>
 #include <vector>
 
 export module blueprint.dyn_node:trivial_node;

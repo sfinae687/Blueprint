@@ -6,7 +6,7 @@
 //
 
 module;
-#include <proxy.h>
+#include <proxy/proxy.h>
 #include <boost/hana.hpp>
 
 #include <string_view>

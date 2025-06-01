@@ -7,7 +7,8 @@
 
 module;
 #include <boost/hana/detail/create.hpp>
-#include <proxy.h>
+
+#include <proxy/proxy.h>
 
 #include <any>
 #include <memory>
@@ -62,7 +63,7 @@ namespace blueprint::dyn_node
         using type = void;
     };
     template <typename T>
-    using lookup_hint_t = typename lookup_hint<std::remove_cvref_t<T>>::type;
+    using lookup_hint_t = lookup_hint<std::remove_cvref_t<T>>::type;
 
     // Concept For CPO
 
@@ -155,7 +156,8 @@ namespace blueprint::dyn_node
         ::support_copy<pro::constraint_level::nontrivial>
         ::support_relocation<pro::constraint_level::nontrivial>
         ::support_destruction<pro::constraint_level::nontrivial>
-        ::support_rtti ::build
+        ::support<pro::skills::rtti>
+        ::build
     { };
 
     PRO_DEF_FREE_AS_MEM_DISPATCH(type_id_dispatch, dyn_node::type_id, type_id);
@@ -172,8 +174,8 @@ namespace blueprint::dyn_node
         ::support_copy<pro::constraint_level::nontrivial>
         ::support_destruction<pro::constraint_level::nontrivial>
         ::support_relocation<pro::constraint_level::nontrivial>
-        ::support_rtti
-        ::support_direct_rtti ::build
+        ::support<pro::skills::rtti>
+        ::build
     { };
 
     // Data proxy has reference meaning and reference counter (to redeclare memory) in it.
@@ -212,7 +214,7 @@ namespace blueprint::dyn_node
         ::add_convention<compute_dispatch, bool(data_sequence) noexcept>
         ::add_convention<output_dispatch, data_sequence() const noexcept>
         ::support_destruction<pro::constraint_level::nontrivial>
-        ::support_rtti
+        ::support<pro::skills::rtti>
         ::build
     {};
 
@@ -234,4 +236,16 @@ namespace blueprint::dyn_node
 
     export using type_definitions_t = std::unordered_map<id_type, type_definition_proxy>;
     export using node_definitions_t = std::unordered_map<id_type, node_definition_proxy>;
+
+    export
+    {
+        template <typename T>
+        concept node_definition = pro::proxiable<std::shared_ptr<T>, node_definition_facade>;
+        template <typename T>
+        concept node_instance = pro::proxiable<std::unique_ptr<T>, node_instance_facade>;
+        template <typename T>
+        concept type_definition = pro::proxiable<std::shared_ptr<T>, type_definition_facade>;
+        template <typename T>
+        concept data = pro::proxiable<std::shared_ptr<T>, data_interface_facade>;
+    }
 } // namespace blueprint::dyn_node

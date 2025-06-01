@@ -7,6 +7,7 @@ set(BP06_BUILTIN_NODE_INTERFACE
         builtin_mapper.cppm
         type/matrix.cppm
         node/matrix_editor.cppm
+        type/image.cppm
 )
 add_library(blueprint_builtin_node
         ${BP06_BUILTIN_NODE_INTERFACE}

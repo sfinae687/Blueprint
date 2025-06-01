@@ -5,7 +5,8 @@
 // Created by ll06 on 25-5-2.
 //
 module;
-#include <proxy.h>
+#include <opencv2/core.hpp>
+#include <proxy/proxy.h>
 
 #include <memory>
 #include <vector>
@@ -21,36 +22,51 @@ export import :matrix;
 export import :identity_node;
 export import :integral_arithmetic;
 export import :matrix_editor;
+export import :image;
 
 namespace blueprint::dyn_node::builtin
 {
 
+    template <dyn_node::type_definition T>
+    type_definition_proxy make_type_def()
+    {
+        return std::make_shared<T>();
+    }
+    template <dyn_node::node_definition T, typename... Args>
+    node_definition_proxy make_node_def(Args&&... args)
+    {
+        return std::make_shared<T>(std::forward<Args>(args)...);
+    }
+
     export plugin::component_package builtin_components()
     {
         using namespace blueprint::builtin;
+        dyn_node::data_proxy p = std::make_shared<builtin_image_t>();
 
         using std::make_shared;
         using std::make_unique;
 
-        type_definition_proxy signed_int = make_shared<sint_definition>();
-        type_definition_proxy unsigned_int = make_shared<uint_definition>();
+        auto signed_int = make_type_def<sint_definition>();
+        auto unsigned_int = make_type_def<uint_definition>();
         auto signed_id = signed_int->id();
         auto unsigned_id = unsigned_int->id();
 
-        type_definition_proxy matrix_def = make_shared<matrix_definition>();
+        auto matrix_def = make_type_def<matrix_definition>();
+        auto image_def = make_type_def<image_definition>();
         auto matrix_id = matrix_def->id();
+        auto image_id = image_def->id();
 
-        node_definition_proxy signed_node = make_shared<identity_node_definition>(signed_int);
-        node_definition_proxy unsigned_node = make_shared<identity_node_definition>(unsigned_int);
+        auto signed_node = make_node_def<identity_node_definition>(signed_int);
+        auto unsigned_node = make_node_def<identity_node_definition>(unsigned_int);
         auto signed_node_id = signed_node->id();
         auto unsigned_node_id = unsigned_node->id();
 
-        node_definition_proxy signed_add = make_shared<sint_plus_node>();
-        node_definition_proxy unsigned_add = make_shared<uint_plus_node>();
-        node_definition_proxy signed_sub = make_shared<sint_sub_node>();
-        node_definition_proxy  unsigned_sub = make_shared<uint_sub_node>();
-        node_definition_proxy signed_mul = make_shared<sint_mul_node>();
-        node_definition_proxy unsigned_mul = make_shared<uint_mul_node>();
+        auto signed_add = make_node_def<sint_plus_node>();
+        auto unsigned_add = make_node_def<uint_plus_node>();
+        auto signed_sub = make_node_def<sint_sub_node>();
+        auto unsigned_sub = make_node_def<uint_sub_node>();
+        auto signed_mul = make_node_def<sint_mul_node>();
+        auto unsigned_mul = make_node_def<uint_mul_node>();
         auto signed_plus_id = signed_add->id();
         auto unsigned_plus_id = unsigned_add->id();
         auto signed_sub_id = signed_sub->id();
@@ -58,8 +74,8 @@ namespace blueprint::dyn_node::builtin
         auto signed_mul_id = signed_mul->id();
         auto unsigned_mul_id = unsigned_mul->id();
 
-        node_definition_proxy matrix_editor = make_shared<matrix_editor_def>();
-        node_definition_proxy matrix_display = make_shared<matrix_display_def>();
+        auto matrix_editor = make_node_def<matrix_editor_def>();
+        auto matrix_display = make_node_def<matrix_display_def>();
         auto matrix_editor_id = matrix_editor->id();
         auto matrix_display_id = matrix_display->id();
 
@@ -68,7 +84,8 @@ namespace blueprint::dyn_node::builtin
                 {
                     std::move(signed_int),
                     std::move(unsigned_int),
-                    std::move(matrix_def)
+                    std::move(matrix_def),
+                    std::move(image_def),
                 }
             },
             .nodes = {
