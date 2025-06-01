@@ -23,17 +23,18 @@ export import :identity_node;
 export import :integral_arithmetic;
 export import :matrix_editor;
 export import :image;
+export import :load_image;
 
 namespace blueprint::dyn_node::builtin
 {
 
     template <dyn_node::type_definition T>
-    type_definition_proxy make_type_def()
+    type_definition_proxy def_type()
     {
         return std::make_shared<T>();
     }
     template <dyn_node::node_definition T, typename... Args>
-    node_definition_proxy make_node_def(Args&&... args)
+    node_definition_proxy def_node(Args&&... args)
     {
         return std::make_shared<T>(std::forward<Args>(args)...);
     }
@@ -46,27 +47,27 @@ namespace blueprint::dyn_node::builtin
         using std::make_shared;
         using std::make_unique;
 
-        auto signed_int = make_type_def<sint_definition>();
-        auto unsigned_int = make_type_def<uint_definition>();
+        auto signed_int = def_type<sint_definition>();
+        auto unsigned_int = def_type<uint_definition>();
         auto signed_id = signed_int->id();
         auto unsigned_id = unsigned_int->id();
 
-        auto matrix_def = make_type_def<matrix_definition>();
-        auto image_def = make_type_def<image_definition>();
+        auto matrix_def = def_type<matrix_definition>();
+        auto image_def = def_type<image_definition>();
         auto matrix_id = matrix_def->id();
         auto image_id = image_def->id();
 
-        auto signed_node = make_node_def<identity_node_definition>(signed_int);
-        auto unsigned_node = make_node_def<identity_node_definition>(unsigned_int);
+        auto signed_node = def_node<identity_node_definition>(signed_int);
+        auto unsigned_node = def_node<identity_node_definition>(unsigned_int);
         auto signed_node_id = signed_node->id();
         auto unsigned_node_id = unsigned_node->id();
 
-        auto signed_add = make_node_def<sint_plus_node>();
-        auto unsigned_add = make_node_def<uint_plus_node>();
-        auto signed_sub = make_node_def<sint_sub_node>();
-        auto unsigned_sub = make_node_def<uint_sub_node>();
-        auto signed_mul = make_node_def<sint_mul_node>();
-        auto unsigned_mul = make_node_def<uint_mul_node>();
+        auto signed_add = def_node<sint_plus_node>();
+        auto unsigned_add = def_node<uint_plus_node>();
+        auto signed_sub = def_node<sint_sub_node>();
+        auto unsigned_sub = def_node<uint_sub_node>();
+        auto signed_mul = def_node<sint_mul_node>();
+        auto unsigned_mul = def_node<uint_mul_node>();
         auto signed_plus_id = signed_add->id();
         auto unsigned_plus_id = unsigned_add->id();
         auto signed_sub_id = signed_sub->id();
@@ -74,10 +75,13 @@ namespace blueprint::dyn_node::builtin
         auto signed_mul_id = signed_mul->id();
         auto unsigned_mul_id = unsigned_mul->id();
 
-        auto matrix_editor = make_node_def<matrix_editor_def>();
-        auto matrix_display = make_node_def<matrix_display_def>();
+        auto matrix_editor = def_node<matrix_editor_def>();
+        auto matrix_display = def_node<matrix_display_def>();
         auto matrix_editor_id = matrix_editor->id();
         auto matrix_display_id = matrix_display->id();
+
+        auto load_image = def_load_image_node();
+        auto load_image_id = load_image->id();
 
         return {
             .types = {
@@ -100,6 +104,7 @@ namespace blueprint::dyn_node::builtin
                     std::move(unsigned_mul),
                     std::move(matrix_editor),
                     std::move(matrix_display),
+                    std::move(load_image),
                 }
             },
             .groups = {
@@ -117,6 +122,11 @@ namespace blueprint::dyn_node::builtin
                     "Matrix", {
                         matrix_editor_id,
                         matrix_display_id,
+                    }
+                },
+                {
+                    "Image", {
+                        load_image_id,
                     }
                 }
             },

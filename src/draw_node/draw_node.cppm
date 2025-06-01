@@ -8,7 +8,9 @@
 export module blueprint.draw_node;
 import blueprint.builtin_node;
 export import :draw_rule;
-export import :builtin;
+export import :integral;
+export import :matrix;
+export import :image;
 
 namespace blueprint::draw_node
 {
@@ -35,6 +37,7 @@ namespace blueprint::draw_node
 
         node_draw_map_t rt;
         rt[matrix_editor_id] = &draw_matrix_editor;
+        rt[load_image_node_id] = &draw_load_image;
         return rt;
     }
 

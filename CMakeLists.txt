@@ -66,6 +66,9 @@ add_library(BlueprintOpenCVInterface INTERFACE)
 target_include_directories(BlueprintOpenCVInterface INTERFACE ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(BlueprintOpenCVInterface INTERFACE ${OpenCV_LIBS})
 
+# Other support
+add_subdirectory(lib/native-file-dialog)
+
 # Blueprint Source
 
 set(BUILD_TESTING ON)
@@ -90,7 +93,7 @@ add_subdirectory(src/flow)
 # Blueprint
 add_executable(blueprint_app src/main.cpp)
 target_link_libraries(blueprint_app
-        PRIVATE blueprint Boost::log_setup
+        PRIVATE blueprint Boost::log_setup nfd
 )
 
 # Others

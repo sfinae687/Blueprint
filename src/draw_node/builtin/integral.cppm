@@ -2,32 +2,23 @@
 //  Licensed under the MIT License. See LICENSE in the project root for details.
 
 //
-// Created by ll06 on 25-5-2.
+// Created by ll06 on 2025/6/1.
 //
-
 module;
+
 #include <proxy/proxy.h>
 #include <imgui.h>
 
-#include <memory>
-#include <format>
-
-export module blueprint.draw_node:builtin;
+export module blueprint.draw_node:integral;
 import :draw_rule;
-import blueprint.dyn_node;
 import blueprint.builtin_node;
-import blueprint.gui;
 
 namespace blueprint::draw_node
 {
-    using dyn_node::data_proxy;
-    using namespace dyn_node;
+    using namespace builtin;
     using namespace dyn_node::builtin;
-    using namespace blueprint::builtin;
 
     constexpr std::size_t widget_max_width = 128;
-
-    // Types //
 
     // Integral
 
@@ -115,41 +106,6 @@ namespace blueprint::draw_node
                 context.data = std::make_shared<builtin_unsigned_type>(num);
             }
             context.set_data = reset;
-        }
-    }
-
-    export void draw_matrix(data_draw_context &context)
-    {
-        if (context.data)
-        {
-            auto &&mat = proxy_cast<const builtin_matrix_t&>(*context.data);
-            GUI::matrix_editor(context.id, mat);
-        }
-        else
-        {
-            ImGui::Text("Unknown Matrix");
-        }
-    }
-
-    // Nodes //
-
-    export void node_draw_noop(node_draw_context &)
-    {
-        /* NOOP */
-    }
-
-    export void draw_matrix_editor(node_draw_context &ctx)
-    {
-        using namespace blueprint::builtin;
-
-        auto &&nd = ctx.node;
-        auto node_id = ctx.id;
-
-        auto &&editor = proxy_cast<matrix_editor_node&>(*nd);
-        auto &&mat = *editor.mat_;
-        if (GUI::matrix_editor(node_id, mat))
-        {
-            ctx.set_dirty = true;
         }
     }
 

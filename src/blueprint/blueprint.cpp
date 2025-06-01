@@ -492,6 +492,7 @@ namespace blueprint
 
     void blueprint_application::do_create_node(dyn_node::id_type id, new_node_context ctx)
     {
+        assert(node_def_.contains(id));
         auto&& def = node_def_[id];
         auto new_instance = def->create_node();
         auto hd = node_instance_.add_instance(std::move(new_instance));
