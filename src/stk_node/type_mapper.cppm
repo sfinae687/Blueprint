@@ -57,7 +57,7 @@ namespace blueprint::stk_node
         template <type_desc auto td, typename T>
         struct transform_helper
         {
-            using data_type = typename decltype(+td.data_type)::type;
+            using data_type = decltype(+td.data_type)::type;
             using basic_T = std::remove_cvref_t<T>;
 
             static constexpr bool exactly_match = std::same_as<data_type, basic_T>;
@@ -80,7 +80,7 @@ namespace blueprint::stk_node
         requires details::transform_helper<td, T>::transformable
     struct transform_t
     {
-        T operator() (decltype(+td.data_type)::type &d) const
+        T operator() (const decltype(+td.data_type)::type &d) const
         {
             using helper = details::transform_helper<td, T>;
             if constexpr (helper::exactly_match)

@@ -92,7 +92,7 @@ namespace blueprint::dyn_node::util
 
     bool constant_node_instance::compute(data_sequence ds) noexcept
     {
-        return ds.size() == 0;
+        return ds.size() == 0 && data_.has_value();
     }
 
     data_sequence constant_node_instance::output() const noexcept

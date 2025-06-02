@@ -142,6 +142,7 @@ namespace blueprint::GUI
             auto row_label = std::format("##{}##r{}", label, i);
             if (input_number(row_label, row_data.size(), row_data.data()))
             {
+                changed_flag = true;
                 std::copy(row_data.begin(), row_data.end(), row.begin());
             }
         }

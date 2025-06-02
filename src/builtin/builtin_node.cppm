@@ -28,6 +28,10 @@ export import :matrix_editor;
 export import :image;
 export import :load_image;
 export import :display_image;
+export import :image_resize;
+export import :image_brightness;
+export import :image_kernel;
+export import :image_decompose;
 
 namespace blueprint::dyn_node::builtin
 {
@@ -113,6 +117,15 @@ namespace blueprint::dyn_node::builtin
         auto display_image = def_node<display_image_definition>();
         auto display_image_id = display_image->id();
 
+        auto img_resize = def_image_resize_node();
+        auto img_resize_id = img_resize->id();
+        auto img_brightness = def_image_brightness_node();
+        auto img_brightness_id = img_brightness->id();
+        auto img_kernel = def_image_kernel_node();
+        auto img_kernel_id = img_kernel->id();
+        auto img_decompose = def_image_decompose_node();
+        auto img_decompose_id = img_decompose->id();
+
         return {
             .types = {
                 {
@@ -143,6 +156,10 @@ namespace blueprint::dyn_node::builtin
                     std::move(float_mul),
                     std::move(float_div),
                     std::move(float_mod),
+                    std::move(img_resize),
+                    std::move(img_brightness),
+                    std::move(img_kernel),
+                    std::move(img_decompose),
                 }
             },
             .groups = {
@@ -174,6 +191,10 @@ namespace blueprint::dyn_node::builtin
                     "Image", {
                         load_image_id,
                         display_image_id,
+                        img_resize_id,
+                        img_brightness_id,
+                        img_kernel_id,
+                        img_decompose_id,
                     }
                 }
             },

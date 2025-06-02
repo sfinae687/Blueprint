@@ -26,13 +26,13 @@ namespace blueprint::builtin
         : stk_node::basic_type_desc<SIGNED_INTEGRAL_ID, builtin_signed_type, sint_definition>
     {
         template <std::signed_integral I>
-        I transform(builtin_signed_type &d)
+        I transform(const builtin_signed_type &d) const
         {
             return static_cast<I>(auto{d});
         }
 
         template <std::signed_integral I>
-        builtin_signed_type accept(I &&d)
+        builtin_signed_type accept(I &&d) const
         {
             return static_cast<builtin_signed_type>(d);
         }
@@ -43,12 +43,12 @@ namespace blueprint::builtin
         : stk_node::basic_type_desc<UNSIGNED_INTEGRAL_ID, builtin_unsigned_type, uint_definition>
     {
         template <std::unsigned_integral I>
-        I transform(builtin_unsigned_type &d)
+        I transform(const builtin_unsigned_type &d) const
         {
             return static_cast<I>(auto{d});
         }
         template <std::unsigned_integral I>
-        builtin_unsigned_type accept(I &&d)
+        builtin_unsigned_type accept(I &&d) const
         {
             return static_cast<builtin_unsigned_type>(d);
         }
@@ -58,7 +58,8 @@ namespace blueprint::builtin
     export struct float_point_type_desc_t
         : stk_node::basic_type_desc<float_id, builtin_float, float_definition>
     {
-        [[nodiscard]] float transform(builtin_float v) const
+        template <std::same_as<float> T>
+        [[nodiscard]] T transform(const builtin_float &v) const
         {
             return v;
         }

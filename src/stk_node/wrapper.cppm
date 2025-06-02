@@ -21,6 +21,8 @@ module;
 #include <concepts>
 #include <memory>
 #include <type_traits>
+#include <tuple>
+#include <optional>
 #include <utility>
 
 export module blueprint.stk_node:wrapper;
@@ -99,13 +101,13 @@ namespace blueprint::stk_node
         }
 
         template <typename... Rts>
-        consteval auto result_list(hana::basic_tuple<std::tuple<Rts...>>)
+        consteval auto result_list(hana::basic_type<std::tuple<Rts...>>)
         {
             return hana::make_tuple(hana::type_c<Rts>...);
         }
 
         template <typename Rt>
-        consteval auto result_list(hana::basic_tuple<std::optional<Rt>>)
+        consteval auto result_list(hana::basic_type<std::optional<Rt>>)
         {
             return result_list(hana::type_c<Rt>);
         }
@@ -116,7 +118,7 @@ namespace blueprint::stk_node
             return true;
         }
         template <typename Rt>
-        bool result_success(std::optional<Rt> &&rt)
+        bool result_success(std::optional<Rt> &rt)
         {
             return rt.has_value();
         }
@@ -298,7 +300,7 @@ namespace blueprint::stk_node
             bool compute(dyn_node::data_sequence in_data) noexcept
             {
                 auto rt = def_.fn_(in_data);
-                if (!rt)
+                if (! rt.has_value())
                 {
                     return false;
                 }
@@ -366,14 +368,12 @@ namespace blueprint::stk_node
         }
 
         template <type_mapper auto tmp, typename Rt>
-            requires (result_deducible<tmp, Rt>())
+            requires(result_deducible<tmp, Rt>())
         consteval type_desc_list auto deduced_result_list()
         {
             auto rt_list = result_list(hana::type_c<Rt>);
-            return hana::unpack(rt_list, [&](auto... x)
-            {
-                return deduced_type_list<tmp, typename decltype(+x)::type...>();
-            });
+            return hana::unpack(rt_list,
+                                [&](auto... x) { return deduced_type_list<tmp, typename decltype(+x)::type...>(); });
         }
 
 
@@ -389,22 +389,51 @@ namespace blueprint::stk_node
     export template <type_mapper auto tmp, typename Rt, typename... Args>
         requires details::deduced_func_node_helper<tmp, Rt, Args...>::matchable
     class deduced_func_node
-        : public func_node<
-            details::deduced_type_list<tmp, Args...>(),
-            details::deduced_result_list<tmp, Rt>()
-        >
+        : public func_node<details::deduced_type_list<tmp, Args...>(), details::deduced_result_list<tmp, Rt>()>
     {
-        using fn_type = std::move_only_function<Rt(Args&&...)>;
-        using base  = func_node<
-            details::deduced_type_list<tmp, Args...>(),
-            details::deduced_result_list<tmp, Rt>()
-        >;
+        using base = func_node<details::deduced_type_list<tmp, Args...>(), details::deduced_result_list<tmp, Rt>()>;
+
     public:
-        deduced_func_node(fn_type fn, dyn_node::text_type name, dyn_node::text_type description, dyn_node::id_type id)
-            : base(id, name, description, std::move(fn))
+        deduced_func_node(std::move_only_function<Rt(Args&&...)> fn, dyn_node::text_type name,
+                          dyn_node::text_type description, dyn_node::id_type id) :
+            base(id, name, description, std::move(fn))
         {
-
         }
-
     };
+
+
+    namespace details /* make */
+    {
+        namespace callable = boost::callable_traits;
+        template <typename Rt, typename... Args>
+        struct func_helper
+        {
+            template <type_mapper auto tmp>
+            using node_type = deduced_func_node<tmp, Rt, Args...>;
+
+            template <type_mapper auto tmp>
+            static constexpr bool is_valid = deduced_func_node_helper<tmp, Rt, Args...>::matchable;
+        };
+        template <typename T>
+        using to_func_helper = mp_rename<
+            mp_append<
+                mp_list<callable::return_type_t<T>>,
+                callable::args_t<T>
+            >,
+            func_helper
+        >;
+
+        template <typename T, auto tmp>
+        concept deducible_function = type_mapper<decltype(tmp)> && to_func_helper<T>::template is_valid<tmp>;
+    }
+
+    export template <type_mapper auto tmp, typename T>
+        requires details::deducible_function<T, tmp>
+    dyn_node::node_definition_proxy
+    make_deduced_func_node(T &&fun, dyn_node::id_type id, dyn_node::text_type name, dyn_node::text_type desc)
+    {
+        using node_type = details::to_func_helper<T>::template node_type<tmp>;
+        return std::make_shared<node_type>(std::forward<T>(fun), name, desc, id);
+    }
+
 }
