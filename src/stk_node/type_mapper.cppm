@@ -189,7 +189,7 @@ namespace blueprint::stk_node
 
         template<typename T>
             requires deducible_by_target<T>
-        constexpr auto deduced_by_target() const
+        constexpr type_desc auto deduced_by_target() const
         {
             using namespace boost::hana::literals;
             constexpr auto sel_seq = helper::template transformable_ds<T>;
@@ -198,7 +198,7 @@ namespace blueprint::stk_node
 
         template <typename T>
             requires deducible_by_source<T>
-        constexpr auto deduced_by_source() const
+        constexpr type_desc auto deduced_by_source() const
         {
             using namespace boost::hana::literals;
             constexpr auto sel_seq = helper::template acceptable_ds<T>;

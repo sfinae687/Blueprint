@@ -5,6 +5,10 @@
 // Created by ll06 on 25-5-29.
 //
 
+/// @file
+/// The file provides the templates to wrap a callable to node.
+/// TODO Clean Up Needed
+
 module;
 #include <proxy/proxy.h>
 
@@ -141,7 +145,7 @@ namespace blueprint::stk_node
             {
                 static consteval bool valid_for_result()
                 {
-                    if ((hana::size(output.tuple) != 1_c))
+                    if constexpr (hana::size(output.tuple) != hana::size_c<1>)
                     {
                         return false;
                     }
@@ -194,12 +198,12 @@ namespace blueprint::stk_node
 
             template <typename Rt, typename... Args>
                 requires (valid_for_parameter<Args...>() && valid_for_result<Rt>())
-            static std::move_only_function<std::optional<data_sequence>(data_sequence)> make_fn(std::move_only_function<Rt(Args...)> raw_fn)
+            static std::move_only_function<std::optional<data_sequence>(data_sequence)> make_fn(std::move_only_function<Rt(Args&&...)> raw_fn)
             {
-                return [origin = std::move(raw_fn)] (data_sequence d) -> std::optional<data_sequence>
+                return [origin = std::move(raw_fn)] (data_sequence d) mutable -> std::optional<data_sequence>
                 {
                     constexpr auto sz = hana::size(input.tuple);
-                    if (d != sz.value)
+                    if (d.size() != sz.value)
                     {
                         return std::nullopt;
                     }
@@ -212,26 +216,29 @@ namespace blueprint::stk_node
                         );
                     });
 
-                    return wrap_result<Rt>(hana::unpack(args, origin));
+                    return wrap_result<Rt>(hana::unpack(std::move(args), [&]<typename... TS> (TS&&... x)
+                    {
+                        return origin(std::forward<TS>(x)...);
+                    }));
                 };
             }
         };
     }
 
     export template <type_desc_list auto input_list, type_desc_list auto output_list>
-    class /* TODO HAVE NOT TEST */ func_node
+    class func_node
     {
         using helper = details::func_node_helper<input_list, output_list>;
     public:
 
         template <typename Rt, typename... Args>
             requires (helper::template valid_for_parameter<Args...>() && helper::template valid_for_result<Rt>())
-        func_node(dyn_node::id_type id, dyn_node::text_type name, dyn_node::text_type description, std::move_only_function<Rt(Args...)> fn)
+        func_node(dyn_node::id_type id, dyn_node::text_type name, dyn_node::text_type description, std::move_only_function<Rt(Args&&...)> fn)
             : id_(id)
             , name_(name)
             , description_(description)
             , sig_(helper::signature())
-            , fn_(helper::make_fn(fn))
+            , fn_(helper::make_fn(std::move(fn)))
         {}
 
         friend class func_node_instance;
@@ -271,6 +278,7 @@ namespace blueprint::stk_node
                     return false;
                 }
                 data_ = std::move(*rt);
+                return true;
             }
             [[nodiscard]] dyn_node::data_sequence output() const noexcept
             {
@@ -356,6 +364,28 @@ namespace blueprint::stk_node
             }
         };
 
+        template <type_mapper auto tmp, typename... Args>
+            requires (... && tmp.template deducible_by_target<Args>)
+        consteval type_desc_list auto deduced_type_list()
+        {
+            return input_type<
+                tmp.template deduced_by_target<Args>()...
+            >;
+        }
+
+        template <type_mapper auto tmp, typename Rt>
+            requires (tmp.template deducible_by_source<Rt>)
+        struct deduced_result_type_list_helper
+        {
+            static constexpr auto list = output_type<tmp.template deduced_by_source<Rt>()>;
+        };
+        template <type_mapper auto tmp, typename... Rts>
+            requires (... && tmp.template deducible_by_source<Rts>)
+        struct deduced_result_type_list_helper<tmp, std::tuple<Rts...>>
+        {
+            static constexpr auto list = output_type<tmp.template deduced_by_source<Rts>()...>;
+        };
+
         template <type_mapper auto tmp, typename Rt, typename... Args>
         struct deduced_func_node_helper
         {
@@ -376,103 +406,23 @@ namespace blueprint::stk_node
 
     export template <type_mapper auto tmp, typename Rt, typename... Args>
         requires details::deduced_func_node_helper<tmp, Rt, Args...>::matchable
-    class /*TODO Reduce to func_node */ deduced_func_node
+    class deduced_func_node
+        : public func_node<
+            details::deduced_type_list<tmp, Args...>(),
+            details::deduced_result_type_list_helper<tmp, Rt>::list
+        >
     {
-        using helper = details::deduced_func_node_helper<tmp, Rt, Args...>;
-        using fn_type = std::move_only_function<Rt(Args...)>;
-        static constexpr std::size_t arg_sz = sizeof...(Args);
+        using fn_type = std::move_only_function<Rt(Args&&...)>;
+        using base  = func_node<
+            details::deduced_type_list<tmp, Args...>(),
+            details::deduced_result_type_list_helper<tmp, Rt>::list
+        >;
     public:
-        class func_node_instance
-        {
-        public:
-            explicit func_node_instance(deduced_func_node &d)
-                : def_(d)
-            {}
-
-            [[nodiscard]] dyn_node::id_type type_id() const noexcept
-            {
-                return def_.id();
-            }
-
-            [[nodiscard]] std::span<const dyn_node::signature_t> signatures() const noexcept
-            {
-                return {&def_.sig_, 1};
-            }
-            [[nodiscard]] std::size_t current_variant() const noexcept
-            {
-                return 0;
-            }
-            bool set_variant(std::size_t) noexcept
-            {
-                return false;
-            }
-            bool compute(dyn_node::data_sequence ds) noexcept
-            {
-                if (arg_sz != ds.size())
-                {
-                    return false;
-                }
-
-                auto ind_pk = hana::make_range(hana::size_c<0>, hana::size_c<arg_sz>);
-                auto args = hana::unpack(ind_pk, [&](auto... ind)
-                {
-                    return hana::make_tuple(
-                        deduced_argument_proxy<tmp, Args>(std::move(ds[ind.value]))...
-                    );
-                });
-
-                auto ans = hana::unpack(std::move(args), def_.fn_);
-
-                output_ = details::result_mapper_helper<tmp, Rt>::result_transform(std::move(ans));
-
-                return true;
-            }
-            [[nodiscard]] dyn_node::data_sequence output() const noexcept
-            {
-                return output_;
-            }
-
-
-        private:
-            dyn_node::data_sequence output_;
-            deduced_func_node &def_;
-        };
-        friend class func_node_instance;
-        static_assert(pro::proxiable<std::unique_ptr<func_node_instance>, dyn_node::node_instance_facade>);
-
         deduced_func_node(fn_type fn, dyn_node::text_type name, dyn_node::text_type description, dyn_node::id_type id)
-            : name_(name)
-            , description_(description)
-            , id_(id)
-            , fn_(std::move(fn))
-            , sig_(helper::deduced_signature())
+            : base(id, name, description, std::move(fn))
         {
 
         }
 
-        dyn_node::text_type name() const noexcept
-        {
-            return name_;
-        }
-        dyn_node::text_type description() const noexcept
-        {
-            return description_;
-        }
-        dyn_node::id_type id() const noexcept
-        {
-            return id_;
-        }
-
-        dyn_node::node_instance_proxy create_node()
-        {
-            return std::make_unique<func_node_instance>(*this);
-        }
-
-    private:
-        dyn_node::text_type name_;
-        dyn_node::text_type description_;
-        dyn_node::id_type id_;
-        fn_type fn_;
-        dyn_node::signature_t sig_;
     };
 }
