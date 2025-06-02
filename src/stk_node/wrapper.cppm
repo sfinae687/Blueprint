@@ -376,7 +376,7 @@ namespace blueprint::stk_node
 
     export template <type_mapper auto tmp, typename Rt, typename... Args>
         requires details::deduced_func_node_helper<tmp, Rt, Args...>::matchable
-    class deduced_func_node
+    class /*TODO Reduce to func_node */ deduced_func_node
     {
         using helper = details::deduced_func_node_helper<tmp, Rt, Args...>;
         using fn_type = std::move_only_function<Rt(Args...)>;

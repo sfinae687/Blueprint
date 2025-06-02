@@ -85,9 +85,21 @@ namespace blueprint::draw_node
     {
         auto &&nd = proxy_cast<display_image_instance&>(*ctx.node);
         nd.flush_image();
-        if (! nd.display())
+        if (nd.has_image())
+        {
+            auto id = ctx.id;
+
+            float width = nd.width() * nd.scale;
+            ImGui::SetNextItemWidth(width);
+            auto slider_id = std::format("scale##{}", id);
+
+            ImGui::SliderFloat(slider_id.c_str(), &nd.scale, 0.1, 1.0);
+            nd.display();
+        }
+        else
         {
             ImGui::Text("Unable to display the image");
+
         }
 
     }

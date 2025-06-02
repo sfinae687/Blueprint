@@ -197,14 +197,17 @@ namespace blueprint::GUI
         image(ImTextureID id, image_type ty, ImVec2 sz);
         explicit image(const cv::Mat &);
 
-        explicit operator bool();
+        explicit operator bool() const;
 
         image& operator= (const cv::Mat &);
 
         [[nodiscard]] image_type type() const;
         [[nodiscard]] ImTextureID id() const;
 
-        void show() const;
+        [[nodiscard]] std::size_t width() const;
+        [[nodiscard]] std::size_t height() const;
+
+        void show(float scale=1.0) const;
 
     private:
 
@@ -214,7 +217,7 @@ namespace blueprint::GUI
         image_type ty_ = image_type::none;
         GLuint tid_;
 
-        std::size_t width;
-        std::size_t height;
+        std::size_t width_;
+        std::size_t height_;
     };
 }

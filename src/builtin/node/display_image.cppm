@@ -70,6 +70,21 @@ namespace blueprint::builtin
             return {};
         }
 
+        [[nodiscard]] bool has_image() const
+        {
+            return static_cast<bool>(img_);
+        }
+
+        [[nodiscard]] std::size_t width() const
+        {
+            return img_.width();
+        }
+
+        [[nodiscard]] std::size_t height() const
+        {
+            return img_.height();
+        }
+
         void flush_image()
         {
             if (! origin_.empty())
@@ -82,7 +97,7 @@ namespace blueprint::builtin
         bool display() {
             if (img_)
             {
-                img_.show();
+                img_.show(scale);
                 return true;
             }
             return false;
@@ -90,7 +105,10 @@ namespace blueprint::builtin
 
     private:
         cv::Mat origin_;
-        GUI::image img_;
+        GUI::image img_{};
+
+    public:
+        float scale = 1.0;
 
     };
 

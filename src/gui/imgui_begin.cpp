@@ -101,7 +101,7 @@ namespace blueprint::GUI
         }
     }
 
-    image::image(image&& that) noexcept : ty_(that.ty_), tid_(that.tid_), width(that.width), height(that.height)
+    image::image(image&& that) noexcept : ty_(that.ty_), tid_(that.tid_), width_(that.width_), height_(that.height_)
     {
         that.ty_ = image_type::none;
     }
@@ -114,9 +114,11 @@ namespace blueprint::GUI
         }
     }
 
-    ImTextureID image::id() const
+    ImTextureID image::id() const { return tid_; }
+    std::size_t image::width() const { return width_; }
+    std::size_t image::height() const
     {
-        return tid_;
+        return height_;
     }
     image::image_type image::type() const
     {
@@ -131,20 +133,20 @@ namespace blueprint::GUI
         }
         ty_ = that.ty_;
         tid_ = that.tid_;
-        width = that.width;
-        height = that.height;
+        width_ = that.width_;
+        height_ = that.height_;
         that.ty_ = image_type::none;
         return *this;
     }
-    image::image(ImTextureID id, image_type ty, ImVec2 sz) : ty_(ty), tid_(id), height(sz.x), width(sz.y) {}
+    image::image(ImTextureID id, image_type ty, ImVec2 sz) : ty_(ty), tid_(id), height_(sz.x), width_(sz.y) {}
 
     image::image(const cv::Mat& mat) :
-        ty_(deduced_image_type(mat)), tid_(load_opencv_image(mat)), width(mat.cols), height(mat.rows)
+        ty_(deduced_image_type(mat)), tid_(load_opencv_image(mat)), width_(mat.cols), height_(mat.rows)
     {
         assert(ty_ != image_type::none);
         bind_swizzle();
     }
-    image::operator bool()
+    image::operator bool() const
     {
         return ty_ != image_type::none;
     }
@@ -157,17 +159,20 @@ namespace blueprint::GUI
         }
         ty_ = deduced_image_type(mat);
         tid_ = load_opencv_image(mat);
-        width = mat.cols;
-        height = mat.rows;
+        width_ = mat.cols;
+        height_ = mat.rows;
         assert(ty_ != image_type::none);
         bind_swizzle();
         return *this;
     }
 
-    void image::show() const
+    void image::show(float scale) const
     {
         auto im_tid = id();
-        ImGui::Image(im_tid, ImVec2(width, height));
+        ImVec2 sz(width_, height_);
+        sz.x *= scale;
+        sz.y *= scale;
+        ImGui::Image(im_tid, sz);
     }
 
 
