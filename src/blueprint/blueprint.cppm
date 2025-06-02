@@ -16,6 +16,7 @@ module;
 
 #include <map>
 #include <unordered_set>
+#include <set>
 #include <queue>
 
 
@@ -118,7 +119,7 @@ namespace blueprint
         std::unordered_map<flow::no_id, new_node_context> new_node_;
 
         // Menu definition
-        using menu_def_t = std::unordered_map<std::string, std::unordered_set<std::string_view>>;
+        using menu_def_t = std::map<std::string, std::set<std::string_view>>;
         menu_def_t menu_def_;
 
         // Update flag
