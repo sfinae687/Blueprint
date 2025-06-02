@@ -104,6 +104,23 @@ namespace blueprint::stk_node
             return hana::make_tuple(hana::type_c<Rts>...);
         }
 
+        template <typename Rt>
+        consteval auto result_list(hana::basic_tuple<std::optional<Rt>>)
+        {
+            return result_list(hana::type_c<Rt>);
+        }
+
+        template <typename Rt>
+        constexpr bool result_success(Rt &&rt)
+        {
+            return true;
+        }
+        template <typename Rt>
+        bool result_success(std::optional<Rt> &&rt)
+        {
+            return rt.has_value();
+        }
+
         template <std::size_t i, typename Rt>
             requires (i == 0)
         constexpr decltype(auto) result_decompose(Rt& rt)
@@ -117,6 +134,13 @@ namespace blueprint::stk_node
         {
             return std::move(std::get<i>(rt));
         }
+
+        template <std::size_t i, typename Rt>
+        constexpr decltype(auto) result_decompose(std::optional<Rt>& rt)
+        {
+            return result_decompose<i>(rt.value());
+        }
+
 
         // func node helper
 
@@ -178,6 +202,7 @@ namespace blueprint::stk_node
                 requires (valid_for_result<Rt>())
             static data_sequence wrap_result(Rt&& rt)
             {
+                assert(result_success(rt));
                 auto rg = hana::make_range(hana::size_c<0>, hana::size(output.tuple));
                 auto ele = result_list(hana::type_c<Rt>);
                 return hana::unpack(rg, [&](auto... i) -> data_sequence
@@ -209,10 +234,17 @@ namespace blueprint::stk_node
                         );
                     });
 
-                    return wrap_result<Rt>(hana::unpack(std::move(args), [&]<typename... TS> (TS&&... x)
+                    auto result = hana::unpack(std::move(args), [&]<typename... TS> (TS&&... x)
                     {
                         return origin(std::forward<TS>(x)...);
-                    }));
+                    });
+
+                    if (! result_success(result))
+                    {
+                        return std::nullopt;
+                    }
+
+                    return wrap_result<Rt>(std::move(result));
                 };
             }
         };
@@ -245,7 +277,7 @@ namespace blueprint::stk_node
 
             }
 
-            dyn_node::id_type type_id() const noexcept
+            [[nodiscard]] dyn_node::id_type type_id() const noexcept
             {
                 return def_.id_;
             }
@@ -283,15 +315,15 @@ namespace blueprint::stk_node
             dyn_node::data_sequence data_{};
         };
 
-        dyn_node::text_type name() const noexcept
+        [[nodiscard]] dyn_node::text_type name() const noexcept
         {
             return name_;
         }
-        dyn_node::text_type description() const noexcept
+        [[nodiscard]] dyn_node::text_type description() const noexcept
         {
             return description_;
         }
-        dyn_node::id_type id() const noexcept
+        [[nodiscard]] dyn_node::id_type id() const noexcept
         {
             return id_;
         }
