@@ -12,10 +12,11 @@ module;
 export module blueprint.builtin_node:builtin_mapper;
 import blueprint.dyn_node;
 import blueprint.stk_node;
-import :signed_integral;
-import :unsigned_integral;
-import :matrix;
-import :image;
+export import :signed_integral;
+export import :unsigned_integral;
+export import :float_point;
+export import :matrix;
+export import :image;
 
 namespace blueprint::builtin
 {
@@ -54,12 +55,27 @@ namespace blueprint::builtin
     };
     constexpr uint_type_desc_t uint_type_desc;
 
+    export struct float_point_type_desc_t
+        : stk_node::basic_type_desc<float_id, builtin_float, float_definition>
+    {
+        [[nodiscard]] float transform(builtin_float v) const
+        {
+            return v;
+        }
+        [[nodiscard]] builtin_float accept(float v) const
+        {
+            return builtin_float{v};
+        }
+    };
+    constexpr float_point_type_desc_t float_point_type_desc;
+
     constexpr stk_node::basic_type_desc<matrix_id, builtin_matrix_t, matrix_definition> matrix_type_desc{};
     constexpr stk_node::basic_type_desc<image_id, builtin_image_t, image_definition> image_type_desc{};
 
     using builtin_mapper_t = stk_node::mapper<
         int_type_desc,
         uint_type_desc,
+        float_point_type_desc,
         matrix_type_desc,
         image_type_desc
     >;

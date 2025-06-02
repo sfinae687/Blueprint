@@ -12,15 +12,18 @@ module;
 #include <vector>
 #include <string>
 #include <string_view>
+#include <utility>
 
 export module blueprint.builtin_node;
 import blueprint.dyn_node;
 import blueprint.plugin;
 export import :signed_integral;
 export import :unsigned_integral;
+export import :float_point;
 export import :matrix;
 export import :identity_node;
 export import :integral_arithmetic;
+export import :float_arithmetic;
 export import :matrix_editor;
 export import :image;
 export import :load_image;
@@ -29,15 +32,31 @@ export import :display_image;
 namespace blueprint::dyn_node::builtin
 {
 
-    template <dyn_node::type_definition T>
+    template <type_definition T>
     type_definition_proxy def_type()
     {
         return std::make_shared<T>();
     }
-    template <dyn_node::node_definition T, typename... Args>
+    template <node_definition T, typename... Args>
     node_definition_proxy def_node(Args&&... args)
     {
         return std::make_shared<T>(std::forward<Args>(args)...);
+    }
+
+    template <type_definition T>
+    std::pair<type_definition_proxy, id_type> def_type_id()
+    {
+        auto def = def_type<T>();
+        auto id = def->id();
+        return {std::move(def), id};
+    }
+
+    template <node_definition T, typename... Args>
+    std::pair<node_definition_proxy, id_type> def_node_id(Args&&... args)
+    {
+        auto def = def_node<T>(std::forward<Args>(args)...);
+        auto id = def->id();
+        return {std::move(def), id};
     }
 
     export plugin::component_package builtin_components()
@@ -50,6 +69,7 @@ namespace blueprint::dyn_node::builtin
 
         auto signed_int = def_type<sint_definition>();
         auto unsigned_int = def_type<uint_definition>();
+        auto [float_point, float_point_id] = def_type_id<float_definition>();
         auto signed_id = signed_int->id();
         auto unsigned_id = unsigned_int->id();
 
@@ -60,6 +80,7 @@ namespace blueprint::dyn_node::builtin
 
         auto signed_node = def_node<identity_node_definition>(signed_int);
         auto unsigned_node = def_node<identity_node_definition>(unsigned_int);
+        auto [float_point_node, float_point_node_id] = def_node_id<identity_node_definition>(float_point);
         auto signed_node_id = signed_node->id();
         auto unsigned_node_id = unsigned_node->id();
 
@@ -75,6 +96,12 @@ namespace blueprint::dyn_node::builtin
         auto unsigned_sub_id = unsigned_sub->id();
         auto signed_mul_id = signed_mul->id();
         auto unsigned_mul_id = unsigned_mul->id();
+
+        auto [float_add, float_add_id] = def_node_id<float_plus_node>();
+        auto [float_sub, float_sub_id] = def_node_id<float_minus_node>();
+        auto [float_mul, float_mul_id] = def_node_id<float_mul_node>();
+        auto [float_div, float_div_id] = def_node_id<float_div_node>();
+        auto [float_mod, float_mod_id] = def_node_id<float_mod_node>();
 
         auto matrix_editor = def_node<matrix_editor_def>();
         auto matrix_display = def_node<matrix_display_def>();
@@ -93,12 +120,14 @@ namespace blueprint::dyn_node::builtin
                     std::move(unsigned_int),
                     std::move(matrix_def),
                     std::move(image_def),
+                    std::move(float_point),
                 }
             },
             .nodes = {
                 {
                     std::move(signed_node),
                     std::move(unsigned_node),
+                    std::move(float_point_node),
                     std::move(signed_add),
                     std::move(unsigned_add),
                     std::move(signed_sub),
@@ -109,17 +138,30 @@ namespace blueprint::dyn_node::builtin
                     std::move(matrix_display),
                     std::move(load_image),
                     std::move(display_image),
+                    std::move(float_add),
+                    std::move(float_sub),
+                    std::move(float_mul),
+                    std::move(float_div),
+                    std::move(float_mod),
                 }
             },
             .groups = {
                 {
-                    "Core", {signed_node_id, unsigned_node_id}
+                    "Core", {
+                        signed_node_id, unsigned_node_id,
+                        float_point_node_id
+                    }
                 },
                 {
                     "Arithmetic", {
                         signed_plus_id, unsigned_plus_id,
                         signed_sub_id, unsigned_sub_id,
-                        signed_mul_id, unsigned_mul_id
+                        signed_mul_id, unsigned_mul_id,
+                        float_add_id,
+                        float_sub_id,
+                        float_mul_id,
+                        float_div_id,
+                        float_mod_id,
                     }
                 },
                 {

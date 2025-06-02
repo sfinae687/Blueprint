@@ -8,9 +8,10 @@
 export module blueprint.draw_node;
 import blueprint.builtin_node;
 export import :draw_rule;
-export import :integral;
-export import :matrix;
-export import :image;
+import :integral;
+import :float_point;
+import :matrix;
+import :image;
 
 namespace blueprint::draw_node
 {
@@ -25,6 +26,7 @@ namespace blueprint::draw_node
         rt[SIGNED_INTEGRAL_ID] = &draw_signed;
         rt[UNSIGNED_INTEGRAL_ID] = &draw_unsigned;
         rt[matrix_id] = &draw_matrix;
+        rt[float_id] = &draw_float;
 
         return rt;
     }

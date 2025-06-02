@@ -10,6 +10,8 @@ set(BP06_BUILTIN_NODE_INTERFACE
         type/image.cppm
         node/load_image.cppm
         node/display_image.cppm
+        type/float.cppm
+        node/float_arithmetic.cppm
 )
 add_library(blueprint_builtin_node
         ${BP06_BUILTIN_NODE_INTERFACE}

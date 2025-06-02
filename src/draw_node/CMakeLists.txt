@@ -5,6 +5,7 @@ set(BP06_DRAW_NODE_INTERFACE
         builtin/integral.cppm
         builtin/matrix.cppm
         builtin/image.cppm
+        builtin/float_point.cppm
 )
 add_library(blueprint_draw_node
         ${BP06_DRAW_NODE_INTERFACE}

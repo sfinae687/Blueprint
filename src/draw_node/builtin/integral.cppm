@@ -18,7 +18,7 @@ namespace blueprint::draw_node
     using namespace builtin;
     using namespace dyn_node::builtin;
 
-    constexpr std::size_t widget_max_width = 128;
+    constexpr std::size_t integral_widget_max_width = 128;
 
     // Integral
 
@@ -51,7 +51,7 @@ namespace blueprint::draw_node
             }
             ImGui::Text("Integral");
             ImGui::SameLine(0, 10.f);
-            ImGui::SetNextItemWidth(widget_max_width);
+            ImGui::SetNextItemWidth(integral_widget_max_width);
             if (ImGui::InputScalar("",  ImGuiDataType_S64, &num))
             {
                 reset = true;
@@ -67,7 +67,6 @@ namespace blueprint::draw_node
 
     export void draw_unsigned(data_draw_context &context)
     {
-        ImGui::SetNextItemWidth(widget_max_width);
         if (context.is_connected)
         {
             if (context.data)
@@ -95,7 +94,7 @@ namespace blueprint::draw_node
 
             ImGui::Text("Unsigned");
             ImGui::SameLine(0, 10.f);
-            ImGui::SetNextItemWidth(widget_max_width);
+            ImGui::SetNextItemWidth(integral_widget_max_width);
             if (ImGui::InputScalar("", ImGuiDataType_U64, &num))
             {
                 reset = true;

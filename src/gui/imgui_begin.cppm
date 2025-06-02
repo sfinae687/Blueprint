@@ -73,11 +73,14 @@ namespace blueprint::GUI
                 return -1;
             }
         }
+
+        static_assert(get_imgui_data_type_enum<double>() == ImGuiDataType_Double);
     }
 
     // --- Input --- //
 
-    export template <std::integral T>
+    export template <typename T>
+        requires std::integral<T> || std::floating_point<T>
     constexpr auto imgui_data_type = details::get_imgui_data_type_enum<T>();
 
     export template <typename T>

@@ -73,8 +73,8 @@ namespace blueprint
         draw_node::data_draw_context& make_draw_context(flow::no_id);
         void process_link();
         void draw_link();
-        /* TODO */ void draw_editor_menu();
-        void draw_node_menu();
+        void draw_editor_menu();
+        /* TODO Implement Me */ void draw_node_menu();
 
 
 
