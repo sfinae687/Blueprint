@@ -34,6 +34,7 @@ export import :image_kernel;
 export import :image_decompose;
 export import :image_color_split;
 export import :image_compose;
+export import :image_add;
 
 namespace blueprint::dyn_node::builtin
 {
@@ -131,6 +132,8 @@ namespace blueprint::dyn_node::builtin
         auto img_split_id = img_split->id();
         auto img_compose = def_image_compose_node();
         auto img_compose_id = img_compose->id();
+        auto img_add = def_image_add_node();
+        auto img_add_id = img_add->id();
 
         return {
             .types = {
@@ -168,6 +171,7 @@ namespace blueprint::dyn_node::builtin
                     std::move(img_decompose),
                     std::move(img_split),
                     std::move(img_compose),
+                    std::move(img_add),
                 }
             },
             .groups = {
@@ -205,6 +209,7 @@ namespace blueprint::dyn_node::builtin
                         img_decompose_id,
                         img_split_id,
                         img_compose_id,
+                        img_add_id,
                     }
                 }
             },
