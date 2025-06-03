@@ -24,7 +24,9 @@ namespace blueprint::builtin
             return std::nullopt;
         }
 
-        return alpha * lhs + (1. -alpha) * rhs;
+        cv::Mat rt;
+        cv::addWeighted(lhs, alpha, rhs, 1-alpha, 0, rt);
+        return rt;
     }
 
     export constexpr char image_add_id[] = "core.image-process.add";
