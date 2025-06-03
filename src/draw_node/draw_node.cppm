@@ -27,6 +27,7 @@ namespace blueprint::draw_node
         rt[UNSIGNED_INTEGRAL_ID] = &draw_unsigned;
         rt[matrix_id] = &draw_matrix;
         rt[float_id] = &draw_float;
+        rt[image_id] = &draw_image_info;
 
         return rt;
     }

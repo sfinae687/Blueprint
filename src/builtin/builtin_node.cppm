@@ -34,7 +34,10 @@ export import :image_kernel;
 export import :image_decompose;
 export import :image_color_split;
 export import :image_compose;
-export import :image_add;
+export import :image_weighted;
+export import :image_alpha_beta;
+export import :image_grayscale;
+export import :image_blur;
 
 namespace blueprint::dyn_node::builtin
 {
@@ -132,8 +135,16 @@ namespace blueprint::dyn_node::builtin
         auto img_split_id = img_split->id();
         auto img_compose = def_image_compose_node();
         auto img_compose_id = img_compose->id();
-        auto img_add = def_image_add_node();
+        auto img_add = def_image_weighted_node();
         auto img_add_id = img_add->id();
+        auto img_alpha_beta = def_image_alpha_beta_node();
+        auto img_alpha_beta_id = img_alpha_beta->id();
+        auto img_grayscale = def_image_grayscale_node();
+        auto img_grayscale_id = img_grayscale->id();
+        auto img_blur = def_image_blur_node();
+        auto img_blur_id = img_blur->id();
+        auto img_gaussian_blur = def_image_gaussian_blur_node();
+        auto img_gaussian_blur_id = img_gaussian_blur->id();
 
         return {
             .types = {
@@ -172,6 +183,10 @@ namespace blueprint::dyn_node::builtin
                     std::move(img_split),
                     std::move(img_compose),
                     std::move(img_add),
+                    std::move(img_alpha_beta),
+                    std::move(img_grayscale),
+                    std::move(img_blur),
+                    std::move(img_gaussian_blur),
                 }
             },
             .groups = {
@@ -210,6 +225,10 @@ namespace blueprint::dyn_node::builtin
                         img_split_id,
                         img_compose_id,
                         img_add_id,
+                        img_alpha_beta_id,
+                        img_grayscale_id,
+                        img_blur_id,
+                        img_gaussian_blur_id,
                     }
                 }
             },

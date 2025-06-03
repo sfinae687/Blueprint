@@ -81,7 +81,7 @@ namespace blueprint
             auto all_ready = link_.dump_ready();
             if (all_ready.empty() && in_computing_.empty())
             {
-                begin_compute_flag = false;
+                // begin_compute_flag = false;
             }
             else
             {
@@ -352,13 +352,13 @@ namespace blueprint
         {
             for (auto&& [group_name, members] : menu_def_)
             {
-                std::string group_menu_id = group_name + "##GroupMenu";
+                auto group_menu_id = std::format(" {}##GroupMenu", group_name);
                 if (ImGui::BeginMenu(group_menu_id.c_str()))
                 {
                     for (auto&& ent : members)
                     {
                         auto node_name = node_def_[ent]->name();
-                        auto item_id = node_name.data() + "##"s + group_menu_id;
+                        auto item_id = std::format(" {}##{}", node_name, group_menu_id);
                         if (ImGui::MenuItem(item_id.c_str()))
                         {
                             BOOST_LOG_SEV(logger, trace) << "Create node: " << ent;

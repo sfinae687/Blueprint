@@ -28,6 +28,24 @@ namespace blueprint::draw_node
     using namespace builtin;
     using namespace dyn_node::builtin;
 
+    // Type
+
+    export void draw_image_info(data_draw_context &ctx)
+    {
+        auto &&d = ctx.data;
+        if (ctx.is_connected && ctx.data)
+        {
+            auto &&img = proxy_cast<builtin_image_t&>(*d);
+
+            auto info = std::format("Image({}x{}, {} channel(s))", img.rows, img.cols, img.channels());
+            ImGui::Text("%s", info.c_str());
+        }
+        else
+        {
+            ImGui::Text("Image Unspecified");
+        }
+    }
+
     // Load
 
     export void draw_load_image(node_draw_context &ctx)
@@ -43,17 +61,10 @@ namespace blueprint::draw_node
         auto flush_btn_id = std::format("Flush##{}", id);
         if (ImGui::Button(select_btn_id.c_str()))
         {
-             flush_flag = true;
-        }
-        // if (ImGui::Button(flush_btn_id.c_str()))
-        // {
-        //     flush_flag = true;
-        // }
-        if (flush_flag)
-        {
+            flush_flag = true;
             nfdu8char_t *out_path;
             nfdu8filteritem_t filters[] = {
-                {"Picture", "jpg,jpeg,png"}
+            {"Picture", "jpg,jpeg,png"}
             };
             nfdopendialogu8args_t args = {0};
             args.filterList = filters;
@@ -62,16 +73,15 @@ namespace blueprint::draw_node
             nfdresult_t dialog_result = NFD_OpenDialogU8_With(&out_path, &args);
             if (dialog_result == NFD_OKAY)
             {
-                auto img = cv::imread(out_path);
-                cv::cvtColor(img, img, cv::COLOR_BGR2RGBA);
-                BOOST_LOG_SEV(draw_node_logger, info) << "Load image from: " << out_path;
-                node_inst.set_output(std::make_shared<cv::Mat>(std::move(img)));
-                ctx.set_dirty = true;
+            auto img = cv::imread(out_path);
+            cv::cvtColor(img, img, cv::COLOR_BGR2RGBA);
+            BOOST_LOG_SEV(draw_node_logger, info) << "Load image from: " << out_path;
+            node_inst.set_output(std::make_shared<cv::Mat>(std::move(img)));
+            ctx.set_dirty = true;
             }
 
             node_inst.set_context<std::string>(out_path);
         }
-
         if (node_inst.is_set())
         {
             ImGui::Text("Path:%s", node_inst.get_context<std::string&>().c_str());

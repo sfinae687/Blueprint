@@ -47,7 +47,14 @@ namespace blueprint::builtin
         bool compute(data_sequence) noexcept;
         [[nodiscard]] data_sequence output() const noexcept;
 
-        std::shared_ptr<builtin_matrix_t> mat_;
+        std::shared_ptr<builtin_matrix_t> mat_{};
+        int cur_item = 0;
+        struct gaussian_kernel_context
+        {
+            int sz;
+            double gamma;
+        };
+        std::variant<std::monostate, gaussian_kernel_context> arg_;
     };
 
     export class matrix_display_def

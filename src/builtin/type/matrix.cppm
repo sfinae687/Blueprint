@@ -17,7 +17,7 @@ import blueprint.dyn_node;
 
 namespace blueprint::builtin
 {
-    export using builtin_matrix_t = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>;
+    export using builtin_matrix_t = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
     export constexpr char matrix_id[] = "core.matrix.int";
 
     export struct builtin_hint{};
@@ -47,7 +47,7 @@ namespace blueprint::builtin
         }
         /* NOLINT */ [[nodiscard]] text_type description() const
         {
-            return "The matrix of integral";
+            return "The matrix of double";
         }
         /* NOLINT */ [[nodiscard]] id_type id() const
         {

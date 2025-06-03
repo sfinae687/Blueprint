@@ -15,5 +15,5 @@ target_sources(blueprint_draw_node
 )
 target_link_libraries(blueprint_draw_node
     PUBLIC msft_proxy
-    PRIVATE blueprint_dyn_node blueprint_builtin_node imgui Boost::log blueprint_gui BlueprintOpenCVInterface nfd
+    PRIVATE blueprint_dyn_node blueprint_builtin_node imgui Boost::log blueprint_gui BlueprintOpenCVInterface nfd Eigen3::Eigen
 )
