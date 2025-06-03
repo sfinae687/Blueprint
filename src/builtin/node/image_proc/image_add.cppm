@@ -17,14 +17,14 @@ import :builtin_mapper;
 
 namespace blueprint::builtin
 {
-    export std::optional<cv::Mat> image_add(cv::Mat lhs, cv::Mat rhs)
+    export std::optional<cv::Mat> image_add(float alpha, cv::Mat lhs, cv::Mat rhs)
     {
         if (lhs.channels() != rhs.channels())
         {
             return std::nullopt;
         }
 
-        return lhs + rhs;
+        return alpha * lhs + (1. -alpha) * rhs;
     }
 
     export constexpr char image_add_id[] = "core.image-process.add";
