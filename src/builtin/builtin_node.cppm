@@ -32,6 +32,7 @@ export import :image_resize;
 export import :image_brightness;
 export import :image_kernel;
 export import :image_decompose;
+export import :image_color_split;
 
 namespace blueprint::dyn_node::builtin
 {
@@ -125,6 +126,8 @@ namespace blueprint::dyn_node::builtin
         auto img_kernel_id = img_kernel->id();
         auto img_decompose = def_image_decompose_node();
         auto img_decompose_id = img_decompose->id();
+        auto img_split = def_image_color_split_node();
+        auto img_split_id = img_split->id();
 
         return {
             .types = {
@@ -160,6 +163,7 @@ namespace blueprint::dyn_node::builtin
                     std::move(img_brightness),
                     std::move(img_kernel),
                     std::move(img_decompose),
+                    std::move(img_split),
                 }
             },
             .groups = {
@@ -195,6 +199,7 @@ namespace blueprint::dyn_node::builtin
                         img_brightness_id,
                         img_kernel_id,
                         img_decompose_id,
+                        img_split_id,
                     }
                 }
             },
