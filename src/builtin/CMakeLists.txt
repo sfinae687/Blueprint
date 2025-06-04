@@ -21,6 +21,7 @@ set(BP06_BUILTIN_NODE_INTERFACE
         node/image_proc/alpha_beta.cppm
         node/image_proc/image_grayscale.cppm
         node/image_proc/image_blur.cppm
+        node/matrix_arithmetic.cppm
 )
 add_library(blueprint_builtin_node
         ${BP06_BUILTIN_NODE_INTERFACE}

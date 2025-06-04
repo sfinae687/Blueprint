@@ -17,14 +17,18 @@ module;
 export module blueprint.builtin_node;
 import blueprint.dyn_node;
 import blueprint.plugin;
+
 export import :signed_integral;
 export import :unsigned_integral;
 export import :float_point;
-export import :matrix;
 export import :identity_node;
 export import :integral_arithmetic;
 export import :float_arithmetic;
+
+export import :matrix;
 export import :matrix_editor;
+export import :matrix_arithmetic;
+
 export import :image;
 export import :load_image;
 export import :display_image;
@@ -143,6 +147,21 @@ namespace blueprint::dyn_node::builtin
         auto img_gaussian_blur = def_image_gaussian_blur_node();
         auto img_gaussian_blur_id = img_gaussian_blur->id();
 
+        auto mat_plus = def_matrix_plus();
+        auto mat_plus_id = mat_plus->id();
+        auto mat_sub = def_matrix_subtract();
+        auto mat_sub_id = mat_sub->id();
+        auto mat_mul = def_matrix_multiplies();
+        auto mat_mul_id = mat_mul->id();
+        auto mat_array_mul = def_matrix_array_multiplies();
+        auto mat_array_mul_id = mat_array_mul->id();
+        auto mat_scalar_plus = def_matrix_scalar_plus();
+        auto mat_scalar_plus_id = mat_scalar_plus->id();
+        auto mat_scalar_sub = def_matrix_scalar_subtract();
+        auto mat_scalar_sub_id = mat_scalar_sub->id();
+        auto mat_scalar_mul = def_matrix_scalar_multiplies();
+        auto mat_scalar_mul_id = mat_scalar_mul->id();
+
         return {
             .types = {
                 {
@@ -183,6 +202,13 @@ namespace blueprint::dyn_node::builtin
                     std::move(img_grayscale),
                     std::move(img_blur),
                     std::move(img_gaussian_blur),
+                    std::move(mat_plus),
+                    std::move(mat_sub),
+                    std::move(mat_mul),
+                    std::move(mat_array_mul),
+                    std::move(mat_scalar_plus),
+                    std::move(mat_scalar_sub),
+                    std::move(mat_scalar_mul),
                 }
             },
             .groups = {
@@ -208,6 +234,13 @@ namespace blueprint::dyn_node::builtin
                     "Matrix", {
                         matrix_editor_id,
                         matrix_display_id,
+                        mat_plus_id,
+                        mat_sub_id,
+                        mat_mul_id,
+                        mat_array_mul_id,
+                        mat_scalar_plus_id,
+                        mat_scalar_sub_id,
+                        mat_scalar_mul_id,
                     }
                 },
                 {
