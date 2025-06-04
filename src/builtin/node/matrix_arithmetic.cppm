@@ -57,6 +57,19 @@ namespace blueprint::builtin
         return lhs.array() * rhs.array();
     }
 
+    export std::optional<builtin_matrix_t> matrix_array_divide(builtin_matrix_t lhs, builtin_matrix_t rhs)
+    {
+        if (lhs.rows() != rhs.rows() || lhs.cols() != rhs.cols())
+        {
+            return std::nullopt;
+        }
+        if (rhs.array().any() == 0.0)
+        {
+            return std::nullopt; // Division by zero
+        }
+        return lhs.array() / rhs.array();
+    }
+
     export builtin_matrix_t matrix_scalar_plus(builtin_matrix_t lhs, double rhs)
     {
         return lhs.array() + rhs;
@@ -70,6 +83,34 @@ namespace blueprint::builtin
     export builtin_matrix_t matrix_scalar_multiplies(builtin_matrix_t lhs, double rhs)
     {
         return lhs.array() * rhs;
+    }
+
+    export std::optional<builtin_matrix_t> matrix_scalar_divide(builtin_matrix_t lhs, double rhs)
+    {
+        if (rhs == 0.0)
+        {
+            return std::nullopt;
+        }
+        return lhs.array() / rhs;
+    }
+
+
+    export builtin_matrix_t matrix_negate(builtin_matrix_t x)
+    {
+        return -x;
+    }
+
+    export std::optional<builtin_matrix_t> matrix_hypot(builtin_matrix_t x, builtin_matrix_t y, builtin_matrix_t z)
+    {
+        if (x.size() != y.size() || x.size() != z.size())
+        {
+            return std::nullopt;
+        }
+
+        auto &&xa = x.array();
+        auto &&ya = y.array();
+        auto &&za = z.array();
+        return Eigen::sqrt(xa * xa + ya * ya + za * za);
     }
 
     export def_t def_matrix_plus()
@@ -118,6 +159,35 @@ namespace blueprint::builtin
     {
         return stk_node::make_deduced_func_node<builtin_mapper>(&matrix_scalar_multiplies,
             "core.arithmetic.multiply.scalar", "Scalar Multiply", "Multiply a matrix by a scalar"
+        );
+    }
+
+    export def_t def_matrix_negate()
+    {
+        return stk_node::make_deduced_func_node<builtin_mapper>(&matrix_negate,
+            "core.arithmetic.negate.matrix", "Matrix Negate", "Negate a matrix"
+        );
+    }
+
+    export def_t def_matrix_array_divide()
+    {
+        return stk_node::make_deduced_func_node<builtin_mapper>(&matrix_array_divide,
+            "core.arithmetic.array-divide.matrix", "Matrix Array Divide",
+            "Divide two matrix with array semantics"
+        );
+    }
+
+    export def_t def_matrix_scalar_divide()
+    {
+        return stk_node::make_deduced_func_node<builtin_mapper>(&matrix_scalar_divide,
+            "core.arithmetic.divide.scalar", "Scalar Divide", "Divide a matrix by a scalar"
+        );
+    }
+
+    export def_t def_matrix_hypot()
+    {
+        return stk_node::make_deduced_func_node<builtin_mapper>(&matrix_hypot,
+            "core.arithmetic.hypot.matrix", "Matrix Hypot", "Compute the hypotenuse of three matrix"
         );
     }
 

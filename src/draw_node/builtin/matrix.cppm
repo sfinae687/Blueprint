@@ -31,7 +31,15 @@ namespace blueprint::draw_node
         if (context.data)
         {
             auto &&mat = proxy_cast<const builtin_matrix_t&>(*context.data);
-            GUI::matrix_editor(context.id, mat);
+            if (mat.rows() > 10 || mat.cols() > 10)
+            {
+                auto mat_dis = std::format("Matrix({}x{})", mat.rows(), mat.cols());
+                ImGui::Text("%s", mat_dis.c_str());
+            }
+            else
+            {
+                GUI::matrix_editor(context.id, mat);
+            }
         }
         else
         {
@@ -42,6 +50,33 @@ namespace blueprint::draw_node
     // Nodes //
 
     // matrix editor
+
+    enum mat_type
+    {
+        Custom,
+        Laplace_kernel,
+        Vertical_sobel,
+        Horizontal_sobel,
+        Vertical_Prewitt,
+        Horizontal_Prewitt,
+        Gaussian_kernel,
+        Zeros,
+        Ones,
+        Eye,
+    };
+
+    inline const char *items[] = {
+        "Custom",
+        "Laplace kernel",
+        "Vertical sobel",
+        "Horizontal sobel",
+        "Vertical Prewitt",
+        "Horizontal Prewitt",
+        "Gaussian kernel",
+        "Zeros",
+        "Ones",
+        "Eye",
+    };
 
     export void draw_matrix_editor(node_draw_context &ctx)
     {
@@ -55,15 +90,6 @@ namespace blueprint::draw_node
         auto &&cur_item = editor.cur_item;
         auto &&arg = editor.arg_;
 
-        const char *items[] = {
-            "Custom",
-            "Laplace kernel",
-            "Vertical sobel",
-            "Horizontal sobel",
-            "Vertical Prewitt",
-            "Horizontal Prewitt",
-            "Gaussian kernel",
-        };
 
         auto combo_lab = std::format("Mat type##{}", node_id);
 
@@ -72,13 +98,13 @@ namespace blueprint::draw_node
 
         switch (cur_item)
         {
-        case 0:
+        case Custom:
             if (GUI::matrix_editor(node_id, mat))
             {
                 ctx.set_dirty = true;
             }
             break;
-        case 1:
+        case Laplace_kernel:
             if (combo_changed)
             {
                 mat = builtin_matrix_t{
@@ -89,7 +115,7 @@ namespace blueprint::draw_node
                 ctx.set_dirty = true;
             }
             break;
-        case 2:
+        case Vertical_sobel:
             if (combo_changed)
             {
                 mat = builtin_matrix_t {
@@ -100,7 +126,7 @@ namespace blueprint::draw_node
                 ctx.set_dirty= true;
             }
             break;
-        case 3:
+        case Horizontal_sobel:
             if (combo_changed)
             {
                 mat = builtin_matrix_t {
@@ -111,7 +137,7 @@ namespace blueprint::draw_node
                 ctx.set_dirty= true;
             }
             break;
-        case 4:
+        case Vertical_Prewitt:
             if (combo_changed)
             {
                 mat = builtin_matrix_t{
@@ -121,7 +147,7 @@ namespace blueprint::draw_node
                 };
                 ctx.set_dirty = true;
             }
-        case 5:
+        case Horizontal_Prewitt:
             if (combo_changed)
             {
                 mat = builtin_matrix_t{
@@ -131,7 +157,7 @@ namespace blueprint::draw_node
                 };
                 ctx.set_dirty = true;
             }
-        case 6:
+        case Gaussian_kernel:
         {
             if (combo_changed)
             {
@@ -141,7 +167,7 @@ namespace blueprint::draw_node
             }
 
             auto &&gua = std::get<matrix_editor_node::gaussian_kernel_context>(arg);
-            bool changed = false;
+            bool changed = combo_changed;
             ImGui::SetNextItemWidth(128);
             if (ImGui::InputInt("ksize", &gua.sz))
             {
@@ -160,10 +186,67 @@ namespace blueprint::draw_node
             {
                 auto kernel = cv::getGaussianKernel(gua.sz, gua.gamma, CV_64F);
                 kernel = kernel * kernel.t();
-                cv:cv2eigen(kernel, mat);
+                cv::cv2eigen(kernel, mat);
                 ctx.set_dirty = true;
             }
         }
+        case Ones:
+        case Zeros:
+        {
+            using ctx_t = matrix_editor_node::size_context;
+            if (combo_changed)
+            {
+                arg = ctx_t {1, 1};
+            }
+            auto &&sz_ctx = std::get<ctx_t>(arg);
+            bool changed = false;
+            ImGui::SetNextItemWidth(128);
+            if (ImGui::InputInt("Height", &sz_ctx.height))
+            {
+                changed = true;
+            }
+            ImGui::SetNextItemWidth(128);
+            if (ImGui::InputInt("Width", &sz_ctx.width))
+            {
+                changed = true;
+            }
+
+            if (changed)
+            {
+                if (cur_item == Ones)
+                {
+                    mat = builtin_matrix_t::Ones(sz_ctx.height, sz_ctx.width);
+                } else
+                {
+                    mat = builtin_matrix_t::Zero(sz_ctx.height, sz_ctx.width);
+                }
+                ctx.set_dirty = true;
+            }
+        }
+            break;
+        case Eye:
+        {
+            using ctx_t = matrix_editor_node::eye_context;
+            if (combo_changed)
+            {
+                arg = ctx_t {1};
+            }
+            auto &&sz = std::get<ctx_t>(arg);
+            bool changed = combo_changed;
+
+            ImGui::SetNextItemWidth(128);
+            if (ImGui::InputInt("Size", &sz.sz))
+            {
+                changed = true;
+            }
+
+            if (changed)
+            {
+                mat = builtin_matrix_t::Identity(sz.sz, sz.sz);
+                ctx.set_dirty = true;
+            }
+        }
+            break;
         default:
             break;
         }

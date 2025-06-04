@@ -54,7 +54,16 @@ namespace blueprint::builtin
             int sz;
             double gamma;
         };
-        std::variant<std::monostate, gaussian_kernel_context> arg_;
+        struct size_context
+        {
+            int height;
+            int width;
+        };
+        struct eye_context
+        {
+            int sz;
+        };
+        std::variant<std::monostate, gaussian_kernel_context, size_context, eye_context> arg_;
     };
 
     export class matrix_display_def

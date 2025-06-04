@@ -42,6 +42,8 @@ export import :image_alpha_beta;
 export import :image_grayscale;
 export import :image_blur;
 export import :image_canny;
+export import :to_matrix;
+export import :to_image;
 
 namespace blueprint::dyn_node::builtin
 {
@@ -149,6 +151,8 @@ namespace blueprint::dyn_node::builtin
         auto img_gaussian_blur_id = img_gaussian_blur->id();
         auto img_canny = def_image_canny_node();
         auto img_canny_id = img_canny->id();
+        auto img_to_matrix = def_image_to_matrix();
+        auto to_matrix_id = img_to_matrix->id();
 
         auto mat_plus = def_matrix_plus();
         auto mat_plus_id = mat_plus->id();
@@ -164,6 +168,16 @@ namespace blueprint::dyn_node::builtin
         auto mat_scalar_sub_id = mat_scalar_sub->id();
         auto mat_scalar_mul = def_matrix_scalar_multiplies();
         auto mat_scalar_mul_id = mat_scalar_mul->id();
+        auto mat_to_img = def_matrix_to_img();
+        auto to_img_id = mat_to_img->id();
+        auto mat_neg = def_matrix_negate();
+        auto mat_neg_id = mat_neg->id();
+        auto mat_array_div = def_matrix_array_divide();
+        auto mat_array_div_id = mat_array_div->id();
+        auto mat_scalar_div = def_matrix_scalar_divide();
+        auto mat_scalar_div_id = mat_scalar_div->id();
+        auto mat_hypot = def_matrix_hypot();
+        auto mat_hypot_id = mat_hypot->id();
 
         return {
             .types = {
@@ -206,6 +220,7 @@ namespace blueprint::dyn_node::builtin
                     std::move(img_blur),
                     std::move(img_gaussian_blur),
                     std::move(img_canny),
+                    std::move(img_to_matrix),
                     std::move(mat_plus),
                     std::move(mat_sub),
                     std::move(mat_mul),
@@ -213,6 +228,11 @@ namespace blueprint::dyn_node::builtin
                     std::move(mat_scalar_plus),
                     std::move(mat_scalar_sub),
                     std::move(mat_scalar_mul),
+                    std::move(mat_to_img),
+                    std::move(mat_neg),
+                    std::move(mat_scalar_div),
+                    std::move(mat_array_div),
+                    std::move(mat_hypot),
                 }
             },
             .groups = {
@@ -245,6 +265,11 @@ namespace blueprint::dyn_node::builtin
                         mat_scalar_plus_id,
                         mat_scalar_sub_id,
                         mat_scalar_mul_id,
+                        to_img_id,
+                        mat_neg_id,
+                        mat_array_div_id,
+                        mat_scalar_div_id,
+                        mat_hypot_id,
                     }
                 },
                 {
@@ -258,6 +283,7 @@ namespace blueprint::dyn_node::builtin
                         img_blur_id,
                         img_gaussian_blur_id,
                         img_canny_id,
+                        to_matrix_id,
                     }
                 },
                 {

@@ -22,7 +22,9 @@ namespace blueprint::builtin
         if (img.channels() == 4)
         {
             cv::Mat ans;
-            cv::cvtColor(img, ans, cv::COLOR_RGBA2GRAY);
+            img.convertTo(ans, CV_32F);
+            cv::cvtColor(ans, ans, cv::COLOR_RGBA2GRAY);
+            ans.convertTo(ans, CV_64F);
             return ans;
         }
         else if (img.channels() == 1)

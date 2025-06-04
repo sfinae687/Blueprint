@@ -104,10 +104,10 @@ namespace blueprint::builtin
 
                 if (normalize)
                 {
-                    cv::normalize(display_image, display_image, 0, 1, cv::NORM_MINMAX, CV_32F);
+                    cv::normalize(display_image, display_image, 0, 1, cv::NORM_MINMAX, CV_64F);
                 }
-                
-                assert(origin_.depth() == CV_32F);
+
+                assert(origin_.depth() == CV_64F);
                 cv::convertScaleAbs(display_image, display_image, alpha*255.0, beta);
 
                 img_ = display_image;

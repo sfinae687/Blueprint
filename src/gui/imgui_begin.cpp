@@ -204,6 +204,7 @@ namespace blueprint::GUI
                     std::ifstream out_file(out_path, std::ifstream::trunc);
                     out_file.close();
                     auto img = dump_image();
+                    cv::cvtColor(img, img, cv::COLOR_RGBA2BGRA);
                     cv::imwrite(out_path, img);
                 }
             }

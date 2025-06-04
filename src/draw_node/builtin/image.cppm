@@ -76,7 +76,7 @@ namespace blueprint::draw_node
             {
             auto img = cv::imread(out_path);
             cv::cvtColor(img, img, cv::COLOR_BGR2RGBA);
-            img.convertTo(img, CV_32F, 1/255.0);
+            img.convertTo(img, CV_64F, 1/255.0);
             BOOST_LOG_SEV(draw_node_logger, info) << "Load image from: " << out_path;
             node_inst.set_output(std::make_shared<cv::Mat>(std::move(img)));
             ctx.set_dirty = true;
