@@ -41,6 +41,7 @@ export import :image_weighted;
 export import :image_alpha_beta;
 export import :image_grayscale;
 export import :image_blur;
+export import :image_canny;
 
 namespace blueprint::dyn_node::builtin
 {
@@ -146,6 +147,8 @@ namespace blueprint::dyn_node::builtin
         auto img_blur_id = img_blur->id();
         auto img_gaussian_blur = def_image_gaussian_blur_node();
         auto img_gaussian_blur_id = img_gaussian_blur->id();
+        auto img_canny = def_image_canny_node();
+        auto img_canny_id = img_canny->id();
 
         auto mat_plus = def_matrix_plus();
         auto mat_plus_id = mat_plus->id();
@@ -202,6 +205,7 @@ namespace blueprint::dyn_node::builtin
                     std::move(img_grayscale),
                     std::move(img_blur),
                     std::move(img_gaussian_blur),
+                    std::move(img_canny),
                     std::move(mat_plus),
                     std::move(mat_sub),
                     std::move(mat_mul),
@@ -253,6 +257,7 @@ namespace blueprint::dyn_node::builtin
                         img_alpha_beta_id,
                         img_blur_id,
                         img_gaussian_blur_id,
+                        img_canny_id,
                     }
                 },
                 {

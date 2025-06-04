@@ -212,6 +212,7 @@ namespace blueprint::GUI
 
     private:
 
+        cv::Mat dump_image() const;
         void release();
         void bind_swizzle() const;
 

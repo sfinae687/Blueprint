@@ -8,11 +8,17 @@
 module;
 #include <imgui.h>
 #include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include <string_view>
 
+#include <nfd.h>
+
+#include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <opencv2/imgproc.hpp>
 
 module blueprint.gui;
 import :begin;
@@ -175,6 +181,60 @@ namespace blueprint::GUI
         sz.x *= scale;
         sz.y *= scale;
         ImGui::Image(im_tid, sz);
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        {
+            ImGui::CloseCurrentPopup();
+            ImGui::OpenPopup("Image Menu");
+        }
+        if (ImGui::BeginPopup("Image Menu"))
+        {
+            if (ImGui::MenuItem("Save image"))
+            {
+                nfdu8char_t* out_path;
+                nfdu8filteritem_t filters[] = {{"Picture", "jpg,jpeg,png"}};
+
+                nfdsavedialogu8args_t args = {0};
+                args.filterCount = std::size(filters);
+                args.filterList = filters;
+                nfdresult_t dialog_result = NFD_SaveDialogU8_With(&out_path, &args);
+
+                if (dialog_result == NFD_OKAY)
+                {
+                    namespace fs = std::filesystem;
+                    std::ifstream out_file(out_path, std::ifstream::trunc);
+                    out_file.close();
+                    auto img = dump_image();
+                    cv::imwrite(out_path, img);
+                }
+            }
+            ImGui::EndPopup();
+        }
+    }
+    cv::Mat image::dump_image() const
+    {
+        int cv_type = CV_8UC4;
+        assert(ty_ != image_type::none);
+        cv::Mat rt;
+
+        glBindTexture(GL_TEXTURE_2D, tid_);
+
+        if (ty_ == image_type::rgba)
+        {
+            cv_type = CV_8UC4;
+            rt = cv::Mat(height(), width(), cv_type);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, rt.data);
+        }
+        else
+        {
+            cv_type = CV_8UC1;
+            rt = cv::Mat(height(), width(), cv_type);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, rt.data);
+        }
+
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        return rt;
     }
 
 

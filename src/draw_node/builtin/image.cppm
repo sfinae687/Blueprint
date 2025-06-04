@@ -137,7 +137,6 @@ namespace blueprint::draw_node
         else
         {
             ImGui::Text("Unable to display the image");
-
         }
 
     }

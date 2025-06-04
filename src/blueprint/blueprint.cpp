@@ -75,6 +75,10 @@ namespace blueprint
 
     void blueprint_application::update()
     {
+        if (! ImNodes::IsNodeHovered(&hovered_node))
+        {
+            hovered_node = -1;
+        }
 
         if (begin_compute_flag)
         {
@@ -118,7 +122,6 @@ namespace blueprint
         using namespace GUI;
         if (begin_main_window("main", &main_open))
         {
-
             ImGui::BeginChild("NodeEditor",
                 ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
 
@@ -131,7 +134,12 @@ namespace blueprint
 
             draw_link();
 
-            draw_editor_menu();
+            if (hovered_node == -1)
+            {
+                draw_editor_menu();
+            }
+
+            ImNodes::MiniMap();
 
             ImNodes::EndNodeEditor();
 

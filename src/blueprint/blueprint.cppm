@@ -97,6 +97,7 @@ namespace blueprint
 
         GUI::window gui_;
         GUI::imnodes_context imnodes_context_;
+        int hovered_node = -1;
 
         // application state
         bool main_open = true;
