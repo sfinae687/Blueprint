@@ -2,6 +2,8 @@ set(BP06_STK_NODE_INTERFACE
         stk_node.cppm
         type_mapper.cppm
         wrapper.cppm
+        template_definition.cppm
+        template_type_definition.cppm
 )
 
 add_library(blueprint_stk_node

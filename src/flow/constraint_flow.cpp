@@ -334,7 +334,8 @@ namespace blueprint::constraint
     bool constraint_flow::mark_dirty(flow::no_id id) noexcept
     {
         using enum node_state;
-        if (state(id) != CLEAN)
+        auto st = state(id);
+        if (st != ERROR && st != CLEAN)
         {
             return false;
         }

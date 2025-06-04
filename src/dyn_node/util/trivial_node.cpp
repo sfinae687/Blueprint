@@ -7,7 +7,7 @@
 
 module;
 #include <boost/hof.hpp>
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <algorithm>
 #include <ranges>
@@ -54,7 +54,17 @@ namespace blueprint::dyn_node::util
 
     bool trivial_node_instance::set_variant(std::size_t) const noexcept { return false; }
 
-    bool trivial_node_instance::compute(data_sequence) noexcept { return false; }
+    bool trivial_node_instance::compute(data_sequence ds) noexcept
+    {
+        if (ds.size() != sig_.input.size())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
 
     data_sequence trivial_node_instance::output() const noexcept { return {}; }
 

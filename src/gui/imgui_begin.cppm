@@ -10,14 +10,17 @@
 
 module;
 #include <Eigen/Dense>
+#include <opencv2/core.hpp>
 #include <imgui.h>
 
 #include <boost/hana.hpp>
 
-#include <string_view>
 #include <concepts>
 #include <ranges>
+#include <string_view>
 #include <vector>
+
+#include "../../lib/glfw/src/internal.h"
 
 export module blueprint.gui:begin;
 
@@ -30,6 +33,9 @@ namespace blueprint::GUI
     {
         constexpr std::size_t input_number_width = 64;
     }
+
+
+    // --- Window ---//
 
     /**
      * Begin a window fill viewport, and keep staying in the background.
@@ -67,9 +73,14 @@ namespace blueprint::GUI
                 return -1;
             }
         }
+
+        static_assert(get_imgui_data_type_enum<double>() == ImGuiDataType_Double);
     }
 
-    export template <std::integral T>
+    // --- Input --- //
+
+    export template <typename T>
+        requires std::integral<T> || std::floating_point<T>
     constexpr auto imgui_data_type = details::get_imgui_data_type_enum<T>();
 
     export template <typename T>
@@ -131,6 +142,7 @@ namespace blueprint::GUI
             auto row_label = std::format("##{}##r{}", label, i);
             if (input_number(row_label, row_data.size(), row_data.data()))
             {
+                changed_flag = true;
                 std::copy(row_data.begin(), row_data.end(), row.begin());
             }
         }
@@ -157,4 +169,57 @@ namespace blueprint::GUI
 
         return false;
     }
+
+    // --- Image --- //
+
+    export ImTextureID load_opencv_image(const cv::Mat& image);
+    export void unload_texture(ImTextureID);
+
+    /**
+     * class image manages the resource to render an image to GUI.
+     */
+    export class image
+    {
+    public:
+        enum class image_type
+        {
+            none,
+            rgba,
+            gray,
+        };
+
+        image() = default;
+        image(const image &) = delete;
+        image(image &&) noexcept;
+        ~image();
+        image& operator= (const image &) = delete;
+        image& operator= (image &&) noexcept;
+
+        image(ImTextureID id, image_type ty, ImVec2 sz);
+        explicit image(const cv::Mat &);
+
+        explicit operator bool() const;
+
+        image& operator= (const cv::Mat &);
+
+        [[nodiscard]] image_type type() const;
+        [[nodiscard]] ImTextureID id() const;
+
+        [[nodiscard]] std::size_t width() const;
+        [[nodiscard]] std::size_t height() const;
+
+        void show(float scale=1.0) const;
+
+    private:
+
+        cv::Mat dump_image() const;
+        void release();
+        void bind_swizzle() const;
+
+        image_type ty_ = image_type::none;
+        GLuint tid_;
+
+        std::size_t width_;
+        std::size_t height_;
+    };
 }

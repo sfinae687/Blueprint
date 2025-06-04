@@ -6,9 +6,11 @@
 //
 
 module;
-#include <proxy.h>
+#include <proxy/proxy.h>
+
 #include <string>
 #include <string_view>
+#include <iostream>
 
 module blueprint.dyn_node;
 import :definition;
@@ -17,17 +19,34 @@ import :constant_factory;
 namespace blueprint::dyn_node::util
 {
     using namespace std::string_literals;
+
+    std::string make_constant_id(std::string_view id)
+    {
+        return constant_id_base + id.data();
+    }
+
+    // definition
+
     constant_node_definition::constant_node_definition(data_proxy d)
-        : constant_node_definition(d, constant_id_base + "." + d->type_id().data())
+        : constant_node_definition(d, make_constant_id(d->type_id()))
     {
 
     }
-    constant_node_definition::constant_node_definition(data_proxy d, std::string id)
-        : id_(std::move(id)), data_(std::move(d))
+    constant_node_definition::constant_node_definition(data_proxy d, std::string id) :
+        id_(std::move(id)), data_(std::move(d)), sig_({{}, {data_->type_id()}})
+    {
+    }
+
+    constant_node_definition::constant_node_definition(id_type output_ty)
+        : id_(make_constant_id(output_ty)), data_(nullptr), sig_({{}, {output_ty}})
     {
 
     }
+     constant_node_definition::constant_node_definition(id_type output_ty, std::string def_id)
+         : id_(std::move(def_id)), data_(nullptr), sig_({}, {output_ty})
+    {
 
+    }
 
     id_type constant_node_definition::id() const noexcept
     {
@@ -41,13 +60,15 @@ namespace blueprint::dyn_node::util
 
     /*NOLINT*/ text_type constant_node_definition::description() const noexcept
     {
-        return "The node provide a specilfy result.";
+        return "The node provide a specify result.";
     }
 
     node_instance_proxy constant_node_definition::create_node()
     {
-        return std::make_unique<constant_node_instance>(id_, data_->clone());
+        return std::make_unique<constant_node_instance>(id_, data_ ? data_->clone() : nullptr, *this);
     }
+
+    // Instance
 
     id_type constant_node_instance::type_id() const noexcept
     {
@@ -56,7 +77,7 @@ namespace blueprint::dyn_node::util
 
     std::span<const signature_t> constant_node_instance::signatures() const noexcept
     {
-        return {&sig_, 1};
+        return {&def_.sig_, 1};
     }
 
     std::size_t constant_node_instance::current_variant() const noexcept
@@ -69,21 +90,24 @@ namespace blueprint::dyn_node::util
         return false;
     }
 
-    bool constant_node_instance::compute(data_sequence) noexcept
+    bool constant_node_instance::compute(data_sequence ds) noexcept
     {
-        return false;
+        return ds.size() == 0 && data_.has_value();
     }
 
     data_sequence constant_node_instance::output() const noexcept
     {
         return {data_};
     }
-
-    constant_node_instance::constant_node_instance(id_type id, data_proxy d)
-        : id_(id), data_(std::move(d))
+    void constant_node_instance::set_output(data_proxy d) noexcept
     {
-        sig_.input = {};
-        sig_.output = {data_->type_id()};
+        assert(d->type_id() == def_.sig_.output[0]);
+        data_ = std::move(d);
+        assert(data_->type_id() == def_.sig_.output[0]);
     }
+
+    constant_node_instance::constant_node_instance(id_type id, data_proxy d, constant_node_definition &def)
+        : id_(id), data_(std::move(d)), def_(def)
+    {}
 
 } // namespace blueprint::dyn_node::util

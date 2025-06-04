@@ -9,11 +9,17 @@
 module;
 #define IMGUI_DEFINE_MATH_OPERATORS
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/common.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
+
 #include <imgui.h>
 #include <imnodes.h>
-#include <proxy.h>
+
+#include <boost/log/attributes.hpp>
+#include <boost/log/common.hpp>
+
+#include <proxy/proxy.h>
 
 #include <iomanip>
 #include <ranges>
@@ -51,8 +57,8 @@ namespace blueprint
         setup_logger();
         load_builtin();
 
-        gui_.set_update_operation([this]() {update();});
-        gui_.set_draw_operation([this]() {draw();});
+        gui_.set_update_operation([this] {update();});
+        gui_.set_draw_operation([this] {draw();});
     }
 
     int blueprint_application::run()
@@ -69,13 +75,17 @@ namespace blueprint
 
     void blueprint_application::update()
     {
+        if (! ImNodes::IsNodeHovered(&hovered_node))
+        {
+            hovered_node = -1;
+        }
 
         if (begin_compute_flag)
         {
             auto all_ready = link_.dump_ready();
             if (all_ready.empty() && in_computing_.empty())
             {
-                begin_compute_flag = false;
+                // begin_compute_flag = false;
             }
             else
             {
@@ -87,9 +97,10 @@ namespace blueprint
             }
         }
 
-        to_finish_compute_.consume_all([this] (flow::no_id id)
+        to_finish_compute_.consume_all([this] (auto item)
         {
-            do_finish_computing(id);
+            auto [id, ans] = item;
+            do_finish_computing(id, ans);
         });
 
         while (! to_remove_nodes_.empty())
@@ -111,7 +122,6 @@ namespace blueprint
         using namespace GUI;
         if (begin_main_window("main", &main_open))
         {
-
             ImGui::BeginChild("NodeEditor",
                 ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
 
@@ -124,7 +134,12 @@ namespace blueprint
 
             draw_link();
 
-            draw_editor_menu();
+            if (hovered_node == -1)
+            {
+                draw_editor_menu();
+            }
+
+            ImNodes::MiniMap();
 
             ImNodes::EndNodeEditor();
 
@@ -345,13 +360,13 @@ namespace blueprint
         {
             for (auto&& [group_name, members] : menu_def_)
             {
-                std::string group_menu_id = group_name + "##GroupMenu";
+                auto group_menu_id = std::format(" {}##GroupMenu", group_name);
                 if (ImGui::BeginMenu(group_menu_id.c_str()))
                 {
                     for (auto&& ent : members)
                     {
                         auto node_name = node_def_[ent]->name();
-                        auto item_id = node_name.data() + "##"s + group_menu_id;
+                        auto item_id = std::format(" {}##{}", node_name, group_menu_id);
                         if (ImGui::MenuItem(item_id.c_str()))
                         {
                             BOOST_LOG_SEV(logger, trace) << "Create node: " << ent;
@@ -486,6 +501,7 @@ namespace blueprint
 
     void blueprint_application::do_create_node(dyn_node::id_type id, new_node_context ctx)
     {
+        assert(node_def_.contains(id));
         auto&& def = node_def_[id];
         auto new_instance = def->create_node();
         auto hd = node_instance_.add_instance(std::move(new_instance));
@@ -501,17 +517,24 @@ namespace blueprint
                 auto&& inst = node_instance_.get_handler(id).node_instance();
                 auto inputs = link_.gather_input(id);
                 assert(inputs.has_value());
-                inst->compute(std::move(inputs.value()));
-                to_finish_computing(id);
+                auto rt = inst->compute(std::move(inputs.value()));
+                to_finish_computing(id, rt);
             });
 
         in_computing_.insert(id);
     }
 
-    void blueprint_application::to_finish_computing(flow::no_id id) { to_finish_compute_.push(id); }
-    void blueprint_application::do_finish_computing(flow::no_id id)
+    void blueprint_application::to_finish_computing(flow::no_id id, bool res) { to_finish_compute_.push({id, res}); }
+    void blueprint_application::do_finish_computing(flow::no_id id, bool res)
     {
-        link_.mark_clean(id);
+        if (res)
+        {
+            link_.mark_clean(id);
+        }
+        else
+        {
+            link_.mark_error(id);
+        }
         in_computing_.erase(id);
     }
 

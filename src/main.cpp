@@ -3,7 +3,8 @@
 
 import blueprint;
 
-#include "imgui.h"
+#include <imgui.h>
+#include <nfd.h>
 
 #include <boost/log/utility/setup.hpp>
 
@@ -21,7 +22,7 @@ void init_log()
 
 int main(int argc, char *argv[])
 {
-
+    NFD_Init();
     init_log();
 
     auto app_gd = blueprint::app_guard();

@@ -6,7 +6,7 @@
 //
 
 module;
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <functional>
 #include <unordered_map>

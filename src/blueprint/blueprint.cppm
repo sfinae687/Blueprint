@@ -16,6 +16,7 @@ module;
 
 #include <map>
 #include <unordered_set>
+#include <set>
 #include <queue>
 
 
@@ -73,8 +74,8 @@ namespace blueprint
         draw_node::data_draw_context& make_draw_context(flow::no_id);
         void process_link();
         void draw_link();
-        /* TODO */ void draw_editor_menu();
-        void draw_node_menu();
+        void draw_editor_menu();
+        /* TODO Implement Me */ void draw_node_menu();
 
 
 
@@ -84,8 +85,8 @@ namespace blueprint
         void to_create_node(dyn_node::id_type, new_node_context);
         void do_create_node(dyn_node::id_type id, new_node_context ctx);
         void to_computing(flow::no_id);
-        void to_finish_computing(flow::no_id);
-        void do_finish_computing(flow::no_id);
+        void to_finish_computing(flow::no_id, bool);
+        void do_finish_computing(flow::no_id, bool);
         void to_switch_variant(flow::no_id, std::size_t i);
 
 
@@ -96,6 +97,7 @@ namespace blueprint
 
         GUI::window gui_;
         GUI::imnodes_context imnodes_context_;
+        int hovered_node = -1;
 
         // application state
         bool main_open = true;
@@ -118,7 +120,7 @@ namespace blueprint
         std::unordered_map<flow::no_id, new_node_context> new_node_;
 
         // Menu definition
-        using menu_def_t = std::unordered_map<std::string, std::unordered_set<std::string_view>>;
+        using menu_def_t = std::map<std::string, std::set<std::string_view>>;
         menu_def_t menu_def_;
 
         // Update flag
@@ -128,7 +130,13 @@ namespace blueprint
         std::queue<flow::no_id> to_remove_nodes_;
         std::queue<std::pair<dyn_node::id_type, new_node_context>> to_create_nodes_;
         std::unordered_set<flow::no_id> in_computing_;
-        boost::lockfree::queue<flow::no_id> to_finish_compute_;
+
+        struct compute_result
+        {
+            flow::no_id node_id;
+            bool success;
+        };
+        boost::lockfree::queue<compute_result> to_finish_compute_;
 
         // executor
         dp::thread_pool<> executor_;

@@ -7,11 +7,30 @@ set(BP06_BUILTIN_NODE_INTERFACE
         builtin_mapper.cppm
         type/matrix.cppm
         node/matrix_editor.cppm
+        type/image.cppm
+        node/load_image.cppm
+        node/display_image.cppm
+        type/float.cppm
+        node/float_arithmetic.cppm
+        node/image_proc/image_resize.cppm
+        node/image_proc/image_kernel.cppm
+        node/image_proc/image_decompose.cppm
+        node/image_proc/image_color_split.cppm
+        node/image_proc/image_compose.cppm
+        node/image_proc/image_weighted.cppm
+        node/image_proc/alpha_beta.cppm
+        node/image_proc/image_grayscale.cppm
+        node/image_proc/image_blur.cppm
+        node/matrix_arithmetic.cppm
+        node/image_proc/image_canny.cppm
+        node/image_proc/to_matrix.cppm
+        node/image_proc/to_image.cppm
 )
 add_library(blueprint_builtin_node
         ${BP06_BUILTIN_NODE_INTERFACE}
         node/identity_node.cpp
         node/matrix_editor.cpp
+        node/load_image.cpp
 )
 target_sources(blueprint_builtin_node
     PUBLIC FILE_SET CXX_MODULES FILES ${BP06_BUILTIN_NODE_INTERFACE}
@@ -25,4 +44,7 @@ target_link_libraries(blueprint_builtin_node
         blueprint_stk_node
         Eigen3::Eigen
         BlueprintOpenCVInterface
+        blueprint_gui
+        blueprint_stk_node
+        nfd
 )

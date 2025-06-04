@@ -6,7 +6,7 @@
 //
 
 module;
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <boost/hana.hpp>
 #include <boost/hana/string.hpp>
@@ -57,7 +57,7 @@ namespace blueprint::stk_node
         template <type_desc auto td, typename T>
         struct transform_helper
         {
-            using data_type = typename decltype(+td.data_type)::type;
+            using data_type = decltype(+td.data_type)::type;
             using basic_T = std::remove_cvref_t<T>;
 
             static constexpr bool exactly_match = std::same_as<data_type, basic_T>;
@@ -76,11 +76,11 @@ namespace blueprint::stk_node
         };
     }
 
-    export struct transform_t
+    export template <type_desc auto td, typename T>
+        requires details::transform_helper<td, T>::transformable
+    struct transform_t
     {
-        template <type_desc auto td, typename T>
-            requires details::transform_helper<td, T>::transformable
-        T operator() (typename decltype(+td.data_type)::type &d) const
+        T operator() (const decltype(+td.data_type)::type &d) const
         {
             using helper = details::transform_helper<td, T>;
             if constexpr (helper::exactly_match)
@@ -98,14 +98,15 @@ namespace blueprint::stk_node
             __builtin_unreachable();
         }
     };
-    export constexpr transform_t transform{};
+    export template <type_desc auto td, typename T>
+    constexpr transform_t<td, T> transform{};
 
     namespace details
     {
         template <type_desc auto td, typename S>
         struct accept_helper
         {
-            using data_type = typename decltype(+td.data_type)::type;
+            using data_type = decltype(+td.data_type)::type;
             using basic_source_type = std::remove_cvref_t<S>;
 
             static constexpr bool exactly_match = std::same_as<data_type, basic_source_type>;
@@ -124,11 +125,12 @@ namespace blueprint::stk_node
         };
     }
 
-    export struct accept_t
+    export template <type_desc auto td>
+    struct accept_t
     {
-        template <type_desc auto td, typename S>
+        template <typename S>
             requires details::accept_helper<td, S>::acceptable
-        typename details::accept_helper<td, S>::data_type operator() (S &&s) const
+        details::accept_helper<td, S>::data_type operator() (S &&s) const
         {
             using helper = details::accept_helper<td, S>;
             if constexpr (helper::exactly_match)
@@ -146,7 +148,8 @@ namespace blueprint::stk_node
             __builtin_unreachable();
         }
     };
-    export constexpr accept_t accept{};
+    export template <type_desc auto td>
+    constexpr accept_t<td> accept{};
 
 
 
@@ -186,7 +189,7 @@ namespace blueprint::stk_node
 
         template<typename T>
             requires deducible_by_target<T>
-        constexpr auto deduced_by_target() const
+        constexpr type_desc auto deduced_by_target() const
         {
             using namespace boost::hana::literals;
             constexpr auto sel_seq = helper::template transformable_ds<T>;
@@ -195,7 +198,7 @@ namespace blueprint::stk_node
 
         template <typename T>
             requires deducible_by_source<T>
-        constexpr auto deduced_by_source() const
+        constexpr type_desc auto deduced_by_source() const
         {
             using namespace boost::hana::literals;
             constexpr auto sel_seq = helper::template acceptable_ds<T>;

@@ -8,3 +8,5 @@
 export module blueprint.stk_node;
 export import :type_mapper;
 export import :wrapper;
+export import :template_definition;
+export import :template_type_definition;

@@ -5,7 +5,7 @@
 // Created by ll06 on 25-4-28.
 //
 module;
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 export module blueprint.gui:forward_declaration;
 

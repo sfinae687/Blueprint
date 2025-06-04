@@ -7,9 +7,18 @@
 
 module;
 #include <imgui.h>
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <GL/gl.h>
+#include <GLFW/glfw3.h>
 #include <string_view>
 
+#include <nfd.h>
+
+#include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <opencv2/imgproc.hpp>
 
 module blueprint.gui;
 import :begin;
@@ -22,14 +31,236 @@ namespace blueprint::GUI
         ImGui::SetNextWindowPos(vp->WorkPos);
         ImGui::SetNextWindowSize(vp->WorkSize);
 
-        constexpr auto main_win_flag = ImGuiWindowFlags_NoTitleBar
-            | ImGuiWindowFlags_NoResize
-            | ImGuiWindowFlags_NoMove
-            | ImGuiWindowFlags_MenuBar
-            | ImGuiWindowFlags_NoBringToFrontOnFocus
-            | ImGuiWindowFlags_NoDocking
-            | ImGuiWindowFlags_NoCollapse
-            | ImGuiWindowFlags_NoDecoration;
+        constexpr auto main_win_flag = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoBringToFrontOnFocus |
+            ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
         return ImGui::Begin(title.data(), p_open, main_win_flag);
     }
-}
+
+    void upload_grayscale_image(const cv::Mat &image)
+    {
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RED,
+            image.cols, image.rows, 0,
+            GL_RED,
+            GL_UNSIGNED_BYTE,
+            image.data
+        );
+    }
+
+    void upload_rgba_image(const cv::Mat &image)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.cols, image.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data);
+    }
+
+    ImTextureID load_opencv_image(const cv::Mat& image)
+    {
+
+        assert(image.depth() == CV_8U);
+
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+
+        if (image.channels() == 1)
+        {
+            upload_grayscale_image(image);
+        }
+        else if (image.channels() == 4)
+        {
+            upload_rgba_image(image);
+        }
+        else
+        {
+            assert(false);
+        }
+        glBindTexture(GL_TEXTURE_2D, 0);
+        return texture;
+    }
+    void unload_texture(ImTextureID id)
+    {
+        auto gl_id = static_cast<GLuint>(id);
+        glDeleteTextures(1, &gl_id);
+    }
+
+    // image
+    namespace
+    {
+        GLint gray_swizzle[] = { GL_RED, GL_RED, GL_RED, GL_ONE };
+    }
+
+    image::image_type deduced_image_type(const cv::Mat &mat)
+    {
+        using enum image::image_type;
+        switch (mat.channels())
+        {
+        case 1:
+            return gray;
+        case 4:
+            return rgba;
+        default:
+            return none;
+        }
+    }
+
+    image::image(image&& that) noexcept : ty_(that.ty_), tid_(that.tid_), width_(that.width_), height_(that.height_)
+    {
+        that.ty_ = image_type::none;
+    }
+
+    image::~image()
+    {
+        if (ty_ != image_type::none)
+        {
+            release();
+        }
+    }
+
+    ImTextureID image::id() const { return tid_; }
+    std::size_t image::width() const { return width_; }
+    std::size_t image::height() const
+    {
+        return height_;
+    }
+    image::image_type image::type() const
+    {
+        return ty_;
+    }
+
+    image& image::operator=(image&& that) noexcept
+    {
+        if (ty_ != image_type::none)
+        {
+            release();
+        }
+        ty_ = that.ty_;
+        tid_ = that.tid_;
+        width_ = that.width_;
+        height_ = that.height_;
+        that.ty_ = image_type::none;
+        return *this;
+    }
+    image::image(ImTextureID id, image_type ty, ImVec2 sz) : ty_(ty), tid_(id), height_(sz.x), width_(sz.y) {}
+
+    image::image(const cv::Mat& mat) :
+        ty_(deduced_image_type(mat)), tid_(load_opencv_image(mat)), width_(mat.cols), height_(mat.rows)
+    {
+        assert(ty_ != image_type::none);
+        bind_swizzle();
+    }
+    image::operator bool() const
+    {
+        return ty_ != image_type::none;
+    }
+
+    image& image::operator=(const cv::Mat& mat)
+    {
+        if (ty_ != image_type::none)
+        {
+            release();
+        }
+        ty_ = deduced_image_type(mat);
+        tid_ = load_opencv_image(mat);
+        width_ = mat.cols;
+        height_ = mat.rows;
+        assert(ty_ != image_type::none);
+        bind_swizzle();
+        return *this;
+    }
+
+    void image::show(float scale) const
+    {
+        auto im_tid = id();
+        ImVec2 sz(width_, height_);
+        sz.x *= scale;
+        sz.y *= scale;
+        ImGui::Image(im_tid, sz);
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        {
+            ImGui::CloseCurrentPopup();
+            ImGui::OpenPopup("Image Menu");
+        }
+        if (ImGui::BeginPopup("Image Menu"))
+        {
+            if (ImGui::MenuItem("Save image"))
+            {
+                nfdu8char_t* out_path;
+                nfdu8filteritem_t filters[] = {{"Picture", "jpg,jpeg,png"}};
+
+                nfdsavedialogu8args_t args = {0};
+                args.filterCount = std::size(filters);
+                args.filterList = filters;
+                nfdresult_t dialog_result = NFD_SaveDialogU8_With(&out_path, &args);
+
+                if (dialog_result == NFD_OKAY)
+                {
+                    namespace fs = std::filesystem;
+                    std::ifstream out_file(out_path, std::ifstream::trunc);
+                    out_file.close();
+                    auto img = dump_image();
+                    cv::cvtColor(img, img, cv::COLOR_RGBA2BGRA);
+                    cv::imwrite(out_path, img);
+                }
+            }
+            ImGui::EndPopup();
+        }
+    }
+    cv::Mat image::dump_image() const
+    {
+        int cv_type = CV_8UC4;
+        assert(ty_ != image_type::none);
+        cv::Mat rt;
+
+        glBindTexture(GL_TEXTURE_2D, tid_);
+
+        if (ty_ == image_type::rgba)
+        {
+            cv_type = CV_8UC4;
+            rt = cv::Mat(height(), width(), cv_type);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, rt.data);
+        }
+        else
+        {
+            cv_type = CV_8UC1;
+            rt = cv::Mat(height(), width(), cv_type);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, rt.data);
+        }
+
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        return rt;
+    }
+
+
+    void image::release()
+    {
+        glDeleteTextures(1, &tid_);
+        ty_ = image_type::none;
+    }
+    void image::bind_swizzle() const
+    {
+        using enum image_type;
+        GLint *param;
+
+        switch (ty_)
+        {
+        case gray:
+            param = gray_swizzle;
+            break;
+        default:
+            return;
+        }
+
+        glBindTexture(GL_TEXTURE_2D, tid_);
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, param);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+} // namespace blueprint::GUI

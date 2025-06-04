@@ -5,17 +5,25 @@
 // Created by ll06 on 25-5-29.
 //
 
+/// @file
+/// The file provides the templates to wrap a callable to node.
+/// TODO Clean Up Needed
+
 module;
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <boost/callable_traits.hpp>
 #include <boost/hof.hpp>
 #include <boost/hana.hpp>
 #include <boost/mp11.hpp>
 
-#include <utility>
+#include <boost/align/detail/element_type.hpp>
 #include <concepts>
 #include <memory>
+#include <type_traits>
+#include <tuple>
+#include <optional>
+#include <utility>
 
 export module blueprint.stk_node:wrapper;
 import blueprint.dyn_node;
@@ -24,112 +32,256 @@ import :type_mapper;
 namespace blueprint::stk_node
 {
 
-    template <type_mapper auto tmp, typename T>
-        requires (tmp.template deducible_by_source<T>)
-    constexpr dyn_node::data_proxy result_proxy(T &&t)
-    {
-        type_desc auto td = tmp.template deduced_by_source<T>();
+    // --- utility --- //
 
-        using data_type = typename decltype(+td.data_type)::type;
-        return std::make_shared<data_type>(accept.operator()<td>(std::forward<T>(t)));
+    template <type_desc auto td, typename T>
+        requires details::transform_helper<td, T>::transformable
+    T unwrap_parameter_data(dyn_node::data_proxy d)
+    {
+        dyn_node::id_type td_id = td.hana_id.c_str();
+        assert(td_id == d->type_id());
+        using data_type = decltype(+td.data_type)::type;
+
+        auto &&data = proxy_cast<data_type&>(*d);
+        return transform<td, T>(data);
     }
 
-    template <type_mapper auto tmp, typename T>
-        requires (tmp.template deducible_by_target<T>)
-    constexpr T argument_proxy(dyn_node::data_proxy p)
+    template <type_desc auto td, typename T>
+        requires details::accept_helper<td, T>::acceptable
+    dyn_node::data_proxy wrap_result_data(T&& t)
     {
-        type_desc auto td = tmp.template deduced_by_target<T>();
-        constexpr dyn_node::id_type id = td.hana_id.c_str();
-        assert(p->type_id() == id);
-
-        using data_type = typename decltype(+td.data_type)::type;
-        data_type &dd = proxy_cast<data_type&>(*p);
-        return transform.operator()<td, T>(dd);
+        using data_type = decltype(+td.data_type)::type;
+        return std::make_shared<data_type>(accept<td>(std::forward<T>(t)));
     }
 
-    namespace details
-    {
+    // type-desc list
 
-        template <type_mapper auto tmp, typename Rt>
-        struct result_mapper_helper
+    namespace details /* type-desc list */
+    {
+        template <type_desc auto... td>
+        struct basic_type_desc_list
         {
-            static constexpr bool matchable = tmp.template deducible_by_source<Rt>;
-
-            static constexpr dyn_node::output_sequence_t id_seq()
-            {
-                type_desc auto td = tmp.template deduced_by_source<Rt>();
-                return {td.hana_id.c_str()};
-            }
-
-            static constexpr dyn_node::data_sequence result_transform(Rt r)
-            {
-                return {result_proxy<tmp, Rt>(std::move(r))};
-            }
+            static constexpr auto tuple = hana::make_tuple(td...);
         };
 
-        template <type_mapper auto tmp, typename... RTS>
-        struct result_mapper_helper<tmp, std::tuple<RTS...>>
-        {
-            static constexpr bool matchable = (... && tmp.template deducible_by_source<RTS>);
+    }
 
-            static constexpr dyn_node::output_sequence_t id_seq()
+    export template <type_desc auto... td>
+    struct input_type_list_t : details::basic_type_desc_list<td...>
+    {};
+    export template <type_desc auto... td>
+    constexpr input_type_list_t<td...> input_type;
+
+    export template <type_desc auto... td>
+    struct output_type_list_t : details::basic_type_desc_list<td...>
+    {};
+    export template <type_desc auto... td>
+    constexpr output_type_list_t<td...> output_type;
+
+    template <typename T>
+    concept type_desc_list = requires (T t) {
+        t.tuple;
+        // TODO more strict constraint
+    };
+
+    // --- func_node --- //
+
+    namespace details /* func_node */
+    {
+        using namespace boost::mp11;
+        using dyn_node::data_proxy;
+        using dyn_node::data_sequence;
+
+        // return value process
+
+        template <typename Rt>
+        consteval auto result_list(hana::basic_type<Rt>)
+        {
+            return hana::make_tuple(hana::type_c<Rt>);
+        }
+
+        template <typename... Rts>
+        consteval auto result_list(hana::basic_type<std::tuple<Rts...>>)
+        {
+            return hana::make_tuple(hana::type_c<Rts>...);
+        }
+
+        template <typename Rt>
+        consteval auto result_list(hana::basic_type<std::optional<Rt>>)
+        {
+            return result_list(hana::type_c<Rt>);
+        }
+
+        template <typename Rt>
+        constexpr bool result_success(Rt &&rt)
+        {
+            return true;
+        }
+        template <typename Rt>
+        bool result_success(std::optional<Rt> &rt)
+        {
+            return rt.has_value();
+        }
+
+        template <std::size_t i, typename Rt>
+            requires (i == 0)
+        constexpr decltype(auto) result_decompose(Rt& rt)
+        {
+            return std::move(rt);
+        }
+
+        template <std::size_t i, typename... Rts>
+            requires (i < sizeof...(Rts))
+        constexpr decltype(auto) result_decompose(std::tuple<Rts...> &rt)
+        {
+            return std::move(std::get<i>(rt));
+        }
+
+        template <std::size_t i, typename Rt>
+        constexpr decltype(auto) result_decompose(std::optional<Rt>& rt)
+        {
+            return result_decompose<i>(rt.value());
+        }
+
+
+        // func node helper
+
+        template <type_desc_list auto input, type_desc_list auto output>
+        struct func_node_helper
+        {
+
+            // signature
+
+            static dyn_node::signature_t signature()
             {
-                return {
-                    (tmp.template deduced_by_source<RTS>).hana_id.c_str()...
-                };
+                auto input_id = hana::unpack(input.tuple, [&](type_desc auto... x)
+                {
+                    return dyn_node::input_sequence_t{x.hana_id.c_str()...};
+                });
+                auto output_id = hana::unpack(output.tuple, [&](type_desc auto... x)
+                {
+                    return dyn_node::output_sequence_t{x.hana_id.c_str()...};
+                });
+                return {std::move(input_id), std::move(output_id)};
             }
 
-            static constexpr dyn_node::data_sequence result_transform(std::tuple<RTS...> r)
-            {
-                using namespace boost::hana::literals;
-                constexpr std::size_t sz = sizeof...(RTS);
-                auto ind_range = hana::make_range(hana::size_c<0>, hana::size_c<sz>);
+            // compile check
 
-                return hana::unpack(ind_range, [&](auto... ind)
+            template <typename... T>
+            static consteval bool valid_for_parameter()
+            {
+                if (sizeof...(T) != hana::size(input.tuple).value)
                 {
-                    return dyn_node::data_sequence{
-                        result_proxy<tmp, RTS>(std::move(std::get<ind.value>(r)))...
+                    return false;
+                }
+                return hana::unpack(input.tuple, [&] (type_desc auto... x) consteval
+                {
+                    return (... && transform_helper<x, T>::transformable);
+                });
+            }
+
+            template <typename Rt>
+            static consteval bool valid_for_result()
+            {
+                constexpr auto element_list = result_list(hana::type_c<Rt>);
+                if constexpr (hana::size(element_list) != hana::size(output.tuple))
+                {
+                    return false;
+                }
+
+                return hana::fold_left(hana::zip(output.tuple, element_list), true, [&](auto s, auto x) consteval
+                {
+                    constexpr auto td = x[0_c];
+                    constexpr auto e = x[1_c];
+                    using e_type = decltype(+e)::type;
+                    return s && accept_helper<td, e_type>::acceptable;
+                });
+            }
+
+            // wrapper
+
+            template <typename Rt>
+                requires (valid_for_result<Rt>())
+            static data_sequence wrap_result(Rt&& rt)
+            {
+                assert(result_success(rt));
+                auto rg = hana::make_range(hana::size_c<0>, hana::size(output.tuple));
+                auto ele = result_list(hana::type_c<Rt>);
+                return hana::unpack(rg, [&](auto... i) -> data_sequence
+                {
+                    return {
+                        wrap_result_data<output.tuple[i], typename decltype(+ele[i])::type>(result_decompose<i.value>(rt))...
                     };
                 });
             }
-        };
 
-        template <type_mapper auto tmp, typename Rt, typename... Args>
-        struct func_node_helper
-        {
-            static constexpr bool matchable =
-                result_mapper_helper<tmp, Rt>::matchable
-                && (... && tmp.template deducible_by_target<Args>);
-
-            static dyn_node::signature_t deduced_signature()
+            template <typename Rt, typename... Args>
+                requires (valid_for_parameter<Args...>() && valid_for_result<Rt>())
+            static std::move_only_function<std::optional<data_sequence>(data_sequence)>
+            make_fn(std::move_only_function<Rt(Args&&...)> raw_fn)
             {
-                dyn_node::output_sequence_t output_seq = result_mapper_helper<tmp, Rt>::id_seq();
-                dyn_node::input_sequence_t input_seq = {
-                    (tmp.template deduced_by_target<Args>()).hana_id.c_str()...
+                return [origin = std::move(raw_fn)] (data_sequence d) mutable -> std::optional<data_sequence>
+                {
+                    constexpr auto sz = hana::size(input.tuple);
+                    if (d.size() != sz.value)
+                    {
+                        return std::nullopt;
+                    }
+
+                    constexpr auto rg = hana::make_range(hana::size_c<0>, sz);
+                    auto args = hana::unpack(rg, [&](auto... i)
+                    {
+                        return hana::make_tuple(
+                            unwrap_parameter_data<input.tuple[i], Args>(std::move(d[i.value]))...
+                        );
+                    });
+
+                    auto result = hana::unpack(std::move(args), [&]<typename... TS> (TS&&... x)
+                    {
+                        return origin(std::forward<TS>(x)...);
+                    });
+
+                    if (! result_success(result))
+                    {
+                        return std::nullopt;
+                    }
+
+                    return wrap_result<Rt>(std::move(result));
                 };
-                return {std::move(input_seq), std::move(output_seq)};
             }
         };
     }
 
-    export template <type_mapper auto tmp, typename Rt, typename... Args>
-        requires details::func_node_helper<tmp, Rt, Args...>::matchable
-    class deduced_func_node
+    export template <type_desc_list auto input_list, type_desc_list auto output_list>
+    class func_node
     {
-        using helper = details::func_node_helper<tmp, Rt, Args...>;
-        using fn_type = std::move_only_function<Rt(Args...)>;
-        static constexpr std::size_t arg_sz = sizeof...(Args);
+        using helper = details::func_node_helper<input_list, output_list>;
     public:
+
+        template <typename Rt, typename... Args>
+            requires (helper::template valid_for_parameter<Args...>() && helper::template valid_for_result<Rt>())
+        func_node(dyn_node::id_type id, dyn_node::text_type name, dyn_node::text_type description, std::move_only_function<Rt(Args&&...)> fn)
+            : id_(id)
+            , name_(name)
+            , description_(description)
+            , sig_(helper::signature())
+            , fn_(helper::make_fn(std::move(fn)))
+        {}
+
+        friend class func_node_instance;
         class func_node_instance
         {
         public:
-            explicit func_node_instance(deduced_func_node &d)
-                : def_(d)
-            {}
+
+            explicit func_node_instance(func_node &def)
+                : def_(def)
+            {
+
+            }
 
             [[nodiscard]] dyn_node::id_type type_id() const noexcept
             {
-                return def_.id();
+                return def_.id_;
             }
 
             [[nodiscard]] std::span<const dyn_node::signature_t> signatures() const noexcept
@@ -140,77 +292,148 @@ namespace blueprint::stk_node
             {
                 return 0;
             }
-            bool set_variant(std::size_t) noexcept
+            [[nodiscard]] bool set_variant(std::size_t) const noexcept
             {
                 return false;
             }
-            bool compute(dyn_node::data_sequence ds) noexcept
+            [[nodiscard("Check the state of compute is always neccessary")]]
+            bool compute(dyn_node::data_sequence in_data) noexcept
             {
-                if (arg_sz != ds.size())
+                auto rt = def_.fn_(in_data);
+                if (! rt.has_value())
                 {
                     return false;
                 }
-
-                auto ind_pk = hana::make_range(hana::size_c<0>, hana::size_c<arg_sz>);
-                auto args = hana::unpack(ind_pk, [&](auto... ind)
-                {
-                    return hana::make_tuple(
-                        argument_proxy<tmp, Args>(std::move(ds[ind.value]))...
-                    );
-                });
-
-                auto ans = hana::unpack(std::move(args), def_.fn_);
-
-                output_ = details::result_mapper_helper<tmp, Rt>::result_transform(std::move(ans));
-
+                data_ = std::move(*rt);
                 return true;
             }
             [[nodiscard]] dyn_node::data_sequence output() const noexcept
             {
-                return output_;
+                return data_;
             }
 
-
         private:
-            dyn_node::data_sequence output_;
-            deduced_func_node &def_;
+            func_node &def_;
+            dyn_node::data_sequence data_{};
         };
-        friend class func_node_instance;
-        static_assert(pro::proxiable<std::unique_ptr<func_node_instance>, dyn_node::node_instance_facade>);
 
-        deduced_func_node(fn_type fn, dyn_node::text_type name, dyn_node::text_type description, dyn_node::id_type id)
-            : name_(name)
-            , description_(description)
-            , id_(id)
-            , fn_(std::move(fn))
-            , sig_(helper::deduced_signature())
-        {
-
-        }
-
-        dyn_node::text_type name() const noexcept
+        [[nodiscard]] dyn_node::text_type name() const noexcept
         {
             return name_;
         }
-        dyn_node::text_type description() const noexcept
+        [[nodiscard]] dyn_node::text_type description() const noexcept
         {
             return description_;
         }
-        dyn_node::id_type id() const noexcept
+        [[nodiscard]] dyn_node::id_type id() const noexcept
         {
             return id_;
         }
 
         dyn_node::node_instance_proxy create_node()
         {
-            return std::make_unique<func_node_instance>(*this);
+            return std::make_shared<func_node_instance>(*this);
         }
 
     private:
-        dyn_node::text_type name_;
-        dyn_node::text_type description_;
         dyn_node::id_type id_;
-        fn_type fn_;
+        dyn_node::text_type name_, description_;
         dyn_node::signature_t sig_;
+        std::move_only_function<std::optional<dyn_node::data_sequence>(dyn_node::data_sequence)> fn_;
     };
+
+
+    // deduced func node
+
+    namespace details /* deduced func node helper */
+    {
+
+        template <type_mapper auto tmp, typename... Args>
+            requires (... && tmp.template deducible_by_target<Args>)
+        consteval type_desc_list auto deduced_type_list()
+        {
+            return input_type<
+                tmp.template deduced_by_target<Args>()...
+            >;
+        }
+
+        template <type_mapper auto tmp, typename Rt>
+        consteval bool result_deducible()
+        {
+            auto rt_list = result_list(hana::type_c<Rt>);
+            return hana::unpack(rt_list, [&] (auto... x)
+            {
+                return (... && tmp.template deducible_by_source<typename decltype(+x)::type>);
+            });
+        }
+
+        template <type_mapper auto tmp, typename Rt>
+            requires(result_deducible<tmp, Rt>())
+        consteval type_desc_list auto deduced_result_list()
+        {
+            auto rt_list = result_list(hana::type_c<Rt>);
+            return hana::unpack(rt_list,
+                                [&](auto... x) { return deduced_type_list<tmp, typename decltype(+x)::type...>(); });
+        }
+
+
+        template <type_mapper auto tmp, typename Rt, typename... Args>
+        struct deduced_func_node_helper
+        {
+            static constexpr bool matchable =
+                result_deducible<tmp, Rt>()
+                && (... && tmp.template deducible_by_target<Args>);
+        };
+    }
+
+    export template <type_mapper auto tmp, typename Rt, typename... Args>
+        requires details::deduced_func_node_helper<tmp, Rt, Args...>::matchable
+    class deduced_func_node
+        : public func_node<details::deduced_type_list<tmp, Args...>(), details::deduced_result_list<tmp, Rt>()>
+    {
+        using base = func_node<details::deduced_type_list<tmp, Args...>(), details::deduced_result_list<tmp, Rt>()>;
+
+    public:
+        deduced_func_node(std::move_only_function<Rt(Args&&...)> fn, dyn_node::text_type name,
+                          dyn_node::text_type description, dyn_node::id_type id) :
+            base(id, name, description, std::move(fn))
+        {
+        }
+    };
+
+
+    namespace details /* make */
+    {
+        namespace callable = boost::callable_traits;
+        template <typename Rt, typename... Args>
+        struct func_helper
+        {
+            template <type_mapper auto tmp>
+            using node_type = deduced_func_node<tmp, Rt, Args...>;
+
+            template <type_mapper auto tmp>
+            static constexpr bool is_valid = deduced_func_node_helper<tmp, Rt, Args...>::matchable;
+        };
+        template <typename T>
+        using to_func_helper = mp_rename<
+            mp_append<
+                mp_list<callable::return_type_t<T>>,
+                callable::args_t<T>
+            >,
+            func_helper
+        >;
+
+        template <typename T, auto tmp>
+        concept deducible_function = type_mapper<decltype(tmp)> && to_func_helper<T>::template is_valid<tmp>;
+    }
+
+    export template <type_mapper auto tmp, typename T>
+        requires details::deducible_function<T, tmp>
+    dyn_node::node_definition_proxy
+    make_deduced_func_node(T &&fun, dyn_node::id_type id, dyn_node::text_type name, dyn_node::text_type desc)
+    {
+        using node_type = details::to_func_helper<T>::template node_type<tmp>;
+        return std::make_shared<node_type>(std::forward<T>(fun), name, desc, id);
+    }
+
 }

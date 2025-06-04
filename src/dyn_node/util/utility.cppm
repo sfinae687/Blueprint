@@ -5,8 +5,12 @@
 // Created by ll06 on 25-5-14.
 //
 
+/// @file
+/// The dyn_node module provides some simple, dynamic basic utility for building node and type.
+/// More utility with generic and mata-programing is available from stk_node module.
+
 module;
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <ranges>
 #include <span>
@@ -16,6 +20,7 @@ module;
 export module blueprint.dyn_node:utility;
 import :definition;
 export import :trivial_node;
+export import :constant_factory;
 
 namespace blueprint::dyn_node::util
 {

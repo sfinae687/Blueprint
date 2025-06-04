@@ -7,7 +7,7 @@
 
 module;
 
-#include <proxy.h>
+#include <proxy/proxy.h>
 
 #include <functional>
 
@@ -19,17 +19,9 @@ import :builtin_mapper;
 namespace blueprint::builtin
 {
     using stk_node::deduced_func_node;
+    using sint_op_base = deduced_func_node<builtin_mapper, builtin_signed_type, builtin_signed_type, builtin_signed_type>;
 
-    using sint_op_base = deduced_func_node<
-        builtin_mapper, 
-        builtin_signed_type, 
-        builtin_signed_type, builtin_signed_type
-    >;
-
-    using uint_op_base = deduced_func_node<builtin_mapper,
-        builtin_unsigned_type,
-        builtin_unsigned_type, builtin_unsigned_type
-    >;
+    using uint_op_base = deduced_func_node<builtin_mapper, builtin_unsigned_type, builtin_unsigned_type, builtin_unsigned_type>;
 
     constexpr char signed_plus_id[] = "core.arithmetic.plus.signed";
 
