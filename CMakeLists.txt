@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 include(FetchContent)
-include(cmake/CPM.cmake)
+#include(cmake/CPM.cmake)
 
 # dependency
 

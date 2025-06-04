@@ -52,6 +52,8 @@ namespace blueprint::GUI
     ImTextureID load_opencv_image(const cv::Mat& image)
     {
 
+        assert(image.depth() == CV_8U);
+
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);

@@ -63,6 +63,7 @@ namespace blueprint::builtin
             }
 
             origin_ = proxy_cast<cv::Mat&>(*ds[0]);
+            set_flush();
             return true;
         }
         [[nodiscard]] data_sequence output() const noexcept
@@ -72,7 +73,7 @@ namespace blueprint::builtin
 
         [[nodiscard]] bool has_image() const
         {
-            return static_cast<bool>(img_);
+            return ! origin_.empty() || static_cast<bool>(img_);
         }
 
         [[nodiscard]] std::size_t width() const
@@ -85,12 +86,33 @@ namespace blueprint::builtin
             return img_.height();
         }
 
+        [[nodiscard]] bool need_flush() const
+        {
+            return flush_needed_;
+        }
+
+        void set_flush()
+        {
+            flush_needed_ = true;
+        }
+
         void flush_image()
         {
-            if (! origin_.empty())
+            if (need_flush())
             {
-                img_ = origin_;
-                origin_.release();
+                cv::Mat display_image = origin_.clone();
+
+                if (normalize)
+                {
+                    cv::normalize(display_image, display_image, 0, 1, cv::NORM_MINMAX, CV_32F);
+                }
+                
+                assert(origin_.depth() == CV_32F);
+                cv::convertScaleAbs(display_image, display_image, alpha*255.0, beta);
+
+                img_ = display_image;
+                unset_flush();
+
             }
         }
 
@@ -104,10 +126,24 @@ namespace blueprint::builtin
         }
 
     private:
+
+        void unset_flush()
+        {
+            flush_needed_ = false;
+        }
+
+        bool flush_needed_ = false;
+
         cv::Mat origin_;
         GUI::image img_{};
 
     public:
+        // process before display
+
+        bool normalize = false;
+        float alpha = 1.0;
+        float beta = 0.0;
+
         float scale = 1.0;
 
     };

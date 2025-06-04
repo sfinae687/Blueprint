@@ -13,7 +13,6 @@ set(BP06_BUILTIN_NODE_INTERFACE
         type/float.cppm
         node/float_arithmetic.cppm
         node/image_proc/image_resize.cppm
-        node/image_proc/image_brightness.cppm
         node/image_proc/image_kernel.cppm
         node/image_proc/image_decompose.cppm
         node/image_proc/image_color_split.cppm

@@ -20,6 +20,7 @@ module;
 
 export module blueprint.draw_node:image;
 import blueprint.builtin_node;
+import blueprint.gui;
 import :draw_rule;
 import :debug;
 
@@ -75,6 +76,7 @@ namespace blueprint::draw_node
             {
             auto img = cv::imread(out_path);
             cv::cvtColor(img, img, cv::COLOR_BGR2RGBA);
+            img.convertTo(img, CV_32F, 1/255.0);
             BOOST_LOG_SEV(draw_node_logger, info) << "Load image from: " << out_path;
             node_inst.set_output(std::make_shared<cv::Mat>(std::move(img)));
             ctx.set_dirty = true;
@@ -94,16 +96,42 @@ namespace blueprint::draw_node
     export void draw_display_image(node_draw_context &ctx)
     {
         auto &&nd = proxy_cast<display_image_instance&>(*ctx.node);
-        nd.flush_image();
         if (nd.has_image())
         {
             auto id = ctx.id;
 
             float width = nd.width() * nd.scale;
+
+            bool config_changed = false;
+
             ImGui::SetNextItemWidth(width);
             auto slider_id = std::format("scale##{}", id);
+            config_changed |= ImGui::SliderFloat(slider_id.c_str(), &nd.scale, 0.1, 1.0);
 
-            ImGui::SliderFloat(slider_id.c_str(), &nd.scale, 0.1, 1.0);
+            ImGui::SetNextItemWidth(width);
+            auto normalize_id = std::format("normalize##{}", id);
+            config_changed |= ImGui::Checkbox(normalize_id.c_str(), &nd.normalize);
+
+
+            ImGui::SetNextItemWidth(width);
+            auto alpha_id = std::format("alpha##{}", id);
+            config_changed |= GUI::input_number(alpha_id, nd.alpha);
+
+            ImGui::SetNextItemWidth(width);
+            auto beta_id = std::format("beta##{}", id);
+            config_changed |= GUI::input_number(beta_id, nd.beta);
+
+            if (config_changed)
+            {
+                nd.set_flush();
+            }
+            nd.flush_image();
+
+
+            ImGui::SetNextItemWidth(width);
+
+
+
             nd.display();
         }
         else

@@ -21,9 +21,7 @@ namespace blueprint::builtin
 {
     export cv::Mat image_alpha_beta(cv::Mat img, float alpha, float beta)
     {
-        cv::Mat rt;
-        cv::convertScaleAbs(img, rt, alpha, beta);
-        return rt;
+        return img * alpha + beta;
     }
 
     export constexpr char image_alpha_beta_id[] = "core.image-process.alpha_beta";

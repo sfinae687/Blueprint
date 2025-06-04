@@ -43,7 +43,7 @@ namespace blueprint::builtin
             float_minus_node()
                 : float_op_base(std::minus<builtin_float>{},
                     "Minus(Float)", "Process minus of two floating-point number",
-                    float_plus_id
+                    float_sub_id
                 )
             {}
         };

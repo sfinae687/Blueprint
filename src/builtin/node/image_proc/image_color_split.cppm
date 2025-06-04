@@ -27,14 +27,15 @@ namespace blueprint::builtin
         }
 
         cv::Mat zeros = cv::Mat::zeros(img.rows, img.cols, img.depth());
+        cv::Mat ones = cv::Mat::ones(img.rows, img.cols, img.depth());
 
         std::vector<cv::Mat> rts;
         cv::split(img, rts);
 
         cv::Mat r, g, b, a;
-        cv::merge(std::vector{rts[0], zeros, zeros, rts[3]}, r);
-        cv::merge(std::vector{zeros, rts[1], zeros, rts[3]}, g);
-        cv::merge(std::vector{zeros, zeros, rts[2], rts[3]}, b);
+        cv::merge(std::vector{rts[0], zeros, zeros, ones}, r);
+        cv::merge(std::vector{zeros, rts[1], zeros, ones}, g);
+        cv::merge(std::vector{zeros, zeros, rts[2], ones}, b);
         cv::merge(std::vector{zeros, zeros, zeros, rts[3]}, a);
         return std::make_tuple(r, g, b, a);
     }

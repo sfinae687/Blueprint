@@ -29,7 +29,6 @@ export import :image;
 export import :load_image;
 export import :display_image;
 export import :image_resize;
-export import :image_brightness;
 export import :image_kernel;
 export import :image_decompose;
 export import :image_color_split;
@@ -125,8 +124,6 @@ namespace blueprint::dyn_node::builtin
 
         auto img_resize = def_image_resize_node();
         auto img_resize_id = img_resize->id();
-        auto img_brightness = def_image_brightness_node();
-        auto img_brightness_id = img_brightness->id();
         auto img_kernel = def_image_kernel_node();
         auto img_kernel_id = img_kernel->id();
         auto img_decompose = def_image_decompose_node();
@@ -177,7 +174,6 @@ namespace blueprint::dyn_node::builtin
                     std::move(float_div),
                     std::move(float_mod),
                     std::move(img_resize),
-                    std::move(img_brightness),
                     std::move(img_kernel),
                     std::move(img_decompose),
                     std::move(img_split),
@@ -219,16 +215,19 @@ namespace blueprint::dyn_node::builtin
                         load_image_id,
                         display_image_id,
                         img_resize_id,
-                        img_brightness_id,
                         img_kernel_id,
+                        img_add_id,
+                        img_alpha_beta_id,
+                        img_blur_id,
+                        img_gaussian_blur_id,
+                    }
+                },
+                {
+                    "Color Space", {
                         img_decompose_id,
                         img_split_id,
                         img_compose_id,
-                        img_add_id,
-                        img_alpha_beta_id,
                         img_grayscale_id,
-                        img_blur_id,
-                        img_gaussian_blur_id,
                     }
                 }
             },
