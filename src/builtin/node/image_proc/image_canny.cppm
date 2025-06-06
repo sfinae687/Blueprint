@@ -27,7 +27,7 @@ namespace blueprint::builtin
         cv::Mat rt;
         cv::Canny(u8_img, rt, f1, f2);
 
-        rt.convertTo(rt, CV_32F, 1/255.);
+        rt.convertTo(rt, CV_64F, 1/255.);
         return rt;
     }
 
