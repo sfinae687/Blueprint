@@ -24,6 +24,7 @@ namespace blueprint::stk_node
     using dyn_node::node_instance;
     using dyn_node::id_type;
     using dyn_node::node_instance_proxy;
+    using dyn_node::binary_archive;
 
     export template <const char Id[], const char Name[], const char Description[], node_instance T, typename CTX = void>
     class template_definition
@@ -53,6 +54,11 @@ namespace blueprint::stk_node
             return std::make_shared<T>(context_);
         }
 
+        node_instance_proxy load(binary_archive &ar)
+        {
+            return std::make_shared<T>(load_binary<CTX>(ar));
+        }
+
     private:
         context_t context_;
     };
@@ -79,6 +85,11 @@ namespace blueprint::stk_node
         node_instance_proxy create_node()
         {
             return std::make_shared<T>();
+        }
+
+        node_instance_proxy load(binary_archive &)
+        {
+            return create_node();
         }
 
     };

@@ -32,13 +32,13 @@ namespace blueprint::dyn_node
             return std::any_cast<T>(self.ctx_);
         }
 
-        bool is_set() const
+        [[nodiscard]] bool is_set() const
         {
             return ctx_.has_value();
         }
 
     private:
-       std::any ctx_;
+        std::any ctx_;
     };
 }
 

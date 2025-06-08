@@ -35,7 +35,7 @@ namespace blueprint::dyn_node::util
     public:
         explicit constant_node_definition(data_proxy d);
         constant_node_definition(data_proxy d, std::string id);
-        constant_node_definition(id_type);
+        explicit constant_node_definition(id_type);
         constant_node_definition(id_type, std::string def_id);
 
         [[nodiscard]] id_type id() const noexcept;
@@ -43,6 +43,7 @@ namespace blueprint::dyn_node::util
         [[nodiscard]] text_type description() const noexcept;
 
         node_instance_proxy create_node();
+        node_instance_proxy load(binary_archive &);
 
     private:
         std::string id_;
@@ -67,6 +68,8 @@ namespace blueprint::dyn_node::util
         bool set_variant(std::size_t) noexcept;
         bool compute(data_sequence) noexcept;
         [[nodiscard]] data_sequence output() const noexcept;
+
+        [[nodiscard]] binary_archive serialize() const;
 
         // operation
         void set_output(dyn_node::data_proxy) noexcept;

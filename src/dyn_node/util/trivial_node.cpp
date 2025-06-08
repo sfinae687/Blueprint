@@ -11,6 +11,8 @@ module;
 
 #include <algorithm>
 #include <ranges>
+#include <utility>
+#include <vector>
 
 module blueprint.dyn_node;
 import :trivial_node;
@@ -38,6 +40,10 @@ namespace blueprint::dyn_node::util
     {
         auto ptr = std::make_unique<trivial_node_instance>(id_, node_input, node_output);
         return ptr;
+    }
+    node_instance_proxy trivial_node_definition::load_node(binary_archive &ar)
+    {
+        return create_node();
     }
 
     // instance
@@ -67,5 +73,9 @@ namespace blueprint::dyn_node::util
     }
 
     data_sequence trivial_node_instance::output() const noexcept { return {}; }
+    binary_archive trivial_node_instance::serialize() const
+    {
+        return {};
+    }
 
 } // namespace blueprint::dyn_node::util

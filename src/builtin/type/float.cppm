@@ -32,7 +32,7 @@ namespace blueprint::builtin
     constexpr char float_name[] = "Float";
     constexpr char float_description[] = "Double precision float number";
 
-    export using float_definition = stk_node::template_type_definition<float_id, float_name, float_description>;
+    export using float_definition = stk_node::template_type_definition<float_id, float_name, float_description, builtin_float>;
 
     export dyn_node::id_type type_id(builtin_float_hint, builtin_float)
     {

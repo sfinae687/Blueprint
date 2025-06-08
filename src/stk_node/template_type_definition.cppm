@@ -5,12 +5,16 @@
 // Created by ll06 on 2025/6/2.
 //
 
+module;
+
+#include <memory>
+
 export module blueprint.stk_node:template_type_definition;
 import blueprint.dyn_node;
 
 namespace blueprint::stk_node
 {
-    export template <const char *Id, const char *Name, const char *Description>
+    export template <const char *Id, const char *Name, const char *Description, typename T>
     struct template_type_definition
     {
         /*NOLINT*/ [[nodiscard]] dyn_node::text_type name() const noexcept
@@ -24,6 +28,11 @@ namespace blueprint::stk_node
         /*NOLINT*/ [[nodiscard]] dyn_node::id_type id() const noexcept
         {
             return Id;
+        }
+
+        dyn_node::data_proxy load(dyn_node::binary_archive &ar)
+        {
+            return std::make_shared<T>(load_binary<T>(ar));
         }
     };
 }

@@ -15,6 +15,7 @@ module;
 module blueprint.dyn_node;
 import :definition;
 import :constant_factory;
+import :serialization;
 
 namespace blueprint::dyn_node::util
 {
@@ -68,6 +69,12 @@ namespace blueprint::dyn_node::util
         return std::make_unique<constant_node_instance>(id_, data_ ? data_->clone() : nullptr, *this);
     }
 
+    node_instance_proxy constant_node_definition::load(binary_archive& ar)
+    {
+        auto data_p = load_data_with_type(ar);
+        return std::make_unique<constant_node_instance>(id_, std::move(data_p), *this);
+    }
+
     // Instance
 
     id_type constant_node_instance::type_id() const noexcept
@@ -95,10 +102,13 @@ namespace blueprint::dyn_node::util
         return ds.size() == 0 && data_.has_value();
     }
 
-    data_sequence constant_node_instance::output() const noexcept
+    data_sequence constant_node_instance::output() const noexcept { return {data_}; }
+
+    binary_archive constant_node_instance::serialize() const
     {
-        return {data_};
+        return save_data_with_type(data_);
     }
+
     void constant_node_instance::set_output(data_proxy d) noexcept
     {
         assert(d->type_id() == def_.sig_.output[0]);

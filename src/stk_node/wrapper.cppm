@@ -312,6 +312,11 @@ namespace blueprint::stk_node
                 return data_;
             }
 
+            [[nodiscard]] dyn_node::binary_archive serialize() const
+            {
+                return {};
+            }
+
         private:
             func_node &def_;
             dyn_node::data_sequence data_{};
@@ -335,6 +340,11 @@ namespace blueprint::stk_node
             return std::make_shared<func_node_instance>(*this);
         }
 
+        dyn_node::node_instance_proxy load(dyn_node::binary_archive &ar)
+        {
+            return create_node();
+        }
+
     private:
         dyn_node::id_type id_;
         dyn_node::text_type name_, description_;
@@ -343,7 +353,7 @@ namespace blueprint::stk_node
     };
 
 
-    // deduced func node
+    // [section] deduced func node //
 
     namespace details /* deduced func node helper */
     {

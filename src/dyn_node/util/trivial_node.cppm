@@ -29,11 +29,12 @@ namespace blueprint::dyn_node::util
         trivial_node_definition(const trivial_node_definition&) = delete;
         trivial_node_definition& operator=(const trivial_node_definition&) = delete;
 
-        text_type name() const noexcept;
-        text_type description() const noexcept;
-        id_type id() const noexcept;
+        [[nodiscard]] text_type name() const noexcept;
+        [[nodiscard]] text_type description() const noexcept;
+        [[nodiscard]] id_type id() const noexcept;
 
         node_instance_proxy create_node();
+        node_instance_proxy load_node(binary_archive &);
 
     private:
         id_type id_;
@@ -42,7 +43,7 @@ namespace blueprint::dyn_node::util
         id_sequence node_input;
         id_sequence node_output;
     };
-    static_assert(pro::proxiable<std::shared_ptr<trivial_node_definition>, node_definition_facade>);
+    static_assert(node_definition<trivial_node_definition>);
 
     export class trivial_node_instance : public any_context
     {
@@ -51,7 +52,7 @@ namespace blueprint::dyn_node::util
         trivial_node_instance(const trivial_node_instance&) = delete;
         trivial_node_instance& operator=(const trivial_node_instance&) = delete;
 
-        id_type type_id() const noexcept;
+        [[nodiscard]] id_type type_id() const noexcept;
 
         [[nodiscard]] std::span<const signature_t> signatures() const noexcept;
         [[nodiscard]] std::size_t current_variant() const noexcept;
@@ -60,11 +61,13 @@ namespace blueprint::dyn_node::util
         bool compute(data_sequence) noexcept;
         [[nodiscard]] data_sequence output() const noexcept;
 
+        [[nodiscard]] binary_archive serialize() const;
+
 
     private:
         id_type id_;
         signature_t sig_;
     };
-    static_assert(pro::proxiable<std::unique_ptr<trivial_node_instance>, node_instance_facade>);
+    static_assert(node_instance<trivial_node_instance>);
 
 }
