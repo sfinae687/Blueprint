@@ -21,6 +21,7 @@ export module blueprint.dyn_node:utility;
 import :definition;
 export import :trivial_node;
 export import :constant_factory;
+export import :serialization;
 
 namespace blueprint::dyn_node::util
 {

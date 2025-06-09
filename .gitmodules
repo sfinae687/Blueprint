@@ -19,3 +19,6 @@
 [submodule "lib/native-file-dialog"]
 	path = lib/native-file-dialog
 	url = https://github.com/btzy/nativefiledialog-extended.git
+[submodule "lib/cereal"]
+	path = lib/cereal
+	url = https://github.com/USCiLab/cereal.git

@@ -8,8 +8,12 @@
 module;
 
 #include <any>
+#include <functional>
+#include <utility>
 
 export module blueprint.dyn_node:any_context;
+import blueprint.archive;
+import :serialization;
 
 namespace blueprint::dyn_node
 {
@@ -38,7 +42,7 @@ namespace blueprint::dyn_node
         }
 
     private:
-       std::any ctx_;
+        std::any ctx_;
     };
 }
 

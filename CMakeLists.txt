@@ -19,6 +19,11 @@ find_package(OpenGL REQUIRED)
 # GLFW
 add_subdirectory(lib/glfw)
 
+# Cereal
+set(SKIP_PERFORMANCE_COMPARISON ON)
+add_subdirectory(lib/cereal)
+unset(SKIP_PERFORMANCE_COMPARISON)
+
 # Boost
 find_package(Boost CONFIG REQUIRED COMPONENTS log log_setup )
 
@@ -69,10 +74,13 @@ target_link_libraries(BlueprintOpenCVInterface INTERFACE ${OpenCV_LIBS})
 # Other support
 add_subdirectory(lib/native-file-dialog)
 
-# Blueprint Source
+### Blueprint Source ###
 
 set(BUILD_TESTING ON)
 enable_testing()
+
+# basic
+add_subdirectory(src/archive)
 
 # Blueprint GUI
 add_subdirectory(src/gui)

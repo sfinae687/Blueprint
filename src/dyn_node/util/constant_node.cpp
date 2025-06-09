@@ -15,6 +15,7 @@ module;
 module blueprint.dyn_node;
 import :definition;
 import :constant_factory;
+import :serialization;
 
 namespace blueprint::dyn_node::util
 {
@@ -66,6 +67,20 @@ namespace blueprint::dyn_node::util
     node_instance_proxy constant_node_definition::create_node()
     {
         return std::make_unique<constant_node_instance>(id_, data_ ? data_->clone() : nullptr, *this);
+    }
+
+    node_instance_proxy constant_node_definition::load(archive::input_archive_t& ar)
+    {
+        auto d = util::load_data_with_type(ar);
+        return std::make_unique<constant_node_instance>(id_, std::move(d), *this);
+    }
+
+    void constant_node_definition::save(archive::output_archive_t& ar, node_instance_proxy& p)
+    {
+        assert(id_ == p->type_id());
+
+        auto &&d = proxy_cast<constant_node_instance&>(*p);
+        util::save_data_with_type(ar, d.data_);
     }
 
     // Instance
