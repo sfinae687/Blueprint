@@ -38,6 +38,16 @@ namespace blueprint::dyn_node
     namespace builtin
     {
         // Int
+
+        export constexpr id_type type_id(builtin_hint, builtin_unsigned_type)
+        {
+            return UNSIGNED_INTEGRAL_ID;
+        }
+        export data_proxy clone(builtin_hint, builtin_unsigned_type i)
+        {
+            return std::make_shared<builtin_unsigned_type>(i);
+        }
+
         export struct uint_definition
         {
             /*NOLINT*/ [[nodiscard]] text_type name() const
@@ -52,16 +62,22 @@ namespace blueprint::dyn_node
             {
                 return UNSIGNED_INTEGRAL_ID;
             }
-        };
 
-        export constexpr id_type type_id(builtin_hint, builtin_unsigned_type)
-        {
-            return UNSIGNED_INTEGRAL_ID;
-        }
-        export data_proxy clone(builtin_hint, builtin_unsigned_type i)
-        {
-            return std::make_shared<builtin_unsigned_type>(i);
-        }
+            dyn_node::data_proxy load(archive::input_archive_t &ar)
+            {
+                builtin_unsigned_type si;
+                ar(si);
+                return std::make_shared<builtin_unsigned_type>(si);
+            }
+
+            void save(archive::output_archive_t &ar, dyn_node::data_proxy &p)
+            {
+                assert(p->type_id() == UNSIGNED_INTEGRAL_ID);
+
+                auto si = proxy_cast<builtin_unsigned_type>(*p);
+                ar(si);
+            }
+        };
 
 
     }

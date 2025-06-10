@@ -25,18 +25,24 @@ namespace blueprint::builtin
     export constexpr char matrix_editor_id[] = "core.matrix-editor";
     export constexpr char matrix_display_id[] = "core.matrix-display";
 
-    export class matrix_editor_def
+    export class matrix_editor_def;
+
+    class matrix_editor_def
     {
     public:
-        id_type id() const noexcept;
-        text_type name() const noexcept;
-        text_type description() const noexcept;
+        [[nodiscard]] id_type id() const noexcept;
+        [[nodiscard]] text_type name() const noexcept;
+        [[nodiscard]] text_type description() const noexcept;
 
         node_instance_proxy create_node() noexcept;
+
+        node_instance_proxy load(archive::input_archive_t &);
+        void save(archive::output_archive_t &, node_instance_proxy &p);
     };
 
     export class matrix_editor_node
     {
+        friend class matrix_editor_def;
     public:
         matrix_editor_node();
 
@@ -47,8 +53,23 @@ namespace blueprint::builtin
         bool compute(data_sequence) noexcept;
         [[nodiscard]] data_sequence output() const noexcept;
 
+        enum mat_type : int
+        {
+            Custom,
+            Laplace_kernel,
+            Vertical_sobel,
+            Horizontal_sobel,
+            Vertical_Prewitt,
+            Horizontal_Prewitt,
+            Gaussian_kernel,
+            Zeros,
+            Ones,
+            Eye,
+        };
+
         std::shared_ptr<builtin_matrix_t> mat_{};
         int cur_item = 0;
+
         struct gaussian_kernel_context
         {
             int sz;
@@ -64,16 +85,21 @@ namespace blueprint::builtin
             int sz;
         };
         std::variant<std::monostate, gaussian_kernel_context, size_context, eye_context> arg_;
+
+        void flush_matrix();
     };
 
     export class matrix_display_def
     {
     public:
-        id_type id() const noexcept;
-        text_type name() const noexcept;
-        text_type description() const noexcept;
+        [[nodiscard]] id_type id() const noexcept;
+        [[nodiscard]] text_type name() const noexcept;
+        [[nodiscard]] text_type description() const noexcept;
 
         node_instance_proxy create_node() noexcept;
+
+        node_instance_proxy load(archive::input_archive_t &);
+        void save(archive::output_archive_t &, node_instance_proxy &p);
     };
 
     export class matrix_display_node

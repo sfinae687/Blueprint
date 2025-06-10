@@ -125,6 +125,8 @@ namespace blueprint::builtin
             return false;
         }
 
+
+
     private:
 
         void unset_flush()
@@ -138,7 +140,9 @@ namespace blueprint::builtin
         GUI::image img_{};
 
     public:
+
         // process before display
+        // [need save]
 
         bool normalize = false;
         float alpha = 1.0;

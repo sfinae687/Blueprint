@@ -335,6 +335,15 @@ namespace blueprint::stk_node
             return std::make_shared<func_node_instance>(*this);
         }
 
+        dyn_node::node_instance_proxy load(archive::input_archive_t &ar)
+        {
+            return std::make_shared<func_node_instance>(*this);
+        }
+        void save(archive::output_archive_t &ar, dyn_node::node_instance_proxy &p)
+        {
+            ;;
+        }
+
     private:
         dyn_node::id_type id_;
         dyn_node::text_type name_, description_;

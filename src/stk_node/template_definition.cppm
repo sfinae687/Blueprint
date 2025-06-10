@@ -25,8 +25,19 @@ namespace blueprint::stk_node
     using dyn_node::id_type;
     using dyn_node::node_instance_proxy;
 
-    export template <const char Id[], const char Name[], const char Description[], node_instance T, typename CTX = void>
-    class template_definition
+    template <typename T, typename CTX>
+    concept context_aware_node = archive::loadable<CTX> && archive::saveable<CTX> && std::constructible_from<T, CTX>
+        && requires (T t, CTX ctx) {
+            {t.context()} -> archive::saveable;
+        };
+
+    export template <const char Id[], const char Name[], const char Description[], typename T, typename CTX = void>
+        requires std::same_as<CTX, void> || context_aware_node<T, CTX>
+    class template_definition {};
+
+    export template <const char Id[], const char Name[], const char Description[], node_instance T, typename CTX>
+        requires context_aware_node<T, CTX>
+    class template_definition<Id, Name, Description, T, CTX>
     {
         using context_t = std::remove_cvref_t<CTX>;
     public:
@@ -51,6 +62,19 @@ namespace blueprint::stk_node
         node_instance_proxy create_node()
         {
             return std::make_shared<T>(context_);
+        }
+
+        node_instance_proxy load(archive::input_archive_t &ar)
+        {
+            CTX ctx;
+            archive::load(ctx, ar);
+            return std::make_shared<T>(std::move(ctx));
+        }
+        void save(archive::output_archive_t &ar, node_instance_proxy &p)
+        {
+            auto &&nt = proxy_cast<T&>(*p);
+            auto &&ctx = nt.context();
+            archive::save(ar, ctx);
         }
 
     private:
@@ -79,6 +103,15 @@ namespace blueprint::stk_node
         node_instance_proxy create_node()
         {
             return std::make_shared<T>();
+        }
+
+        node_instance_proxy load(archive::input_archive_t &)
+        {
+            return create_node();
+        }
+        void save(archive::output_archive_t &, node_instance_proxy &p)
+        {
+            assert(id() == p->type_id());
         }
 
     };

@@ -51,20 +51,6 @@ namespace blueprint::draw_node
 
     // matrix editor
 
-    enum mat_type
-    {
-        Custom,
-        Laplace_kernel,
-        Vertical_sobel,
-        Horizontal_sobel,
-        Vertical_Prewitt,
-        Horizontal_Prewitt,
-        Gaussian_kernel,
-        Zeros,
-        Ones,
-        Eye,
-    };
-
     inline const char *items[] = {
         "Custom",
         "Laplace kernel",
@@ -96,6 +82,8 @@ namespace blueprint::draw_node
         ImGui::SetNextItemWidth(128 + 32);
         bool combo_changed = ImGui::Combo(combo_lab.c_str(), &cur_item, items, IM_ARRAYSIZE(items));
 
+        using enum matrix_editor_node::mat_type;
+
         switch (cur_item)
         {
         case Custom:
@@ -105,56 +93,12 @@ namespace blueprint::draw_node
             }
             break;
         case Laplace_kernel:
-            if (combo_changed)
-            {
-                mat = builtin_matrix_t{
-                    {0, 1, 0},
-                    {1, -4, 1},
-                    {0, 1, 0},
-                };
-                ctx.set_dirty = true;
-            }
-            break;
         case Vertical_sobel:
-            if (combo_changed)
-            {
-                mat = builtin_matrix_t {
-                    {1, 2, 1},
-                    {0, 0, 0},
-                    {-1, -2, -1},
-                };
-                ctx.set_dirty= true;
-            }
-            break;
         case Horizontal_sobel:
-            if (combo_changed)
-            {
-                mat = builtin_matrix_t {
-                    {1, 0, -1},
-                    {2, 0, -2},
-                    {1, 0, -1},
-                };
-                ctx.set_dirty= true;
-            }
-            break;
         case Vertical_Prewitt:
-            if (combo_changed)
-            {
-                mat = builtin_matrix_t{
-                    {1, 1, 1},
-                    {0, 0, 0},
-                    {-1, -1, -1},
-                };
-                ctx.set_dirty = true;
-            }
         case Horizontal_Prewitt:
             if (combo_changed)
             {
-                mat = builtin_matrix_t{
-                    {1, 0, -1},
-                    {1, 0, -1},
-                    {1, 0, -1},
-                };
                 ctx.set_dirty = true;
             }
         case Gaussian_kernel:
@@ -184,9 +128,6 @@ namespace blueprint::draw_node
             }
             else if (changed)
             {
-                auto kernel = cv::getGaussianKernel(gua.sz, gua.gamma, CV_64F);
-                kernel = kernel * kernel.t();
-                cv::cv2eigen(kernel, mat);
                 ctx.set_dirty = true;
             }
         }
@@ -213,13 +154,6 @@ namespace blueprint::draw_node
 
             if (changed)
             {
-                if (cur_item == Ones)
-                {
-                    mat = builtin_matrix_t::Ones(sz_ctx.height, sz_ctx.width);
-                } else
-                {
-                    mat = builtin_matrix_t::Zero(sz_ctx.height, sz_ctx.width);
-                }
                 ctx.set_dirty = true;
             }
         }
@@ -242,13 +176,17 @@ namespace blueprint::draw_node
 
             if (changed)
             {
-                mat = builtin_matrix_t::Identity(sz.sz, sz.sz);
                 ctx.set_dirty = true;
             }
         }
             break;
         default:
             break;
+        }
+
+        if (ctx.set_dirty)
+        {
+            editor.flush_matrix();
         }
     }
 

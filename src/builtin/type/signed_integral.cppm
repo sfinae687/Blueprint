@@ -7,6 +7,9 @@
 
 module;
 
+#include <proxy/proxy.h>
+
+#include <cassert>
 #include <memory>
 
 export module blueprint.builtin_node:signed_integral;
@@ -35,6 +38,15 @@ namespace blueprint::dyn_node
     namespace builtin
     {
         // Int
+        export constexpr id_type type_id(builtin_hint, builtin_signed_type)
+        {
+            return SIGNED_INTEGRAL_ID;
+        }
+        export data_proxy clone(builtin_hint, builtin_signed_type i)
+        {
+            return std::make_shared<builtin_signed_type>(i);
+        }
+
 
         export struct sint_definition
         {
@@ -50,17 +62,21 @@ namespace blueprint::dyn_node
             {
                 return SIGNED_INTEGRAL_ID;
             }
+
+            dyn_node::data_proxy load(archive::input_archive_t &ar)
+            {
+                builtin_signed_type si;
+                ar(si);
+                return std::make_shared<builtin_signed_type>(si);
+            }
+
+            void save(archive::output_archive_t &ar, dyn_node::data_proxy &p)
+            {
+                assert(p->type_id() == SIGNED_INTEGRAL_ID);
+
+                auto si = proxy_cast<builtin_signed_type>(*p);
+                ar(si);
+            }
         };
-
-        export constexpr id_type type_id(builtin_hint, builtin_signed_type)
-        {
-            return SIGNED_INTEGRAL_ID;
-        }
-        export data_proxy clone(builtin_hint, builtin_signed_type i)
-        {
-            return std::make_shared<builtin_signed_type>(i);
-        }
-
-
     }
 }
