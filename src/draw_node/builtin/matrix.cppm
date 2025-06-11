@@ -101,6 +101,7 @@ namespace blueprint::draw_node
             {
                 ctx.set_dirty = true;
             }
+            break;
         case Gaussian_kernel:
         {
             if (combo_changed)
@@ -130,6 +131,7 @@ namespace blueprint::draw_node
             {
                 ctx.set_dirty = true;
             }
+            break;
         }
         case Ones:
         case Zeros:
@@ -140,7 +142,7 @@ namespace blueprint::draw_node
                 arg = ctx_t {1, 1};
             }
             auto &&sz_ctx = std::get<ctx_t>(arg);
-            bool changed = false;
+            bool changed = combo_changed;
             ImGui::SetNextItemWidth(128);
             if (ImGui::InputInt("Height", &sz_ctx.height))
             {
@@ -156,8 +158,8 @@ namespace blueprint::draw_node
             {
                 ctx.set_dirty = true;
             }
-        }
             break;
+        }
         case Eye:
         {
             using ctx_t = matrix_editor_node::eye_context;
@@ -178,8 +180,8 @@ namespace blueprint::draw_node
             {
                 ctx.set_dirty = true;
             }
-        }
             break;
+        }
         default:
             break;
         }

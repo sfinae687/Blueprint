@@ -11,6 +11,7 @@ module;
 #include <cereal/types/string.hpp>
 
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include <memory>
 #include <string>
@@ -42,11 +43,12 @@ namespace blueprint::builtin
     {
         signature_t load_image_sig {
             {},
-            {matrix_id}
+            { image_id },
         };
     }
 
     load_image_instance::load_image_instance()
+        : img_(std::make_shared<builtin_image_t>())
     {
 
     }
@@ -60,12 +62,12 @@ namespace blueprint::builtin
     }
     bool load_image_instance::compute(data_sequence ds) noexcept
     {
-        return ds.size() != 0;
+        return ds.size() == 0;
     }
     data_sequence load_image_instance::output() const noexcept { return {img_}; }
     bool load_image_instance::has_image() const
     {
-        return ! img_->empty();
+        return img_ && ! img_->empty();
     }
 
     fs::path load_image_instance::path()
@@ -79,6 +81,7 @@ namespace blueprint::builtin
         if (fs::is_regular_file(path_))
         {
             auto img = cv::imread(path_);
+            cv::cvtColor(img, img, cv::COLOR_BGR2RGBA);
             img.convertTo(img, CV_64F, 1/255.0);
             *img_ = std::move(img);
         }

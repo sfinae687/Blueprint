@@ -224,30 +224,33 @@ namespace blueprint::builtin
                 {1, 0, -1},
                 {1, 0, -1},
             };
-
+            break;
         case Gaussian_kernel:
         {
             auto &&gua = std::get<gaussian_kernel_context>(arg_);
             auto kernel = cv::getGaussianKernel(gua.sz, gua.gamma, CV_64F);
             kernel = kernel * kernel.t();
             cv::cv2eigen(kernel, *mat_);
+            break;
         }
         case Ones:
         {
             auto &&sz_ctx = std::get<size_context>(arg_);
             *mat_ = builtin_matrix_t::Ones(sz_ctx.height, sz_ctx.width);
+            break;
         }
         case Zeros:
         {
             auto &&sz_ctx = std::get<size_context>(arg_);
             *mat_ = builtin_matrix_t::Zero(sz_ctx.height, sz_ctx.width);
+            break;
         }
         case Eye:
         {
             auto &&sz = std::get<eye_context>(arg_);
             *mat_ = builtin_matrix_t::Identity(sz.sz, sz.sz);
+            break;
         }
-
         default:
             break;
         }

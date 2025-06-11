@@ -99,9 +99,10 @@ add_subdirectory(src/builtin)
 add_subdirectory(src/flow)
 
 # Blueprint
+add_subdirectory(src/application)
 add_executable(blueprint_app src/main.cpp)
 target_link_libraries(blueprint_app
-        PRIVATE blueprint Boost::log_setup nfd
+        PRIVATE blueprint_application_lib Boost::log_setup nfd
 )
 
 # Others

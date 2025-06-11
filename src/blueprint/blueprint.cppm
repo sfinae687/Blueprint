@@ -31,15 +31,6 @@ import blueprint.constraint;
 namespace blueprint
 {
 
-    export auto app_guard()
-    {
-        GUI::init_gui();
-        return boost::scope::scope_exit([]
-        {
-            GUI::finish_gui();
-        });
-    }
-
     export class blueprint_application
     {
         using self = blueprint_application;
@@ -54,18 +45,17 @@ namespace blueprint
             ImVec2 pos;
         };
     public:
-        blueprint_application();
+        explicit blueprint_application(GUI::window &);
         ~blueprint_application() = default;
 
         blueprint_application(const blueprint_application &) = delete;
         blueprint_application& operator= (const blueprint_application &) = delete;
 
-        int run();
-
-    private:
         void setup_logger();
         void update();
         void draw();
+
+    private:
 
         void load_builtin();
         void load_component(plugin::component_package);
@@ -95,12 +85,8 @@ namespace blueprint
 
         // context manager
 
-        GUI::window gui_;
         GUI::imnodes_context imnodes_context_;
         int hovered_node = -1;
-
-        // application state
-        bool main_open = true;
 
         // Node And Types definition
         dyn_node::node_definitions_t node_def_;

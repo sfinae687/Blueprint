@@ -46,9 +46,8 @@ namespace blueprint
     using namespace std::string_literals;
 
     /// Constructor, it defines the all GUI, and connect another necessary part.
-    blueprint_application::blueprint_application()
-        : gui_("Blueprint Node editor", 1080, 720)
-        , imnodes_context_(gui_)
+    blueprint_application::blueprint_application(GUI::window &gui)
+        : imnodes_context_(gui)
         , link_(node_instance_)
         , to_finish_compute_(64)
     {
@@ -57,20 +56,12 @@ namespace blueprint
         setup_logger();
         load_builtin();
 
-        gui_.set_update_operation([this] {update();});
-        gui_.set_draw_operation([this] {draw();});
-    }
-
-    int blueprint_application::run()
-    {
-        gui_.render_loop();
-        return 0;
     }
 
     void blueprint_application::setup_logger()
     {
         using namespace boost::log;
-        logger.add_attribute("Module", attributes::constant<std::string>("Application"));
+        logger.add_attribute("Module", attributes::constant<std::string>("Editor"));
     }
 
     void blueprint_application::update()
@@ -119,39 +110,33 @@ namespace blueprint
     }
     void blueprint_application::draw()
     {
-        using namespace GUI;
-        if (begin_main_window("main", &main_open))
+        ImGui::BeginChild("NodeEditor",
+            ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
+
+        ImNodes::BeginNodeEditor();
+
+        for (auto &&hd : node_instance_.dump_handler())
         {
-            ImGui::BeginChild("NodeEditor",
-                ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
-
-            ImNodes::BeginNodeEditor();
-
-            for (auto &&hd : node_instance_.dump_handler())
-            {
-                draw_node(hd);
-            }
-
-            draw_link();
-
-            if (hovered_node == -1)
-            {
-                draw_editor_menu();
-            }
-
-            ImNodes::MiniMap();
-
-            ImNodes::EndNodeEditor();
-
-            ImGui::EndChild();
-
-            if (ImGui::Button("Compute"))
-            {
-                begin_compute_flag = true;
-            }
+            draw_node(hd);
         }
-        ImGui::End();
 
+        draw_link();
+
+        if (hovered_node == -1)
+        {
+            draw_editor_menu();
+        }
+
+        ImNodes::MiniMap();
+
+        ImNodes::EndNodeEditor();
+
+        ImGui::EndChild();
+
+        if (ImGui::Button("Compute"))
+        {
+            begin_compute_flag = true;
+        }
     }
 
     void blueprint_application::draw_node(flow::node_instance_handler hd)

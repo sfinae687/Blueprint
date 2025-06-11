@@ -1,7 +1,7 @@
 // Copyright (c) 2025 sfinea687
 // Licensed under the MIT License. See LICENSE in the project root for details.
 
-import blueprint;
+import application;
 
 #include <imgui.h>
 #include <nfd.h>
@@ -22,12 +22,14 @@ void init_log()
 
 int main(int argc, char *argv[])
 {
+    using namespace application;
+
     NFD_Init();
     init_log();
 
-    auto app_gd = blueprint::app_guard();
+    auto app_gd = application::app_guard();
 
-    blueprint::blueprint_application app{};
+    application_context app{};
 
     return app.run();
 }
