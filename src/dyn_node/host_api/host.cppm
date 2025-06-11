@@ -18,11 +18,11 @@ namespace blueprint::dyn_node::host_api
     template <typename T>
     using fn_t = std::move_only_function<T>;
 
-    struct host_api_t
+    export struct host_api_t
     {
         fn_t<node_definition_proxy&(id_type) const> get_node_definition{};
         fn_t<type_definition_proxy&(id_type) const> get_type_definition{};
     };
 
-    const host_api_t *host;
+    export const host_api_t *host;
 }

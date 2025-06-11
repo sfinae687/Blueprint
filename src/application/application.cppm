@@ -44,6 +44,10 @@ namespace application
 
         int run();
 
+        // action //
+        void save_editor();
+        void load_editor();
+
     private:
         void setup_logger();
         void update();

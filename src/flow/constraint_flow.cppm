@@ -151,6 +151,13 @@ namespace blueprint::constraint
 
         std::vector<node_id> dump_ready() noexcept;
 
+        struct set_data_desc /* NOLINT */
+        {
+            input_id ch;
+            dyn_node::data_proxy d;
+        };
+        std::vector<set_data_desc> dump_set();
+
     protected:
 
         std::optional<unsigned long> do_connect(output_t output, input_t input) override;

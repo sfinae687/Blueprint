@@ -59,15 +59,11 @@ namespace blueprint::dyn_node::builtin
 
     node_instance_proxy identity_node_definition::load(archive::input_archive_t& ar)
     {
-        auto d = ty_->load(ar);
-        return std::make_unique<identity_node_instance>(id_, ty_, std::move(d));
+        return create_node();
     }
     void identity_node_definition::save(archive::output_archive_t& ar, node_instance_proxy& p)
     {
         assert(id_ == p->type_id());
-        auto &&nt = proxy_cast<identity_node_instance&>(*p);
-
-        ty_->save(ar, nt.data_);
     }
 
     identity_node_instance::identity_node_instance(string_view id, const type_definition_proxy& ty, data_proxy d)

@@ -10,5 +10,5 @@ target_sources(blueprint_application_lib
 )
 target_link_libraries(blueprint_application_lib
         PUBLIC blueprint
-        PRIVATE blueprint_gui Boost::log Boost::boost
+        PRIVATE blueprint_gui Boost::log Boost::boost nfd
 )

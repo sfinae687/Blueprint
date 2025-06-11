@@ -27,6 +27,7 @@ import blueprint.draw_node;
 import blueprint.plugin;
 import blueprint.flow;
 import blueprint.constraint;
+import blueprint.archive;
 
 namespace blueprint
 {
@@ -46,6 +47,7 @@ namespace blueprint
         };
     public:
         explicit blueprint_application(GUI::window &);
+        blueprint_application(GUI::window &, archive::input_archive_t &);
         ~blueprint_application() = default;
 
         blueprint_application(const blueprint_application &) = delete;
@@ -54,6 +56,7 @@ namespace blueprint
         void setup_logger();
         void update();
         void draw();
+        void save(archive::output_archive_t &);
 
     private:
 
@@ -70,10 +73,10 @@ namespace blueprint
 
 
         void to_create_link(flow::no_id output, flow::no_id input);
-        void to_remove_node(flow::no_id);
-        void do_remove_node(flow::no_id);
         void to_create_node(dyn_node::id_type, new_node_context);
         void do_create_node(dyn_node::id_type id, new_node_context ctx);
+        void to_remove_node(flow::no_id);
+        void do_remove_node(flow::no_id);
         void to_computing(flow::no_id);
         void to_finish_computing(flow::no_id, bool);
         void do_finish_computing(flow::no_id, bool);
@@ -87,6 +90,8 @@ namespace blueprint
 
         GUI::imnodes_context imnodes_context_;
         int hovered_node = -1;
+
+        dyn_node::host_api::host_api_t api_;
 
         // Node And Types definition
         dyn_node::node_definitions_t node_def_;
