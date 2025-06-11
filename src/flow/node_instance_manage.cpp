@@ -62,6 +62,8 @@ namespace blueprint::flow
             return nullptr;
         }
 
+        last_id_ = std::max(last_id_, the_id + 1);
+
         return {*this, id_iter};
     }
 
