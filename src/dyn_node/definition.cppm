@@ -18,6 +18,7 @@ module;
 #include <vector>
 
 export module blueprint.dyn_node:definition;
+export import blueprint.archive;
 
 namespace blueprint::dyn_node
 {
@@ -142,26 +143,11 @@ namespace blueprint::dyn_node
     PRO_DEF_MEM_DISPATCH(description_dispatch, description);
     PRO_DEF_MEM_DISPATCH(id_dispatch, id, id);
 
-    // Type
-
-    using generic_parameter = std::pmr::unordered_map<id_type, std::any>;
-
-    // PRO_DEF_MEM_DISPATCH(is_generic_dispatch, is_generic);
-    // PRO_DEF_MEM_DISPATCH(generic_invoke_dispatch, generic_invoke);
-
-    export struct type_definition_facade : pro::facade_builder
-        ::add_convention<name_dispatch, text_type() const>
-        ::add_convention<description_dispatch, text_type() const>
-        ::add_convention<id_dispatch, id_type() const>
-        ::support_copy<pro::constraint_level::nontrivial>
-        ::support_relocation<pro::constraint_level::nontrivial>
-        ::support_destruction<pro::constraint_level::nontrivial>
-        ::support<pro::skills::rtti>
-        ::build
-    { };
-
     PRO_DEF_FREE_AS_MEM_DISPATCH(type_id_dispatch, dyn_node::type_id, type_id);
     PRO_DEF_FREE_AS_MEM_DISPATCH(clone_dispatch, dyn_node::clone, clone);
+
+    // Data proxy has reference meaning and reference counter (to redeclare memory) in it.
+    // Other proxies have the ownship of its object.
 
     template <typename F>
     using copy_overload = pro::proxy<F>() const;
@@ -178,8 +164,28 @@ namespace blueprint::dyn_node
         ::build
     { };
 
-    // Data proxy has reference meaning and reference counter (to redeclare memory) in it.
-    // Other proxies have the ownship of its object.
+    // Type
+
+    using generic_parameter = std::pmr::unordered_map<id_type, std::any>;
+
+    // PRO_DEF_FREE_AS_MEM_DISPATCH(save_dispatch, archive::save, save);
+    // PRO_DEF_FREE_AS_MEM_DISPATCH(load_dispatch, archive::load, load);
+
+    PRO_DEF_MEM_DISPATCH(save_dispatch, save);
+    PRO_DEF_MEM_DISPATCH(load_dispatch, load);
+
+    export struct type_definition_facade : pro::facade_builder
+        ::add_convention<name_dispatch, text_type() const>
+        ::add_convention<description_dispatch, text_type() const>
+        ::add_convention<id_dispatch, id_type() const>
+        ::add_convention<load_dispatch, pro::proxy<data_interface_facade>(archive::input_archive_t &)>
+        ::add_convention<save_dispatch, void(archive::output_archive_t &, pro::proxy<data_interface_facade> &)>
+        ::support_copy<pro::constraint_level::nontrivial>
+        ::support_relocation<pro::constraint_level::nontrivial>
+        ::support_destruction<pro::constraint_level::nontrivial>
+        ::support<pro::skills::rtti>
+        ::build
+    { };
 
     export using type_definition_proxy = pro::proxy<type_definition_facade>;
     export using data_proxy = pro::proxy<data_interface_facade>;
@@ -225,6 +231,8 @@ namespace blueprint::dyn_node
         ::add_convention<description_dispatch, text_type() const noexcept>
         ::add_convention<id_dispatch, id_type() const noexcept>
         ::add_convention<create_node_dispatch, pro::proxy<node_instance_facade>()>
+        ::add_convention<load_dispatch, pro::proxy<node_instance_facade>(archive::input_archive_t &)>
+        ::add_convention<save_dispatch, void(archive::output_archive_t &, pro::proxy<node_instance_facade> &)>
         ::support_copy<pro::constraint_level::nontrivial>
         ::support_relocation<pro::constraint_level::nontrivial>
         ::support_destruction<pro::constraint_level::nontrivial>

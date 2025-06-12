@@ -31,6 +31,9 @@ namespace blueprint::dyn_node::builtin
 
         node_instance_proxy create_node() noexcept;
 
+        node_instance_proxy load(archive::input_archive_t &);
+        void save(archive::output_archive_t &, node_instance_proxy &p);
+
     private:
         type_definition_proxy ty_;
         string name_;
@@ -40,8 +43,9 @@ namespace blueprint::dyn_node::builtin
 
     export class identity_node_instance
     {
+        friend class identity_node_definition;
     public:
-        identity_node_instance(string_view id, const type_definition_proxy &ty);
+        identity_node_instance(string_view id, const type_definition_proxy &ty, data_proxy d = nullptr);
 
         [[nodiscard]] id_type type_id() const noexcept;
         [[nodiscard]] std::span<const signature_t> signatures() const noexcept;

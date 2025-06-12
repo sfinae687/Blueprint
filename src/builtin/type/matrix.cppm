@@ -38,6 +38,31 @@ namespace blueprint::builtin
     using dyn_node::text_type;
     using dyn_node::id_type;
 
+    export constexpr id_type type_id(builtin_hint, builtin_matrix_t &)
+    {
+        return matrix_id;
+    }
+    export dyn_node::data_proxy clone(builtin_hint, builtin_matrix_t &d)
+    {
+        return std::make_shared<builtin_matrix_t>(d);
+    }
+
+    export void save_matrix(archive::output_archive_t &ar, builtin_matrix_t &tb)
+    {
+        auto rows = tb.rows();
+        auto cols = tb.cols();
+
+        ar(rows, cols);
+        ar.saveBinary(tb.data(), rows * cols * sizeof(double));
+    }
+    export builtin_matrix_t load_matrix(archive::input_archive_t &ar)
+    {
+        Eigen::Index r, c;
+        ar(r, c);
+        builtin_matrix_t tb(r, c);
+        ar.loadBinary(tb.data(), r*c*sizeof(double));
+        return tb;
+    }
 
     export struct matrix_definition
     {
@@ -53,17 +78,21 @@ namespace blueprint::builtin
         {
             return matrix_id;
         }
+
+        dyn_node::data_proxy load(archive::input_archive_t &ar)
+        {
+            auto tb = load_matrix(ar);
+
+            return std::make_shared<builtin_matrix_t>(std::move(tb));
+        }
+
+        void save(archive::output_archive_t &ar, dyn_node::data_proxy &p)
+        {
+            assert(id() == p->type_id());
+            auto &&tb = proxy_cast<builtin_matrix_t&>(*p);
+            save_matrix(ar, tb);
+        }
     };
-
-    export constexpr id_type type_id(builtin_hint, builtin_matrix_t &)
-    {
-        return matrix_id;
-    }
-    export dyn_node::data_proxy clone(builtin_hint, builtin_matrix_t &d)
-    {
-        return std::make_shared<builtin_matrix_t>(d);
-    }
-
-    static_assert(pro::proxiable<std::shared_ptr<builtin_matrix_t>, dyn_node::data_interface_facade>);
+    static_assert(dyn_node::type_definition<matrix_definition>);
 
 }

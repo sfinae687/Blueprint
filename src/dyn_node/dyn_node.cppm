@@ -8,6 +8,7 @@
 export module blueprint.dyn_node;
 export import :definition;
 export import :utility;
+export import :host_api;
 
 namespace blueprint::dyn_node
 {

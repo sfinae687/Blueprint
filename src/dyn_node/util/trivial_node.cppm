@@ -35,6 +35,9 @@ namespace blueprint::dyn_node::util
 
         node_instance_proxy create_node();
 
+        node_instance_proxy load(archive::input_archive_t &) { return create_node(); }
+        void save(archive::output_archive_t &, node_instance_proxy &p) {}
+
     private:
         id_type id_;
         text_type name_;
@@ -44,7 +47,7 @@ namespace blueprint::dyn_node::util
     };
     static_assert(pro::proxiable<std::shared_ptr<trivial_node_definition>, node_definition_facade>);
 
-    export class trivial_node_instance : public any_context
+    export class trivial_node_instance
     {
     public:
         trivial_node_instance(id_type id, input_sequence_t input, output_sequence_t output);

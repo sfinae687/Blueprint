@@ -44,6 +44,9 @@ namespace blueprint::dyn_node::util
 
         node_instance_proxy create_node();
 
+        node_instance_proxy load(archive::input_archive_t &);
+        void save(archive::output_archive_t &, node_instance_proxy &p);
+
     private:
         std::string id_;
         data_proxy data_;
@@ -52,7 +55,7 @@ namespace blueprint::dyn_node::util
     };
     static_assert(pro::proxiable<std::shared_ptr<constant_node_definition>, node_definition_facade>);
 
-    class constant_node_instance : public any_context
+    class constant_node_instance
     {
         friend constant_node_definition;
     public:

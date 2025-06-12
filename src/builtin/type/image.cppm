@@ -7,9 +7,12 @@
 
 module;
 #include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/vector.hpp>
 
 #include <proxy/proxy.h>
-
 #include <memory>
 
 export module blueprint.builtin_node:image;
@@ -50,6 +53,23 @@ namespace blueprint::builtin
         /* NOLINT */ [[nodiscard]] id_type id() const
         {
             return image_id;
+        }
+
+
+        dyn_node::data_proxy load(archive::input_archive_t &ar)
+        {
+            std::vector<uchar> buffer;
+            cv::Mat mat = cv::imdecode(buffer, cv::IMREAD_UNCHANGED);
+            return std::make_shared<cv::Mat>(std::move(mat));
+        }
+
+        void save(archive::output_archive_t &ar, dyn_node::data_proxy &p)
+        {
+            auto &&mat = proxy_cast<cv::Mat&>(*p);
+
+            std::vector<uchar> buffer;
+            cv::imencode(".png", mat, buffer);
+            ar(buffer);
         }
 
     };

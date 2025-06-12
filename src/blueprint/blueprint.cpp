@@ -46,9 +46,8 @@ namespace blueprint
     using namespace std::string_literals;
 
     /// Constructor, it defines the all GUI, and connect another necessary part.
-    blueprint_application::blueprint_application()
-        : gui_("Blueprint Node editor", 1080, 720)
-        , imnodes_context_(gui_)
+    blueprint_application::blueprint_application(GUI::window &gui)
+        : imnodes_context_(gui)
         , link_(node_instance_)
         , to_finish_compute_(64)
     {
@@ -57,20 +56,130 @@ namespace blueprint
         setup_logger();
         load_builtin();
 
-        gui_.set_update_operation([this] {update();});
-        gui_.set_draw_operation([this] {draw();});
+        api_.get_node_definition = [this] (dyn_node::id_type id) -> decltype(auto)
+        {
+            return node_def_.at(id);
+        };
+        api_.get_type_definition = [this] (dyn_node::id_type id) -> decltype(auto)
+        {
+            return type_def_.at(id);
+        };
+
+        dyn_node::host_api::host = &api_;
     }
 
-    int blueprint_application::run()
+    blueprint_application::blueprint_application(GUI::window& gui, archive::input_archive_t& ar)
+        : blueprint_application(gui)
     {
-        gui_.render_loop();
-        return 0;
+        using flow::node_instance_handler;
+        using dyn_node::util::load_data_with_type;
+        using dyn_node::util::load_node_with_type;
+        using flow::no_id;
+
+        std::size_t node_sz, link_sz, set_sz;
+
+        // nodes
+        ar(node_sz);
+        for (std::size_t i=0; i<node_sz; ++i)
+        {
+            no_id id;
+            ImVec2 pos;
+            ar(id);
+            ar(pos.x, pos.y);
+            auto p = load_node_with_type(ar);
+
+            auto rt = node_instance_.add_instance(std::move(p), id);
+            assert(rt != nullptr);
+
+            new_node_context ctx{pos};
+            new_node_[id] = std::move(ctx);
+        }
+
+        // links
+        ar(link_sz);
+        for (std::size_t i=0; i<link_sz; ++i)
+        {
+            no_id in, out;
+            ar(in, out);
+            auto rt = link_.create_link(out, in);
+            assert(rt);
+        }
+
+        // set_data
+        ar(set_sz);
+        for (std::size_t i=0; i<set_sz; ++i)
+        {
+            no_id ch;
+            ar(ch);
+            auto d = load_data_with_type(ar);
+            auto rt = link_.set_date(ch, std::move(d));
+            assert(rt);
+        }
+    }
+
+    void blueprint_application::save(archive::output_archive_t& ar)
+    {
+        using flow::node_instance_handler;
+        using dyn_node::util::save_data_with_type;
+        using dyn_node::util::save_node_with_type;
+        using dyn_node::util::save_data;
+        using dyn_node::util::save_node;
+
+
+        auto &&node_hd = node_instance_.dump_handler();
+        ranges::sort(node_hd, ranges::less{}, [](node_instance_handler hd)
+        {
+            return hd.node_id();
+        });
+
+        // nodes
+        ar(node_hd.size());
+        auto nodes = node_hd | views::transform([] (auto hd)
+        {
+            return std::ref(hd.node_instance());
+        });
+
+        for (auto &&hd : node_hd)
+        {
+            auto id = hd.node_id();
+            ar(id);
+            auto pos = ImNodes::GetNodeEditorSpacePos(id);
+            ar(pos.x, pos.y);
+
+            auto &&nt = hd.node_instance();
+            save_node_with_type(ar, nt);
+        }
+
+        // links
+        auto all_lk = link_.all_link();
+
+        ar(all_lk.size());
+
+        auto in_out_lk = all_lk | views::transform([&] (auto &lk)
+        {
+            return link_.query_link(lk).value();
+        });
+
+        for (auto [in, out] : in_out_lk)
+        {
+            ar(in, out);
+        }
+
+        // set data
+        auto set_d = link_.dump_set();
+
+        ar(set_d.size());
+        for (auto &&[ch, d] : set_d)
+        {
+            ar(ch);
+            save_data_with_type(ar, d);
+        }
     }
 
     void blueprint_application::setup_logger()
     {
         using namespace boost::log;
-        logger.add_attribute("Module", attributes::constant<std::string>("Application"));
+        logger.add_attribute("Module", attributes::constant<std::string>("Editor"));
     }
 
     void blueprint_application::update()
@@ -119,39 +228,33 @@ namespace blueprint
     }
     void blueprint_application::draw()
     {
-        using namespace GUI;
-        if (begin_main_window("main", &main_open))
+        ImGui::BeginChild("NodeEditor",
+            ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
+
+        ImNodes::BeginNodeEditor();
+
+        for (auto &&hd : node_instance_.dump_handler())
         {
-            ImGui::BeginChild("NodeEditor",
-                ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeight() * 1.3F));
-
-            ImNodes::BeginNodeEditor();
-
-            for (auto &&hd : node_instance_.dump_handler())
-            {
-                draw_node(hd);
-            }
-
-            draw_link();
-
-            if (hovered_node == -1)
-            {
-                draw_editor_menu();
-            }
-
-            ImNodes::MiniMap();
-
-            ImNodes::EndNodeEditor();
-
-            ImGui::EndChild();
-
-            if (ImGui::Button("Compute"))
-            {
-                begin_compute_flag = true;
-            }
+            draw_node(hd);
         }
-        ImGui::End();
 
+        draw_link();
+
+        if (hovered_node == -1)
+        {
+            draw_editor_menu();
+        }
+
+        ImNodes::MiniMap();
+
+        ImNodes::EndNodeEditor();
+
+        ImGui::EndChild();
+
+        if (ImGui::Button("Compute"))
+        {
+            begin_compute_flag = true;
+        }
     }
 
     void blueprint_application::draw_node(flow::node_instance_handler hd)

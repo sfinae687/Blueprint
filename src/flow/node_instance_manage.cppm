@@ -37,14 +37,24 @@ namespace blueprint::flow
             : manager_(nullptr), it_({}) {}
         node_instance_handler(const node_instance_handler&) = default;
         node_instance_handler& operator=(const node_instance_handler&) = default;
+        ~node_instance_handler() = default;
 
         bool operator== (const node_instance_handler &) const = default;
+
         bool operator== (std::nullptr_t) const {return manager_ == nullptr || it_ == list_type::iterator{};}
 
         [[nodiscard]] const dyn_node::node_instance_proxy& node_instance() const noexcept;
         [[nodiscard]] dyn_node::node_instance_proxy& node_instance() noexcept;
 
         [[nodiscard]] no_id node_id() const noexcept;
+
+        friend void swap(node_instance_handler &lhs, node_instance_handler &rhs) noexcept
+        {
+            using std::swap;
+
+            swap(lhs.manager_, rhs.manager_);
+            swap(lhs.it_, rhs.it_);
+        }
 
         void remove();
 
@@ -67,6 +77,7 @@ namespace blueprint::flow
         node_instance_manager& operator=(const node_instance_manager& other) = delete;
 
         node_instance_handler add_instance(dyn_node::node_instance_proxy p);
+        node_instance_handler add_instance(dyn_node::node_instance_proxy p, no_id the_id);
 
         [[nodiscard]] node_instance_handler get_handler(no_id) noexcept;
 

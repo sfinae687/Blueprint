@@ -8,6 +8,8 @@
 module;
 #include <proxy/proxy.h>
 
+#include <boost/log/common.hpp>
+
 #include <shared_mutex>
 #include <unordered_map>
 #include <memory>
@@ -17,6 +19,7 @@ module blueprint.flow;
 import blueprint.dyn_node;
 import :node_instance_manage;
 import :NOID;
+import :debug;
 
 namespace blueprint::flow
 {
@@ -49,6 +52,22 @@ namespace blueprint::flow
         auto rt = list_.insert({current_id, {std::move(p), current_id}}).first;
         return {*this, rt};
     }
+
+    node_instance_handler node_instance_manager::add_instance(dyn_node::node_instance_proxy p, no_id the_id)
+    {
+        auto [id_iter, sc] = list_.insert({the_id, {std::move(p), the_id}});
+        if (! sc)
+        {
+            BOOST_LOG_SEV(flow_logger, error) << "The instance addition is prevent by the existed id";
+            return nullptr;
+        }
+
+        last_id_ = std::max(last_id_, the_id + 1);
+
+        return {*this, id_iter};
+    }
+
+
     node_instance_handler node_instance_manager::get_handler(no_id id) noexcept
     {
         std::shared_lock gd(lock_);

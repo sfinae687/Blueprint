@@ -9,8 +9,6 @@ module;
 
 #include <proxy/proxy.h>
 #include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/imgcodecs.hpp>
 
 #include <boost/log/trivial.hpp>
 
@@ -54,7 +52,7 @@ namespace blueprint::draw_node
         using dyn_node::util::constant_node_instance;
         auto &&nd = ctx.node;
         auto id = ctx.id;
-        auto &&node_inst = proxy_cast<constant_node_instance&>(*nd);
+        auto &&node_inst = proxy_cast<load_image_instance&>(*nd);
 
         bool flush_flag = false;
 
@@ -74,19 +72,15 @@ namespace blueprint::draw_node
             nfdresult_t dialog_result = NFD_OpenDialogU8_With(&out_path, &args);
             if (dialog_result == NFD_OKAY)
             {
-            auto img = cv::imread(out_path);
-            cv::cvtColor(img, img, cv::COLOR_BGR2RGBA);
-            img.convertTo(img, CV_64F, 1/255.0);
-            BOOST_LOG_SEV(draw_node_logger, info) << "Load image from: " << out_path;
-            node_inst.set_output(std::make_shared<cv::Mat>(std::move(img)));
-            ctx.set_dirty = true;
+                node_inst.set_path(out_path);
+                BOOST_LOG_SEV(draw_node_logger, info) << "Load image from: " << out_path;
+                ctx.set_dirty = true;
             }
 
-            node_inst.set_context<std::string>(out_path);
         }
-        if (node_inst.is_set())
+        if (node_inst.has_image())
         {
-            ImGui::Text("Path:%s", node_inst.get_context<std::string&>().c_str());
+            ImGui::Text("Path:%s", node_inst.path().c_str());
         }
 
     }
@@ -127,10 +121,7 @@ namespace blueprint::draw_node
             }
             nd.flush_image();
 
-
             ImGui::SetNextItemWidth(width);
-
-
 
             nd.display();
         }

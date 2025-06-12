@@ -358,12 +358,23 @@ namespace blueprint::constraint
 
     std::vector<constraint_flow::node_id> constraint_flow::dump_ready() noexcept
     {
-        auto ans = status_ | views::keys | views::filter([&](node_id id)
-        {
-            return is_ready(id);
-        });
+        auto ans = status_ | views::keys | views::filter([&](node_id id) { return is_ready(id); });
 
         return ranges::to<std::vector>(ans);
+    }
+
+    std::vector<constraint_flow::set_data_desc> constraint_flow::dump_set()
+    {
+        auto desc_view = set_date_ | views::transform( [&] (auto &&p)
+        {
+            auto &&[id, d] = p;
+            return set_data_desc{
+                .ch = id,
+                .d = d,
+            };
+        });
+
+        return ranges::to<std::vector>(desc_view);
     }
 
     std::optional<unsigned long> constraint_flow::do_connect(output_t output, input_t input)
